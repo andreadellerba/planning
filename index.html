@@ -275,6 +275,22 @@ body.editing .edbar{display:flex}
 .toast button{color:var(--accent);font-weight:800}
 body.noanim *{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ═══ stessa forma del menu: contenitori con angoli da 24px e parti interne da 18px ═══ */
+.srch input{height:54px;border-radius:24px;padding-left:44px}
+.srch svg{left:17px;top:19px}
+.sortp{height:54px;border-radius:24px;padding:0 18px}
+.seg,.pseg,.mini{padding:5px;border-radius:24px;gap:3px}
+.seg button,.pseg button{border-radius:18px;height:44px}
+.mini button{border-radius:18px}
+.chip{height:42px;border-radius:18px;padding:0 15px}
+.sbtn,.btn,.prio button,.days7 button,.pnav button,.sel,.inp.sel,.num{border-radius:18px}
+.pnav button{width:44px;height:44px}
+.chips{justify-content:center}
+@media(max-width:640px){.sortp{width:54px;padding:0}}
+/* titoli più lontani dalla notch */
+body{padding-top:calc(env(safe-area-inset-top) + 34px)}
+.topcover{height:calc(env(safe-area-inset-top) + 18px)}
+body.editing{padding-top:calc(env(safe-area-inset-top) + 74px)}
 </style>
 </head>
 <body>
@@ -523,7 +539,7 @@ function card(t){
 }
 function renderAtt(){
   $('f-prio').style.display=D.set.fields.prio?'':'none';
-  $('f-prio').innerHTML=`<button class="chip ${fPrio<0?'on':''}" data-p="-1">Tutte</button>`+PRIO.map((p,i)=>`<button class="chip ${fPrio===i?'on':''}" data-p="${i}" style="--cc:${p.c}"><i></i>${p.n}</button>`).reverse().join('');
+  $('f-prio').innerHTML=`<button class="chip ${fPrio<0?'on':''}" data-p="-1">Tutte</button>`+PRIO.map((p,i)=>`<button class="chip ${fPrio===i?"on":""}" data-p="${i}" style="--cc:${p.c}"><i></i>${p.n}</button>`).join("");
   $('f-sort').value=D.ui.sort;$('sortlbl').textContent=SORTL[D.ui.sort]||'Ordina';
   const all=filtered(),todo=sortTodo(all.filter(t=>!t.done)),done=all.filter(t=>t.done).sort((a,b)=>b.doneAt-a.doneAt);
   $('n-todo').textContent=todo.length;$('n-done').textContent=done.length;
