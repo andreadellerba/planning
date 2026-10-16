@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Le mie attività</title>
@@ -291,6 +291,10 @@ body.noanim *{animation:none!important;transition:none!important}
 body{padding-top:calc(env(safe-area-inset-top) + 34px)}
 .topcover{height:calc(env(safe-area-inset-top) + 18px)}
 body.editing{padding-top:calc(env(safe-area-inset-top) + 74px)}
+/* telefono: niente zoom e niente scorrimento orizzontale */
+html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-x:none}
+html{touch-action:pan-y;-webkit-text-size-adjust:100%}
+@media(max-width:820px){input,textarea,select{font-size:16px!important}}   /* sotto i 16px l'iPhone ingrandisce quando tocchi un campo */
 </style>
 </head>
 <body>
@@ -889,6 +893,8 @@ document.addEventListener('keydown',e=>{
   if(e.key==='1')go('att');if(e.key==='2')go('stat');if(e.key==='3')go('set');
 });
 window.addEventListener('storage',e=>{if(e.key===KEY){load();applyLook();renderAll();}});
+/* iPhone: blocca lo zoom con due dita (Safari ignora user-scalable); il doppio tocco lo blocca touch-action */
+["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();renderAll();}},60000);
 
 load();applyLook();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}go(D.ui.page||'att');
