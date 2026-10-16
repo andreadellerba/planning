@@ -309,6 +309,7 @@ body.noanim *{animation:none!important;transition:none!important}
   <input class="inp" id="lock-in" placeholder="Codice segreto" autocomplete="off" autocapitalize="off" spellcheck="false">
   <div class="lock-err" id="lock-err"></div>
   <button class="btn pri" id="lock-go" style="width:100%">Entra</button>
+  <button class="btn" id="lock-up" hidden style="width:100%;margin-top:8px">Crea online con questo codice e carica le attività di questo dispositivo</button>
   <button class="lock-new" id="lock-new">Non ho ancora un codice: creane uno nuovo</button>
 </div></div>
 <div class="toast" id="toast"><span id="toast-t"></span><button id="toast-u">Annulla</button></div>
@@ -380,17 +381,18 @@ function connect(code,isNew){
         try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}applyLook();renderAll();}
       ready=true;localStorage.removeItem(NEWKEY);if(!snap.metadata.fromCache)setSync('ok');}
     else if(!snap.metadata.fromCache){
-      if(!localStorage.getItem(NEWKEY)){localStorage.removeItem(CODEKEY);showLock('Codice non trovato: controlla di averlo copiato tutto.');return;}
+      if(!localStorage.getItem(NEWKEY)){const has=D.tasks.length>0;localStorage.removeItem(CODEKEY);showLock(has?'Questo codice non è ancora online. Se è il dispositivo con le tue attività, crealo qui sotto.':'Codice non trovato: controlla di averlo copiato tutto, oppure aprilo prima sul dispositivo dove è stato creato.',has?code:'');return;}
       ready=true;lastSent='';push();}
   },err=>{const c=err&&err.code||'errore';setSync('off',c);
     if(c==='permission-denied'&&!localStorage.getItem(NEWKEY)){showLock('Codice non valido.');return;}
     clearTimeout(retryT);retryT=setTimeout(()=>{const k=localStorage.getItem(CODEKEY);if(k)connect(k,false);},6000);});
 }
 window.addEventListener('online',()=>{lastSent='';push();});
-function showLock(msg){if(unsub){unsub();unsub=null;}ref=null;$('lock').hidden=false;$('lock-err').textContent=msg||'';setTimeout(()=>$('lock-in').focus(),50);}
+function showLock(msg,up){if(unsub){unsub();unsub=null;}ref=null;$('lock').hidden=false;$('lock-err').textContent=msg||'';$('lock-up').hidden=!up;if(up)$('lock-in').value=up;setTimeout(()=>$('lock-in').focus(),50);}
 $('lock-go').onclick=()=>{const c=$('lock-in').value.trim().replace(/\s+/g,'');if(c.length<32){$('lock-err').textContent='Il codice è di 36 caratteri: incollalo tutto.';return;}
   localStorage.setItem(CODEKEY,c);$('lock').hidden=true;connect(c,false);toast('Collegato! Le attività arrivano tra un attimo');};
 $('lock-in').addEventListener('keydown',e=>{if(e.key==='Enter')$('lock-go').click();});
+$('lock-up').onclick=()=>{const c=$('lock-in').value.trim().replace(/\s+/g,'');if(c.length<32)return;localStorage.setItem(CODEKEY,c);$('lock').hidden=true;connect(c,true);toast('Carico le attività online…');};
 $('lock-new').onclick=()=>{if(!confirm('Creare un nuovo spazio? Le attività di questo dispositivo vengono caricate online e ti mostro il codice da usare sugli altri dispositivi.'))return;
   const c=newCode();localStorage.setItem(CODEKEY,c);$('lock').hidden=true;connect(c,true);go('set');
   setTimeout(()=>alert('Ecco il tuo codice segreto (lo trovi anche in Impostazioni › Sincronizzazione):\n\n'+c+'\n\nSalvalo in un posto sicuro: serve per aprire le attività sugli altri dispositivi.'),300);};
