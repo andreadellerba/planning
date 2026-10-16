@@ -358,26 +358,35 @@ function newCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz234
 function payload(){return JSON.parse(JSON.stringify({tasks:D.tasks,set:D.set}));}
 // testo con le chiavi in ordine: serve a capire se i dati sono davvero cambiati (Firestore restituisce le chiavi in un altro ordine)
 const stable=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
-function setSync(s){syncState=s;document.querySelectorAll('.sync').forEach(e=>{e.className='sync '+(s==='ok'?'ok':s==='off'?'off':'');e.lastChild.textContent=s==='ok'?' Sincronizzato':s==='off'?' Offline: si salva quando torna la rete':' Sincronizzo…';});}
+let syncErr='',retryT=null;
+function setSync(s,err){syncState=s;if(s!=='off')syncErr='';else if(err)syncErr=err;
+  document.querySelectorAll('.sync').forEach(e=>{e.className='sync '+(s==='ok'?'ok':s==='off'?'off':'');
+    e.lastChild.textContent=s==='ok'?' Sincronizzato':s==='off'?' Non sincronizzato'+(syncErr?' ('+syncErr+')':'')+': riprovo da solo':' Sincronizzo…';});}
+const NEWKEY='todo-code-new';   /* questo dispositivo ha creato lo spazio: se online non c'è ancora, lo carica */
 function push(){
   if(!ref||!ready)return;clearTimeout(pushT);
   pushT=setTimeout(()=>{const p=payload(),s=stable(p);if(s===lastSent)return;lastSent=s;setSync('');
-    ref.set({...p,upd:Date.now()}).then(()=>setSync('ok')).catch(e=>{setSync('off');console.warn(e);});},500);
+    ref.set({...p,upd:Date.now()}).then(()=>{setSync('ok');localStorage.removeItem(NEWKEY);})
+      .catch(e=>{lastSent='';setSync('off',e&&e.code||'errore');clearTimeout(retryT);retryT=setTimeout(push,5000);});},500);
 }
 function connect(code,isNew){
-  try{if(!firebase.apps.length){firebase.initializeApp(FB);db=firebase.firestore();db.enablePersistence({synchronizeTabs:true}).catch(()=>{});}}catch(e){toast('⚠️ Sincronizzazione non disponibile');return;}
+  try{if(!firebase.apps.length){firebase.initializeApp(FB);db=firebase.firestore();}}catch(e){setSync('off','Firebase non caricato');return;}
+  if(isNew)localStorage.setItem(NEWKEY,'1');
   ref=db.collection('spazi').doc(code);ready=false;if(unsub)unsub();
   unsub=ref.onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
     if(snap.exists){const d=snap.data(),s=stable({tasks:d.tasks||[],set:d.set||{}});
       if(s!==lastSent){lastSent=s;D.tasks=d.tasks||[];D.set=d.set||{};norm();
         try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}applyLook();renderAll();}
-      ready=true;if(!snap.metadata.fromCache)setSync('ok');}
+      ready=true;localStorage.removeItem(NEWKEY);if(!snap.metadata.fromCache)setSync('ok');}
     else if(!snap.metadata.fromCache){
-      if(!isNew){localStorage.removeItem(CODEKEY);showLock('Codice non trovato: controlla di averlo copiato tutto.');return;}
+      if(!localStorage.getItem(NEWKEY)){localStorage.removeItem(CODEKEY);showLock('Codice non trovato: controlla di averlo copiato tutto.');return;}
       ready=true;lastSent='';push();}
-  },err=>{setSync('off');if(String(err&&err.code).includes('permission'))showLock('Codice non valido.');});
+  },err=>{const c=err&&err.code||'errore';setSync('off',c);
+    if(c==='permission-denied'&&!localStorage.getItem(NEWKEY)){showLock('Codice non valido.');return;}
+    clearTimeout(retryT);retryT=setTimeout(()=>{const k=localStorage.getItem(CODEKEY);if(k)connect(k,false);},6000);});
 }
+window.addEventListener('online',()=>{lastSent='';push();});
 function showLock(msg){if(unsub){unsub();unsub=null;}ref=null;$('lock').hidden=false;$('lock-err').textContent=msg||'';setTimeout(()=>$('lock-in').focus(),50);}
 $('lock-go').onclick=()=>{const c=$('lock-in').value.trim().replace(/\s+/g,'');if(c.length<32){$('lock-err').textContent='Il codice è di 36 caratteri: incollalo tutto.';return;}
   localStorage.setItem(CODEKEY,c);$('lock').hidden=true;connect(c,false);toast('Collegato! Le attività arrivano tra un attimo');};
@@ -744,7 +753,7 @@ $('sets').addEventListener('click',e=>{
   if(e.target.id==='s-show'){const c=localStorage.getItem(CODEKEY)||'—',el=$('s-code');el.textContent=el.textContent.startsWith('•')?c:'•'.repeat(36);return;}
   if(e.target.id==='s-copy'){const c=localStorage.getItem(CODEKEY);if(!c)return;(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Codice copiato'),()=>{prompt('Copia il codice:',c);});return;}
   if(e.target.id==='s-out'){if(!confirm('Scollegare questo dispositivo? Per rientrare dovrai incollare di nuovo il codice.'))return;
-    localStorage.removeItem(CODEKEY);localStorage.removeItem(KEY);D={tasks:[],set:{},ui:{}};norm();applyLook();renderAll();showLock();return;}
+    localStorage.removeItem(CODEKEY);localStorage.removeItem(NEWKEY);localStorage.removeItem(KEY);D={tasks:[],set:{},ui:{}};norm();applyLook();renderAll();showLock();return;}
   if(e.target.id==='s-cl'){const n=D.tasks.filter(t=>t.done);if(!n.length)return toast('Nessuna attività completata');if(!confirm(`Eliminare ${n.length} attività completate?`))return;
     D.tasks=D.tasks.filter(t=>!t.done);save();renderAll();toast(n.length+' attività eliminate',()=>D.tasks.push(...n));return;}
   if(e.target.id==='s-rs'){if(!confirm('Azzerare tutte le attività e le impostazioni? Fai prima un Backup se vuoi tenerle.'))return;
