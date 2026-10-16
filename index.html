@@ -295,6 +295,10 @@ body.editing{padding-top:calc(env(safe-area-inset-top) + 74px)}
 html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-x:none}
 html{touch-action:pan-y;-webkit-text-size-adjust:100%}
 @media(max-width:820px){input,textarea,select{font-size:16px!important}}   /* sotto i 16px l'iPhone ingrandisce quando tocchi un campo */
+/* sfumatura del colore di sfondo: livello fisso dietro a tutto, ripetuto nella fascia della notch */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--bgimg,none)}
+.topcover{background:var(--bgimg,none) 0 0/100vw 100vh no-repeat,var(--bg)!important;
+  -webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 10px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 10px),transparent)}
 </style>
 </head>
 <body>
@@ -457,7 +461,15 @@ function applyLook(){
   // testo sopra l'accento: bianco o nero, quello che si legge meglio
   const h=D.set.accent.replace('#',''),lin=c=>{c=parseInt(c,16)/255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);},L=.2126*lin(h.slice(0,2))+.7152*lin(h.slice(2,4))+.0722*lin(h.slice(4,6));
   r.style.setProperty('--onacc',(L+.05)/.05>1.05/(L+.05)?'#111':'#fff');
-  if(D.set.bg[m])r.style.setProperty('--bg',D.set.bg[m]);else r.style.removeProperty('--bg');
+  // sfondo scelto: se non è (quasi) nero o bianco, il colore sfuma in una base scura (o chiara) invece di riempire tutto
+  r.style.removeProperty('--bg');r.style.setProperty('--bgimg','none');
+  const c=D.set.bg[m];
+  if(c){const hx=c.replace('#',''),rr=parseInt(hx.slice(0,2),16),gg=parseInt(hx.slice(2,4),16),bb=parseInt(hx.slice(4,6),16),lum=.2126*lin(hx.slice(0,2))+.7152*lin(hx.slice(2,4))+.0722*lin(hx.slice(4,6));
+    const plain=m==='dark'?lum<.02:lum>.85;
+    if(plain)r.style.setProperty('--bg',c);
+    else{r.style.setProperty('--bg',`color-mix(in srgb,${c},${m==='dark'?'#000 84%':'#fff 82%'})`);
+      const a=x=>`rgba(${rr},${gg},${bb},${x})`;
+      r.style.setProperty('--bgimg',`radial-gradient(120% 75% at 50% -12%,${a(m==='dark'?.62:.42)},transparent 72%),radial-gradient(70% 55% at 100% 100%,${a(m==='dark'?.3:.22)},transparent 70%),radial-gradient(60% 45% at 0% 70%,${a(m==='dark'?.18:.14)},transparent 70%)`);}}
   r.style.setProperty('--fs',D.set.fs+'px');
   document.body.classList.toggle('noanim',!D.set.anim);
   document.body.classList.toggle('editing',!!D.ui.editor);
