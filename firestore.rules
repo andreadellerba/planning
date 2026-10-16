@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Ogni spazio è un documento il cui nome è il codice segreto (36 caratteri).
+    // Si può leggere e scrivere solo conoscendo il codice: non si può elencare né cancellare.
+    match /spazi/{code} {
+      allow get, create, update: if code.size() >= 32;
+      allow list, delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
