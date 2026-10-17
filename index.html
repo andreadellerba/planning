@@ -604,10 +604,9 @@ function filtered(){
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function card(t){
-  // dentro la card, in quest'ordine: richiedente, data di creazione, priorità
-  const F=D.set.fields,m=[];
+  // dentro la card, in quest'ordine: data di creazione, richiedente, priorità
+  const F=D.set.fields,m=[`<span title="Creata il">${IC.cal}${dShort(dkey(new Date(t.created)))}</span>`];
   if(F.req&&t.req)m.push(`<span>${IC.user}${esc(t.req)}</span>`);
-  m.push(`<span title="Creata il">${IC.cal}${dShort(dkey(new Date(t.created)))}</span>`);
   if(F.prio)m.push(`<span><i class="pdot"></i>${PRIO[t.prio].n}</span>`);
   return`<div class="card ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
