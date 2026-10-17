@@ -206,6 +206,8 @@ button.srw:active{opacity:.7}
 .chv{font-style:normal;font-size:20px;line-height:1;color:var(--soft);margin-left:2px}
 .sv .cur{font-style:normal;color:var(--accent);font-weight:800}
 .srw .sel{height:36px;padding:0 28px 0 12px;font-size:13px;width:auto}
+.selw{position:relative;display:flex;align-items:center;gap:2px}   /* scelta come le altre righe: scritta e freccia, la tendina è invisibile sopra */
+.selw select{position:absolute;inset:0;opacity:0;width:100%;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
 .srw .num{height:36px;width:62px}
 .srw .sbtn{height:34px;padding:0 12px}
 .sbox .code{padding:0 0 10px 42px;border-bottom:.5px solid var(--line)}
@@ -973,6 +975,9 @@ function fillDates(){
     const up=getComputedStyle(document.documentElement).getPropertyValue('--fdt').trim()==='uppercase';
     const tw=txt=>{txt=up?txt.toUpperCase():txt;cv.font=`${cs.fontWeight} 100px ${fam}`;return(cv.measureText(txt).width+ls*100*txt.length)/100;};
     if(hb0&&hb0.offsetHeight)window._hbH=hb0.offsetHeight;
+    if(!window._hbH){   // Attività non ancora vista: misuro una copia invisibile della pillola, così il titolo è uguale su tutte le pagine
+      const cl=document.querySelector('#p-att .hbtn').cloneNode(true);cl.style.cssText='position:absolute;visibility:hidden;left:-999px;top:0';cl.removeAttribute('id');cl.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
+      document.body.appendChild(cl);window._hbH=cl.offsetHeight;cl.remove();}
     const HB=(window._hbH||48)*.86,fs=HB/rH;h.style.fontSize=fs+'px';   // maiuscola un po' più bassa della pillola, centrata con lei
     const chv=!!h.querySelector('.pfc'),avail=ph0.clientWidth-(hb0?hb0.offsetWidth+12:0);
     const twpx=tw(t.textContent)*fs,need=(rH*1.08+.03+(chv?.44:0))*fs+twpx;
@@ -1459,7 +1464,7 @@ function renderSets(){
       ${row('#f97316',ICS.acc,'Colore principale',sw(ac)+esc(colName(ACN,ac))+chv,'data-pk="acc"','button')}
       ${row('#0ea5e9',ICS.font,'Font',esc(F.n)+chv,'data-pk="font"','button')}
       ${row('#14b8a6',ICS.card,'Card',esc((CARDS.find(x=>x[0]===(S.card||'ombra'))||CARDS[0])[1])+chv,'data-pk="card"','button')}
-      ${row('#64748b',ICS.fs,'Dimensione testo',`<select class="sel" id="s-fs">${[[13,'Piccolo'],[14,'Normale'],[16,'Grande']].map(([k,v])=>`<option value="${k}" ${S.fs===k?'selected':''}>${v}</option>`).join('')}</select>`)}
+      ${row('#64748b',ICS.fs,'Dimensione testo',`<span class="selw">${{13:'Piccolo',14:'Normale',16:'Grande'}[S.fs]||'Normale'}${chv}<select id="s-fs" aria-label="Dimensione testo">${[[13,'Piccolo'],[14,'Normale'],[16,'Grande']].map(([k,v])=>`<option value="${k}" ${S.fs===k?'selected':''}>${v}</option>`).join('')}</select></span>`)}
       ${row('#eab308',ICS.glow,'Luce sfondo',tg('glow',S.glow!==false))}
       ${row('#ec4899',ICS.anim,'Animazioni',tg('anim',S.anim))}
 ${row('#0891b2',ICS.card,'Card unite',tg('joined',S.joined!==false))}
