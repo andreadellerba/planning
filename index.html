@@ -132,8 +132,10 @@ input,textarea,select{font:inherit;color:inherit}
   padding:10px max(12px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 14px) max(12px,env(safe-area-inset-left))}
 .qa.on{display:flex;animation:shIn .22s ease}
 .qa.kb{padding-bottom:10px}
-.qk{display:flex;justify-content:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.qk{display:flex;justify-content:center;justify-content:safe center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
 .qk::-webkit-scrollbar{display:none}
+.qk[hidden]{display:none}
+.qk.qd{justify-content:flex-start}   /* fila dei giorni per la scadenza */
 .q{position:relative;flex-shrink:0;height:36px;padding:0 13px;border-radius:14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--text);cursor:pointer}
 .q svg{width:15px;height:15px}
 .q.on{background:var(--accent);color:var(--onacc);border-color:transparent}
@@ -394,7 +396,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <section class="page on" id="p-att" data-t="att">
     <div class="ph"><div><small id="today-lbl"></small><h1 data-el="t-att" data-def="Attività">Attività</h1></div>
       <div class="hbtn">
-        <span class="ib gl cnt" id="n-todo" title="Completate sul totale">0</span>
+        <button class="ib gl cnt" id="n-todo" title="Tocca per cambiare">0</button>
         <button class="ib gl" id="sortbtn" aria-label="Ordine"></button>
         <button class="ib gl" id="srchbtn" aria-label="Cerca" title="Cerca (/)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
       </div></div>
@@ -437,6 +439,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 <div class="qdim" id="qdim"></div>
 <div class="qa" id="qa">
   <div class="qpv" id="qpv"></div>
+  <div class="qk qd" id="qd" hidden></div>
   <div class="qk" id="qk"></div>
   <div class="qi gl"><input id="qt" placeholder="Nuova attività…" autocomplete="off" enterkeyhint="send" maxlength="200"><datalist id="qreqs"></datalist>
     <button class="sd" id="qsend" aria-label="Aggiungi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
@@ -616,7 +619,7 @@ function applyLook(){
   r.style.removeProperty('--bg');r.style.setProperty('--bgimg','none');
   const c=D.set.bg[m];
   if(c){const hx=c.replace('#',''),rr=parseInt(hx.slice(0,2),16),gg=parseInt(hx.slice(2,4),16),bb=parseInt(hx.slice(4,6),16),lum=.2126*lin(hx.slice(0,2))+.7152*lin(hx.slice(2,4))+.0722*lin(hx.slice(4,6));
-    const plain=m==='dark'?lum<.02:lum>.85;
+    const plain=true;   // lo sfondo scelto si usa così com'è (anche i colori vivaci)
     if(plain)r.style.setProperty('--bg',c);
     else{r.style.setProperty('--bg',`color-mix(in srgb,${c},${m==='dark'?'#000 84%':'#fff 82%'})`);
       const a=x=>`rgba(${rr},${gg},${bb},${x})`;
@@ -716,7 +719,9 @@ function renderAtt(){
   const d=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});$('today-lbl').textContent=d;
   const old=D.ui.sort==='old';$('sortbtn').innerHTML=old?IC.sortOld:IC.sortNew;$('sortbtn').title=old?'Più vecchie in alto':'Più recenti in alto';
   const all=filtered(),todo=all.filter(t=>!t.done).sort((a,b)=>old?a.created-b.created:b.created-a.created),done=all.filter(t=>t.done).sort((a,b)=>b.doneAt-a.doneAt);
-  $('n-todo').textContent=D.tasks.filter(t=>t.done).length+'/'+D.tasks.length;   // completate sul totale
+  // contatore: completate sul totale oppure da completare sul totale (si cambia toccandolo)
+  const nd=D.tasks.filter(t=>t.done).length,ntd=D.ui.cnt==='todo';
+  $('n-todo').textContent=(ntd?D.tasks.length-nd:nd)+'/'+D.tasks.length;$('n-todo').title=ntd?'Da completare sul totale':'Completate sul totale';
   const q=$('q').value.trim();
   let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
   h+=todo.length?todo.map(card).join(''):`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
@@ -762,9 +767,12 @@ function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;D.tasks.splice(i,1)
   L.addEventListener('pointermove',e=>{
     if(!st||e.pointerId!==st.id)return;const dx=e.clientX-st.x,dy=e.clientY-st.y;
     if(!st.mode){
-      if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3){clearTimeout(st.lp);st.mode='swipe';st.w=wrap(st.c,taskOf(st.c));try{st.c.setPointerCapture(e.pointerId);}catch(_){}}
+      if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3){clearTimeout(st.lp);st.mode='swipe';st.w=wrap(st.c,taskOf(st.c));
+        // niente transizioni mentre il dito trascina, altrimenti la card insegue il dito a scatti
+        st.c.style.transition='none';st.c.style.willChange='transform';try{st.c.setPointerCapture(e.pointerId);}catch(_){}}
       else if(Math.abs(dy)>10||Math.abs(dx)>10){clearTimeout(st.lp);st=null;return;}else return;}
-    if(st.mode==='swipe'){st.dx=dx;st.c.style.transform=`translateX(${dx}px)`;st.w.classList.toggle('r',dx>0);st.w.classList.toggle('go',Math.abs(dx)>GO);}
+    if(st.mode==='swipe'){st.dx=dx;if(!st.raf)st.raf=requestAnimationFrame(()=>{const s=st;if(!s)return;s.raf=0;
+      s.c.style.transform=`translate3d(${s.dx}px,0,0)`;s.w.classList.toggle('r',s.dx>0);s.w.classList.toggle('go',Math.abs(s.dx)>GO);});}
   });
   const end=()=>{if(!st)return;clearTimeout(st.lp);const s=st;st=null;
     if(s.mode==='menu'){eatClick();return;}
@@ -804,6 +812,7 @@ function showSearch(on){$('srch').classList.toggle('on',on);$('srchbtn').classLi
 $('srchbtn').onclick=()=>showSearch(!$('srch').classList.contains('on'));
 $('q').addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();showSearch(false);}});
 $('sortbtn').onclick=()=>{D.ui.sort=D.ui.sort==='old'?'new':'old';save();renderAtt();toast(D.ui.sort==='old'?'Più vecchie in alto':'Più recenti in alto');};
+$('n-todo').onclick=()=>{D.ui.cnt=D.ui.cnt==='todo'?'done':'todo';save();renderAtt();toast(D.ui.cnt==='todo'?'Da completare sul totale':'Completate sul totale');};
 
 /* ═══ AGGIUNTA RAPIDA: si scrive e si invia, come un messaggio ═══ */
 /* tre pulsanti: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi), la priorità si cambia toccandola */
@@ -817,12 +826,20 @@ function openQuick(){
 function closeQuick(){document.body.classList.remove('quick');$('qa').classList.remove('on');$('qdim').classList.remove('on');if(document.activeElement)document.activeElement.blur();}
 function renderQk(){
   const F=D.set.fields,r=qv.mode==='r';
-  let h=`<button class="q gl ${r?'':'on'}" data-mode="t">${IC.note}Attività</button>`;
-  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${IC.user}${qv.req&&!r?esc(qv.req):'Richiedente'}</button>`;
-  // scadenza: si apre il calendario; se non la scegli valgono i giorni impostati in Impostazioni
-  if(F.due)h+=`<label class="q gl">${IC.cal}${qv.due?dShort(qv.due):'Scadenza'}<input type="date" id="qdate" value="${qv.due}" aria-label="Scadenza"></label>`;
+  let h=`<button class="q gl ${r?'':'on'}" data-mode="t">Attività</button>`;
+  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${qv.req&&!r?esc(qv.req):'Chi'}</button>`;
+  // scadenza: si sceglie da una fila di giorni (niente calendario di sistema, così la tastiera resta aperta);
+  // se non la scegli valgono i giorni impostati in Impostazioni
+  if(F.due)h+=`<button class="q gl ${qv.dOpen?'on':''}" data-due>${qv.due?'Scadenza · '+dShort(qv.due):'Scadenza'}</button>`;
   if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
-  $('qk').innerHTML=h;qPreview();
+  $('qk').innerHTML=h;
+  const t=today();
+  $('qd').hidden=!qv.dOpen;
+  if(qv.dOpen)$('qd').innerHTML=[...Array(22)].map((_,i)=>{const k=addD(t,i),d=kd(k);
+    const l=i===0?'Oggi':i===1?'Domani':['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][d.getDay()]+' '+d.getDate();
+    return `<button class="q gl ${qv.due===k?'on':''}" data-day="${k}">${l}</button>`;}).join('')
+    +(qv.due?'<button class="q gl" data-day="">Togli</button>':'');
+  qPreview();
 }
 /* anteprima: la card come apparirà, aggiornata mentre scrivi */
 function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
@@ -833,12 +850,13 @@ function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.pl
   if(r)f.setAttribute('list','qreqs');else f.removeAttribute('list');f.maxLength=r?60:200;}
 function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
 /* i pulsanti non tolgono il cursore dal campo, così la tastiera resta aperta */
-$('qk').addEventListener('mousedown',e=>{if(!e.target.closest('label'))e.preventDefault();});
-$('qk').addEventListener('change',e=>{if(e.target.id==='qdate'){qv.due=e.target.value;renderQk();$('qt').focus();}});
+['qk','qd'].forEach(id=>$(id).addEventListener('mousedown',e=>e.preventDefault()));
 $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.mode&&b.dataset.mode!==qv.mode){qStore();qv.mode=b.dataset.mode;qField();}
   else if(b.hasAttribute('data-prio'))qv.prio=(qv.prio+1)%3;
+  else if(b.hasAttribute('data-due'))qv.dOpen=!qv.dOpen;
   renderQk();$('qt').focus();});
+$('qd').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b)return;qv.due=b.dataset.day;qv.dOpen=false;renderQk();$('qt').focus();});
 function sendQuick(){
   qStore();
   if(!qv.title){if(qv.mode!=='t'){qv.mode='t';qField();renderQk();}$('qt').focus();return;}
@@ -991,10 +1009,12 @@ document.addEventListener('touchstart',e=>{const el=e.target.closest&&e.target.c
 /* ═══ IMPOSTAZIONI ═══ */
 /* sfondi e colori principali: si scelgono da un elenco con il cerchio del colore (lo sfondo decide anche chiaro/scuro) */
 const BGN=[
-  ['Scuri',[['Mezzanotte','#0a0e1a'],['Nero','#000000'],['Abisso','#050a14'],['Grafite','#0f1115'],['Ardesia','#121417'],['Carbone','#18181b'],['Antracite','#1c1f24'],['Piombo','#22252c'],
-    ['Notte blu','#0b1020'],['Navy','#0c1530'],['Indaco notte','#0f0d24'],['Oceano','#061416'],['Petrolio','#08191d'],['Abete','#0b1714'],['Bosco','#0a1210'],['Foresta','#0d1a12'],['Muschio','#12170d'],
-    ['Oliva scuro','#14160c'],['Ametista','#110d18'],['Prugna','#1a0f1f'],['Melanzana','#160b1a'],['Mora','#130a17'],['Bordeaux','#150a0e'],['Vinaccia','#1d0b12'],['Granata','#1c0a0a'],
-    ['Ruggine','#1f0f0a'],['Cioccolato','#1a120d'],['Caffè','#1c1611'],['Sabbia notte','#14110d'],['Tabacco','#1a160e']]],
+  ['Vivaci',[['Rosso','#dc2626'],['Ciliegia','#be123c'],['Burgundy','#800020'],['Rubino','#9b111e'],['Corallo','#e11d48'],['Rosa','#db2777'],['Fucsia','#c026d3'],['Viola','#7c3aed'],
+    ['Ametista','#9333ea'],['Indaco','#4f46e5'],['Blu','#2563eb'],['Cobalto','#1d4ed8'],['Azzurro','#0284c7'],['Turchese','#0891b2'],['Verde acqua','#0d9488'],['Smeraldo','#059669'],
+    ['Verde','#16a34a'],['Lime','#65a30d'],['Giallo','#eab308'],['Oro','#ca8a04'],['Arancione','#ea580c'],['Mandarino','#f97316'],['Zucca','#c2410c'],['Mattone','#b45309']]],
+  ['Scuri',[['Nero','#000000'],['Mezzanotte','#0a0e1a'],['Navy notte','#0c1530'],['Navy','#1a2b5e'],['Blu notte','#172554'],['Indaco scuro','#26215c'],['Viola scuro','#3b2167'],['Melanzana','#3b1f4a'],
+    ['Prugna','#4a1d47'],['Vinaccia','#4c1424'],['Bordeaux','#5c1a2b'],['Granata','#5e1b1b'],['Ruggine','#5b2a1a'],['Cioccolato','#3f2a1d'],['Caffè','#3a2f25'],['Oliva','#3a3d1c'],
+    ['Bosco','#1d3b2a'],['Pino','#0f3d2e'],['Petrolio','#0f3a40'],['Oceano','#0c3b52'],['Ardesia','#2b313d'],['Antracite','#2f3238'],['Grafite','#23262d'],['Piombo','#3a3f4a']]],
   ['Chiari',[['Bianco','#ffffff'],['Carta','#f3f3ef'],['Avorio','#faf7ef'],['Panna','#fdf8f0'],['Nebbia','#f2f3f7'],['Perla','#eef0f3'],['Ghiaccio','#edf3f6'],['Cielo','#eef5fc'],
     ['Polvere blu','#eaf0fb'],['Lavanda','#f1eefa'],['Glicine','#f4effc'],['Lilla','#f8f0fb'],['Cipria','#fbf0f2'],['Rosa tenue','#fdf2f5'],['Pesca','#fbf2ec'],['Albicocca','#fdf1e6'],
     ['Sabbia','#f5f0e6'],['Crema','#fbf6e4'],['Vaniglia','#fdfbea'],['Pistacchio','#f3f8e8'],['Salvia','#eef2ea'],['Menta','#eef7f1'],['Acqua','#ecf8f6']]]
@@ -1011,7 +1031,8 @@ const ACN=[
   ['Viola',[['Orchidea','#c084fc'],['Lilla','#b98fff'],['Glicine','#c4b5fd'],['Viola','#8b5cf6'],['Ametista','#9333ea'],['Indaco','#6d4aff'],['Indaco scuro','#4f46e5']]],
   ['Neutri',[['Bianco','#ffffff'],['Ghiaccio','#e2e8f0'],['Argento','#cbd5e1'],['Ardesia','#64748b'],['Sabbia','#d6c7a1'],['Moka','#b08968'],['Nero','#111111']]]
 ];
-const isLight=c=>{const h=c.replace('#',''),v=i=>parseInt(h.slice(i,i+2),16);return(.2126*v(0)+.7152*v(2)+.0722*v(4))/255>.5;};
+/* chiaro se il testo nero si legge meglio del bianco (luminanza reale > 0,18): giallo, arancione, verde chiaro diventano temi chiari */
+const isLight=c=>{const h=c.replace('#',''),v=i=>{const x=parseInt(h.slice(i,i+2),16)/255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4);};return .2126*v(0)+.7152*v(2)+.0722*v(4)>.18;};
 const fstack=x=>x+",system-ui,-apple-system,'Segoe UI',sans-serif";
 const curBg=()=>(D.set.bg[mode()]||(mode()==='dark'?'#0a0e1a':'#f2f3f7')).toLowerCase();
 const colName=(groups,c)=>{for(const[,l]of groups)for(const[n,x]of l)if(x===c)return n;return'Personalizzato';};
@@ -1072,7 +1093,8 @@ $('pko').addEventListener('click',e=>{if(e.target===$('pko')){closePicker();retu
 function setBg(v){const S=D.set;S.mode=isLight(v)?'light':'dark';S.bg[S.mode]=v;S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];}
 /* temi pronti: sfondo + colore principale con un tocco */
 const THEMES=[['Navy','#0c1530','#ff8a3d'],['Mezzanotte','#0a0e1a','#8fa2ff'],['Nero','#000000','#e8ff00'],['Petrolio','#08191d','#38d6e8'],['Bosco','#0a1210','#4fe0a3'],
-  ['Prugna','#1a0f1f','#f9a8d4'],['Caffè','#1c1611','#f0b44c'],['Carta','#f3f3ef','#2f5bea'],['Pesca','#fbf2ec','#c2410c']];
+  ['Prugna','#1a0f1f','#f9a8d4'],['Caffè','#1c1611','#f0b44c'],['Carta','#f3f3ef','#2f5bea'],['Pesca','#fbf2ec','#c2410c'],
+  ['Rosso','#dc2626','#fde047'],['Burgundy','#800020','#f0b44c'],['Blu','#2563eb','#ffffff']];
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&($('pko').classList.contains('on')||$('cmo').classList.contains('on'))){e.stopImmediatePropagation();closePicker();closeCardMenu();}},true);
 $('sets').addEventListener('click',e=>{if(document.body.classList.contains('editing'))return;
   const b=e.target.closest('[data-pk]');if(b){openPicker(b.dataset.pk);return;}
