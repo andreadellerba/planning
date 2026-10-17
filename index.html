@@ -47,6 +47,7 @@ input,textarea,select{font:inherit;color:inherit}
 .ph h1{font-size:calc(38px*var(--fdz));white-space:nowrap}
 .hbtn{display:flex;gap:8px;flex-shrink:0}
 .ib{width:46px;height:46px;border-radius:18px;display:grid;place-items:center;color:var(--tc,var(--accent));font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.ib.cnt{width:auto;min-width:46px;padding:0 13px;font-size:15px;white-space:nowrap}
 .ib svg{width:20px;height:20px}
 .ib.on{background:var(--accent);color:var(--onacc);border-color:transparent;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 50%,transparent)}
 #p-att,#p-stat{max-width:640px;margin:0 auto}
@@ -230,6 +231,25 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .sbox h3{margin:12px 0 4px;text-align:center;font-size:12px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--t-set)}
 .sr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .sr:last-child{border-bottom:0}
+/* elenco di scelta con il cerchio del colore (stile iPhone) o il font scritto col suo stile */
+.pkb{display:flex;align-items:center;gap:9px;width:100%;max-width:260px;height:44px;text-align:left;font-weight:600;font-size:14px;padding:0 30px 0 9px}
+.pkb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw2{width:26px;height:26px;border-radius:50%;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 0 0 1px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.25)}
+.pko{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
+.pko.on{display:flex;animation:fadeIn .2s}
+.pks{width:min(560px,100%);max-height:80vh;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:16px 14px calc(env(safe-area-inset-bottom) + 16px);animation:shIn .25s ease}
+.pks h4{margin:0 0 12px;text-align:center;font-size:15px}
+.pkx{overflow-y:auto;overscroll-behavior:contain;margin:0 -4px;padding:2px 4px}
+.pkg{margin:16px 0 8px;text-align:center;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pkg:first-child{margin-top:0}
+.pkl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pkl.one{grid-template-columns:minmax(0,1fr)}
+.pki{display:flex;align-items:center;gap:10px;min-height:50px;padding:0 12px;border-radius:16px;background:var(--card);font-weight:600;font-size:14px;text-align:left;border:1.5px solid transparent;color:var(--text)}
+.pki span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pki.on{border-color:var(--accent);box-shadow:0 0 14px color-mix(in srgb,var(--accent) 30%,transparent)}
+.pkl.one .pki{justify-content:center;min-height:56px}
+.pkf{font-size:20px}
+@media(min-width:641px){.pko{align-items:center}.pks{border-radius:28px}.pkl{grid-template-columns:repeat(3,minmax(0,1fr))}.pkl.one{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* righe delle impostazioni: due cose per riga (o una sola), nome sopra e comando sotto, tutto centrato */
 .g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
 .g2:last-child{border-bottom:0}
@@ -334,9 +354,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <section class="page on" id="p-att" data-t="att">
     <div class="ph"><div><small id="today-lbl"></small><h1 data-el="t-att" data-def="Attività">Attività</h1></div>
       <div class="hbtn">
+        <span class="ib gl cnt" id="n-todo" title="Completate sul totale">0</span>
         <button class="ib gl" id="sortbtn" aria-label="Ordine"></button>
         <button class="ib gl" id="srchbtn" aria-label="Cerca" title="Cerca (/)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
-        <span class="ib gl" id="n-todo" title="Da fare">0</span>
       </div></div>
     <div class="srch" id="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
       <input id="q" type="search" placeholder="Cerca attività o richiedente…" autocomplete="off"></div>
@@ -371,6 +391,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 </nav>
 
 <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
+<div class="pko" id="pko"><div class="pks" id="pks"></div></div>
 <!-- aggiunta rapida: la barra sta sopra la tastiera -->
 <div class="qdim" id="qdim"></div>
 <div class="qa" id="qa">
@@ -431,6 +452,27 @@ const FONTS={
   nunito:{n:'Nunito',q:'Nunito:wght@400;500;600;700;800',d:'Nunito',w:800,ls:'-.02em',z:.95},
   space:{n:'Space Grotesk',q:'Space+Grotesk:wght@400;500;600;700',d:"'Space Grotesk'",w:700,ls:'-.04em',z:.92},
   inter:{n:'Inter',q:'Inter:wght@400;500;600;700;800',d:'Inter',w:800,ls:'-.035em',z:.92},
+  poppins:{n:'Poppins',q:'Poppins:wght@400;500;600;700;800',d:'Poppins',w:700,ls:'-.03em',z:.9},
+  montserrat:{n:'Montserrat',q:'Montserrat:wght@400;500;600;700;800',d:'Montserrat',w:800,ls:'-.035em',z:.88},
+  rubik:{n:'Rubik',q:'Rubik:wght@400;500;600;700;800',d:'Rubik',w:700,ls:'-.025em',z:.95},
+  worksans:{n:'Work Sans',q:'Work+Sans:wght@400;500;600;700;800',d:"'Work Sans'",w:700,ls:'-.035em',z:.95},
+  figtree:{n:'Figtree',q:'Figtree:wght@400;500;600;700;800',d:'Figtree',w:800,ls:'-.03em',z:.97},
+  onest:{n:'Onest',q:'Onest:wght@400;500;600;700;800',d:'Onest',w:700,ls:'-.03em',z:.95},
+  geist:{n:'Geist',q:'Geist:wght@400;500;600;700;800',d:'Geist',w:700,ls:'-.04em',z:.95},
+  albert:{n:'Albert Sans',q:'Albert+Sans:wght@400;500;600;700;800',d:"'Albert Sans'",w:800,ls:'-.03em',z:.95},
+  redhat:{n:'Red Hat Display',q:'Red+Hat+Display:wght@400;500;600;700;800',d:"'Red Hat Display'",w:800,ls:'-.03em',z:.96},
+  vietnam:{n:'Be Vietnam Pro',q:'Be+Vietnam+Pro:wght@400;500;600;700;800',d:"'Be Vietnam Pro'",w:700,ls:'-.035em',z:.9},
+  mulish:{n:'Mulish',q:'Mulish:wght@400;500;600;700;800',d:'Mulish',w:800,ls:'-.03em',z:.95},
+  quicksand:{n:'Quicksand',q:'Quicksand:wght@400;500;600;700',d:'Quicksand',w:700,ls:'-.02em',z:.98},
+  comfortaa:{n:'Comfortaa',q:'Comfortaa:wght@400;500;600;700',d:'Comfortaa',w:700,ls:'-.03em',z:.86},
+  raleway:{n:'Raleway',q:'Raleway:wght@400;500;600;700;800',d:'Raleway',w:800,ls:'-.025em',z:.92},
+  josefin:{n:'Josefin Sans',q:'Josefin+Sans:wght@400;500;600;700',d:"'Josefin Sans'",w:700,ls:'-.01em',z:1},
+  syne:{n:'Syne + Inter',q:'Syne:wght@700;800&family=Inter:wght@400;500;600;700;800',d:'Syne',b:'Inter',w:800,ls:'-.03em',z:.9},
+  archivo:{n:'Archivo',q:'Archivo:wght@400;500;600;700;800',d:'Archivo',w:800,ls:'-.035em',z:.95},
+  playfair:{n:'Playfair + Inter',q:'Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700;800',d:"'Playfair Display'",b:'Inter',w:700,ls:'-.015em',z:.98},
+  dmserif:{n:'DM Serif + DM Sans',q:'DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400..800',d:"'DM Serif Display'",b:"'DM Sans'",w:400,ls:'-.01em',z:1.02},
+  oswald:{n:'Oswald + Inter',q:'Oswald:wght@600&family=Inter:wght@400;500;600;700;800',d:'Oswald',b:'Inter',w:600,ls:'.01em',up:1,z:1},
+  bebas:{n:'Bebas Neue + Inter',q:'Bebas+Neue&family=Inter:wght@400;500;600;700;800',d:"'Bebas Neue'",b:'Inter',w:400,ls:'.03em',up:1,z:1.15},
   system:{n:'Sistema (SF Pro su iPhone)',q:'',d:"-apple-system,'SF Pro Display'",b:"-apple-system,'SF Pro Text'",w:700,ls:'-.025em',z:.94},
   anton:{n:'Classico (Anton + Inter)',q:'Anton&family=Inter:wght@400;500;600;700;800',d:'Anton',b:'Inter',w:400,ls:'.02em',up:1,z:1.05}
 };
@@ -624,7 +666,7 @@ function renderAtt(){
   const d=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});$('today-lbl').textContent=d;
   const old=D.ui.sort==='old';$('sortbtn').innerHTML=old?IC.sortOld:IC.sortNew;$('sortbtn').title=old?'Più vecchie in alto':'Più recenti in alto';
   const all=filtered(),todo=all.filter(t=>!t.done).sort((a,b)=>old?a.created-b.created:b.created-a.created),done=all.filter(t=>t.done).sort((a,b)=>b.doneAt-a.doneAt);
-  $('n-todo').textContent=D.tasks.filter(t=>!t.done).length;
+  $('n-todo').textContent=D.tasks.filter(t=>t.done).length+'/'+D.tasks.length;   // completate sul totale
   const q=$('q').value.trim();
   let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
   h+=todo.length?todo.map(card).join(''):`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
@@ -660,10 +702,10 @@ $('sortbtn').onclick=()=>{D.ui.sort=D.ui.sort==='old'?'new':'old';save();renderA
 
 /* ═══ AGGIUNTA RAPIDA: si scrive e si invia, come un messaggio ═══ */
 /* tre pulsanti: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi), la priorità si cambia toccandola */
-let qv={prio:1,title:'',req:'',mode:'t'};
+let qv={prio:1,title:'',req:'',due:'',mode:'t'};
 function openQuick(){
   if(!$('p-att').classList.contains('on'))go('att');
-  qv={prio:1,title:'',req:'',mode:'t'};qField();
+  qv={prio:1,title:'',req:'',due:'',mode:'t'};qField();
   $('qreqs').innerHTML=[...new Set(D.tasks.map(x=>x.req).filter(Boolean))].map(r=>`<option value="${esc(r)}">`).join('');
   renderQk();document.body.classList.add('quick');$('qdim').classList.add('on');$('qa').classList.add('on');$('qt').focus();kbFit();   // focus subito: su iPhone apre la tastiera solo dentro al tocco
 }
@@ -672,6 +714,8 @@ function renderQk(){
   const F=D.set.fields,r=qv.mode==='r';
   let h=`<button class="q gl ${r?'':'on'}" data-mode="t">${IC.note}Attività</button>`;
   if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${IC.user}${qv.req&&!r?esc(qv.req):'Richiedente'}</button>`;
+  // scadenza: si apre il calendario; se non la scegli valgono i giorni impostati in Impostazioni
+  if(F.due)h+=`<label class="q gl">${IC.cal}${qv.due?dShort(qv.due):'Scadenza'}<input type="date" id="qdate" value="${qv.due}" aria-label="Scadenza"></label>`;
   if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
   $('qk').innerHTML=h;
 }
@@ -680,7 +724,8 @@ function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.pl
   if(r)f.setAttribute('list','qreqs');else f.removeAttribute('list');f.maxLength=r?60:200;}
 function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
 /* i pulsanti non tolgono il cursore dal campo, così la tastiera resta aperta */
-$('qk').addEventListener('mousedown',e=>e.preventDefault());
+$('qk').addEventListener('mousedown',e=>{if(!e.target.closest('label'))e.preventDefault();});
+$('qk').addEventListener('change',e=>{if(e.target.id==='qdate'){qv.due=e.target.value;renderQk();$('qt').focus();}});
 $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.mode&&b.dataset.mode!==qv.mode){qStore();qv.mode=b.dataset.mode;qField();}
   else if(b.hasAttribute('data-prio'))qv.prio=(qv.prio+1)%3;
@@ -688,7 +733,7 @@ $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
 function sendQuick(){
   qStore();
   if(!qv.title){if(qv.mode!=='t'){qv.mode='t';qField();renderQk();}$('qt').focus();return;}
-  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:addD(today(),D.set.defDays),rec:null,cf:{},done:false,doneAt:0,created:Date.now()};
+  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:qv.due||addD(today(),D.set.defDays),rec:null,cf:{},done:false,doneAt:0,created:Date.now()};
   D.tasks.push(o);save();closeQuick();go('att');toast('Aggiunta: '+o.title);
   const ne=document.querySelector(`.card[data-id="${o.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
 }
@@ -831,33 +876,50 @@ document.addEventListener('touchstart',e=>{const el=e.target.closest&&e.target.c
   tp.innerHTML=el.dataset.tip;tp.style.display='block';const r=el.getBoundingClientRect();tp.style.left=Math.max(8,Math.min(innerWidth-tp.offsetWidth-8,r.left+r.width/2-tp.offsetWidth/2))+'px';tp.style.top=Math.max(8,r.top-tp.offsetHeight-8)+'px';},{passive:true});
 
 /* ═══ IMPOSTAZIONI ═══ */
-/* sfondi e colori principali a tendina (lo sfondo decide anche se il tema è chiaro o scuro) */
-const BGN=[['Mezzanotte','#0a0e1a'],['Nero','#000000'],['Grafite','#0f1115'],['Ardesia','#121417'],['Oceano','#061416'],['Bosco','#0a1210'],['Ametista','#110d18'],['Bordeaux','#150a0e'],['Sabbia notte','#14110d'],
-  ['Bianco','#ffffff'],['Carta','#f3f3ef'],['Ghiaccio','#edf3f6'],['Lavanda','#f1eefa'],['Pesca','#fbf2ec'],['Menta','#eef7f1']];
-const ACN=[['Pervinca','#8fa2ff'],['Blu','#3b6cf6'],['Blu intenso','#2f5bea'],['Indaco','#6d4aff'],['Lilla','#b98fff'],['Viola','#8b5cf6'],['Rosa','#ec4899'],['Corallo','#ff6b8b'],['Rosso','#ef4444'],
-  ['Arancio','#f97316'],['Mandarino','#ff8a3d'],['Ambra','#f0b44c'],['Giallo','#eab308'],['Lime acido','#e8ff00'],['Lime','#84cc16'],['Verde','#22c55e'],['Menta','#4fe0a3'],['Verde acqua','#14b8a6'],
-  ['Ciano','#38d6e8'],['Turchese','#06b6d4'],['Azzurro','#0ea5e9'],['Ghiaccio','#e2e8f0']];
+/* sfondi e colori principali: si scelgono da un elenco con il cerchio del colore (lo sfondo decide anche chiaro/scuro) */
+const BGN=[
+  ['Scuri',[['Mezzanotte','#0a0e1a'],['Nero','#000000'],['Abisso','#050a14'],['Grafite','#0f1115'],['Ardesia','#121417'],['Carbone','#18181b'],['Antracite','#1c1f24'],['Piombo','#22252c'],
+    ['Notte blu','#0b1020'],['Navy','#0c1530'],['Indaco notte','#0f0d24'],['Oceano','#061416'],['Petrolio','#08191d'],['Abete','#0b1714'],['Bosco','#0a1210'],['Foresta','#0d1a12'],['Muschio','#12170d'],
+    ['Oliva scuro','#14160c'],['Ametista','#110d18'],['Prugna','#1a0f1f'],['Melanzana','#160b1a'],['Mora','#130a17'],['Bordeaux','#150a0e'],['Vinaccia','#1d0b12'],['Granata','#1c0a0a'],
+    ['Ruggine','#1f0f0a'],['Cioccolato','#1a120d'],['Caffè','#1c1611'],['Sabbia notte','#14110d'],['Tabacco','#1a160e']]],
+  ['Chiari',[['Bianco','#ffffff'],['Carta','#f3f3ef'],['Avorio','#faf7ef'],['Panna','#fdf8f0'],['Nebbia','#f2f3f7'],['Perla','#eef0f3'],['Ghiaccio','#edf3f6'],['Cielo','#eef5fc'],
+    ['Polvere blu','#eaf0fb'],['Lavanda','#f1eefa'],['Glicine','#f4effc'],['Lilla','#f8f0fb'],['Cipria','#fbf0f2'],['Rosa tenue','#fdf2f5'],['Pesca','#fbf2ec'],['Albicocca','#fdf1e6'],
+    ['Sabbia','#f5f0e6'],['Crema','#fbf6e4'],['Vaniglia','#fdfbea'],['Pistacchio','#f3f8e8'],['Salvia','#eef2ea'],['Menta','#eef7f1'],['Acqua','#ecf8f6']]]
+];
+const ACN=[
+  ['Blu e azzurri',[['Pervinca','#8fa2ff'],['Fiordaliso','#6c8cff'],['Blu','#3b6cf6'],['Blu intenso','#2f5bea'],['Zaffiro','#2563eb'],['Cobalto','#1d4ed8'],['Lavanda','#a5b4fc'],
+    ['Azzurro','#0ea5e9'],['Cielo','#38bdf8'],['Celeste','#7dd3fc'],['Ciano','#38d6e8'],['Turchese','#06b6d4']]],
+  ['Verdi',[['Verde acqua','#14b8a6'],['Acquamarina','#2dd4bf'],['Menta','#4fe0a3'],['Smeraldo','#10b981'],['Verde','#22c55e'],['Prato','#4ade80'],['Salvia','#86efac'],
+    ['Lime','#84cc16'],['Pistacchio','#bef264'],['Lime acido','#e8ff00'],['Oliva','#a3a635']]],
+  ['Gialli e arancio',[['Sole','#fde047'],['Limone','#facc15'],['Giallo','#eab308'],['Oro','#d4a72c'],['Ambra','#f0b44c'],['Albicocca','#fdba74'],['Mandarino','#ff8a3d'],
+    ['Arancio','#f97316'],['Zucca','#ea580c'],['Terracotta','#c2410c']]],
+  ['Rossi e rosa',[['Salmone','#fb8c7a'],['Corallo','#ff6b8b'],['Rosso','#ef4444'],['Ciliegia','#dc2626'],['Lampone','#e11d48'],['Rosa','#ec4899'],['Rosa confetto','#f9a8d4'],
+    ['Peonia','#f472b6'],['Fucsia','#d946ef']]],
+  ['Viola',[['Orchidea','#c084fc'],['Lilla','#b98fff'],['Glicine','#c4b5fd'],['Viola','#8b5cf6'],['Ametista','#9333ea'],['Indaco','#6d4aff'],['Indaco scuro','#4f46e5']]],
+  ['Neutri',[['Bianco','#ffffff'],['Ghiaccio','#e2e8f0'],['Argento','#cbd5e1'],['Ardesia','#64748b'],['Sabbia','#d6c7a1'],['Moka','#b08968'],['Nero','#111111']]]
+];
 const isLight=c=>{const h=c.replace('#',''),v=i=>parseInt(h.slice(i,i+2),16);return(.2126*v(0)+.7152*v(2)+.0722*v(4))/255>.5;};
+const fstack=x=>x+",system-ui,-apple-system,'Segoe UI',sans-serif";
+const curBg=()=>(D.set.bg[mode()]||(mode()==='dark'?'#0a0e1a':'#f2f3f7')).toLowerCase();
+const colName=(groups,c)=>{for(const[,l]of groups)for(const[n,x]of l)if(x===c)return n;return'Personalizzato';};
 function renderSets(){
-  const S=D.set,m=mode(),tg=(k,on)=>`<button class="tg ${on?'on':''}" data-k="${k}" aria-pressed="${on}"></button>`;
-  const bg=(S.bg[m]||(m==='dark'?'#0a0e1a':'#f2f3f7')).toLowerCase(),ac=S.accent.toLowerCase();
-  const opts=(list,cur)=>(list.some(([,c])=>c===cur)?'':`<option value="${cur}" selected>Personalizzato</option>`)+list.map(([n,c])=>`<option value="${c}" ${c===cur?'selected':''}>${n}</option>`).join('');
-  const bgOpt=([n,x])=>`<option value="${x}" ${x===bg?'selected':''}>${n}</option>`;
+  const S=D.set,tg=(k,on)=>`<button class="tg ${on?'on':''}" data-k="${k}" aria-pressed="${on}"></button>`;
+  const bg=curBg(),ac=S.accent.toLowerCase(),F=FONTS[S.font]||FONTS.jakarta;
   const c=(lbl,ctl)=>`<div class="c"><b>${lbl}</b>${ctl}</div>`;
+  const pk=(k,sw,lbl)=>`<button class="sel pkb" data-pk="${k}">${sw?`<i class="sw2" style="background:${sw}"></i>`:''}<span>${esc(lbl)}</span></button>`;
   const fl={req:'Richiedente',prio:'Priorità',due:'Scadenza',rec:'Ricorrenza'};
   const sb=(key,title,body)=>`<div class="sbox" data-ek="${key}"><h3 data-el="s-${key}" data-def="${title}">${esc(T('s-'+key,title))}</h3>${body}</div>`;
   $('sets').innerHTML=`<div class="sets" data-ec="set">
     ${sb('look','Aspetto',`
-      <div class="g2">${c('Sfondo',`<select class="sel" id="s-bg">${BGN.some(x=>x[1]===bg)?'':`<option value="${bg}" selected>Personalizzato</option>`}<optgroup label="Scuri">${BGN.slice(0,9).map(bgOpt).join('')}</optgroup><optgroup label="Chiari">${BGN.slice(9).map(bgOpt).join('')}</optgroup></select>`)}
-        ${c('Colore principale',`<select class="sel" id="s-acc">${opts(ACN,ac)}</select>`)}</div>
-      <div class="g2">${c('Font',`<select class="sel" id="s-font">${Object.entries(FONTS).map(([k,f])=>`<option value="${k}" ${(S.font||'jakarta')===k?'selected':''}>${f.n}</option>`).join('')}</select>`)}
+      <div class="g2">${c('Sfondo',pk('bg',bg,colName(BGN,bg)))}${c('Colore principale',pk('acc',ac,colName(ACN,ac)))}</div>
+      <div class="g2">${c('Font',pk('font','',F.n))}
         ${c('Dimensione testo',`<select class="sel" id="s-fs">${[[13,'Piccolo'],[14,'Normale'],[16,'Grande']].map(([k,v])=>`<option value="${k}" ${S.fs===k?'selected':''}>${v}</option>`).join('')}</select>`)}</div>
       <div class="g2">${c('Animazioni',tg('anim',S.anim))}${c('Suoni',tg('sound',S.sound))}</div>`)}
-    ${sb('edit','Personalizza',`<div class="g2 one">${c('Modalità editor',`<button class="tg ${D.ui.editor?'on':''}" id="s-ed"></button>`)}</div>`)}
     ${sb('att','Attività',`
       <div class="g2 one">${c('Scadenza predefinita (giorni)',`<input class="num" type="number" min="0" max="365" id="s-dd" value="${S.defDays}">`)}</div>
       <div class="g2">${Object.entries(fl).slice(0,2).map(([k,v])=>c(v,`<button class="tg ${S.fields[k]?'on':''}" data-f="${k}"></button>`)).join('')}</div>
       <div class="g2">${Object.entries(fl).slice(2).map(([k,v])=>c(v,`<button class="tg ${S.fields[k]?'on':''}" data-f="${k}"></button>`)).join('')}</div>`)}
+    ${sb('edit','Personalizza',`<div class="g2 one">${c('Modalità editor',`<button class="tg ${D.ui.editor?'on':''}" id="s-ed"></button>`)}</div>`)}
     ${sb('sync','Sincronizzazione',`
       <div class="g2 one">${c('Stato','<span class="sync"><i></i> Sincronizzo…</span>')}</div>
       <div class="g2 one">${c('Codice segreto',`<div class="code" id="s-code">${localStorage.getItem(CODEKEY)?'•'.repeat(36):'—'}</div><div style="display:flex;gap:6px"><button class="sbtn" id="s-show">Mostra</button><button class="sbtn" id="s-copy">Copia</button></div>`)}</div>
@@ -865,6 +927,35 @@ function renderSets(){
   </div>`;
   applyLayout();setSync(syncState);
 }
+/* ═══ ELENCO DI SCELTA (sfondo, colore principale, font) ═══ */
+const PKT={bg:'Sfondo',acc:'Colore principale',font:'Font'};
+let pvLoaded=false;
+function loadFontPreviews(){   // per vedere ogni font scritto col suo stile: si scaricano solo le lettere dei nomi
+  if(pvLoaded)return;pvLoaded=true;
+  const fams=[],chars=new Set();
+  Object.values(FONTS).forEach(f=>{[...f.n].forEach(ch=>chars.add(ch));const name=f.d.split(',')[0].replace(/'/g,'').trim();
+    if(name.startsWith('-apple'))return;fams.push('family='+name.replace(/ /g,'+')+(f.w!==400?':wght@'+f.w:''));});
+  const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?'+fams.join('&')+'&display=swap&text='+encodeURIComponent([...chars].join(''));
+  document.head.appendChild(l);
+}
+function openPicker(k){
+  const S=D.set;let h='';
+  if(k==='font'){loadFontPreviews();const cur=S.font||'jakarta';
+    h=`<div class="pkl one">${Object.entries(FONTS).map(([id,f])=>`<button class="pki ${cur===id?'on':''}" data-v="${id}" style="font-family:${fstack(f.d)};font-weight:${f.w};letter-spacing:${f.ls}${f.up?';text-transform:uppercase':''}"><span class="pkf">${esc(f.n)}</span></button>`).join('')}</div>`;}
+  else{const cur=k==='bg'?curBg():S.accent.toLowerCase();
+    h=(k==='bg'?BGN:ACN).map(([g,l])=>`<div class="pkg">${g}</div><div class="pkl">${l.map(([n,x])=>`<button class="pki ${x===cur?'on':''}" data-v="${x}"><i class="sw2" style="background:${x}"></i><span>${n}</span></button>`).join('')}</div>`).join('');}
+  $('pks').innerHTML=`<h4>${PKT[k]}</h4><div class="pkx">${h}</div>`;$('pks').dataset.k=k;$('pko').classList.add('on');
+  const on=$('pks').querySelector('.pki.on');if(on)on.scrollIntoView({block:'center'});
+}
+function closePicker(){$('pko').classList.remove('on');}
+$('pko').addEventListener('click',e=>{if(e.target===$('pko')){closePicker();return;}
+  const b=e.target.closest('.pki');if(!b)return;const k=$('pks').dataset.k,v=b.dataset.v,S=D.set;
+  if(k==='bg'){S.mode=isLight(v)?'light':'dark';S.bg[S.mode]=v;S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];}
+  if(k==='acc')S.accent=v;
+  if(k==='font')S.font=v;
+  save();applyLook();renderSets();closePicker();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pko').classList.contains('on')){e.stopImmediatePropagation();closePicker();}},true);
+$('sets').addEventListener('click',e=>{const b=e.target.closest('[data-pk]');if(b&&!document.body.classList.contains('editing'))openPicker(b.dataset.pk);});
 function setEditor(on){D.ui.editor=on;save();applyLook();if($('p-set').classList.contains('on'))renderSets();
   if(on)toast('Tieni premuto per spostare · doppio tocco per rinominare');}
 $('ed-done').onclick=()=>setEditor(false);
