@@ -115,10 +115,10 @@ input,textarea,select{font:inherit;color:inherit}
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
 .card.isdone{opacity:.62}
 .card.isdone .ct{text-decoration:line-through;text-decoration-color:var(--soft);color:var(--muted)}
-.cm{display:flex;flex-wrap:nowrap;min-width:0;gap:4px 8px;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
+.cm{display:flex;flex-wrap:nowrap;min-width:0;gap:0;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
 .cm span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
 .cm .rq{flex-shrink:1;min-width:0}
-.cm .ms{font-style:normal;flex-shrink:0;opacity:.7}   /* puntino tra le informazioni della card */
+.cm .ms{font-style:normal;flex-shrink:0;opacity:.7;padding:0 4px}   /* puntino tra le informazioni della card */
 .cm .rq em{font-style:normal;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .cm svg{width:14px;height:14px;flex-shrink:0}
 .cm .late{color:var(--danger);font-weight:650}.cm .today{color:var(--accent);font-weight:650}.cm .okc{color:var(--ok)}
@@ -162,7 +162,7 @@ input,textarea,select{font:inherit;color:inherit}
 .sd svg{width:20px;height:20px}
 .toast.top{bottom:auto;top:calc(env(safe-area-inset-top) + 14px)}
 /* avatar del richiedente nella card (a sinistra) */
-.avi{width:39px;height:39px;border-radius:50%;flex-shrink:0;object-fit:cover;display:block;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--text) 12%,transparent)}
+.avi{width:39px;height:39px;border-radius:50%;flex-shrink:0;object-fit:cover;cursor:pointer;display:block;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--text) 12%,transparent)}
 .avi.none{display:grid;place-items:center;background:var(--card2);color:var(--soft);box-shadow:none}
 .avi.none svg{width:17px;height:17px}
 .avi.big{width:46px;height:46px}
@@ -505,6 +505,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 </nav>
 
 <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
+<input type="file" id="avfile" accept="image/*" hidden>
 <div class="pko" id="pko"><div class="pks" id="pks"></div></div>
 <div class="cmo" id="cmo"><div class="cmm" id="cmm"></div></div>
 <!-- aggiunta rapida: la barra sta sopra la tastiera -->
@@ -821,7 +822,10 @@ function fakeAv(name){
   }
   return _avC[name]='data:image/svg+xml,'+encodeURIComponent(svg);
 }
-const avImg=(n,cls='')=>n?`<img class="avi ${cls}" src="${fakeAv(n)}" alt="" loading="lazy">`:`<span class="avi none ${cls}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>`;
+/* foto vere dei richiedenti: si caricano toccando l'avatar, stanno in D.set.photos (quindi si sincronizzano su tutti i dispositivi) */
+const avKey=n=>n.trim().toLowerCase();
+const avSrc=n=>(D&&D.set.photos&&D.set.photos[avKey(n)])||fakeAv(n);
+const avImg=(n,cls='')=>n?`<img class="avi ${cls}" src="${avSrc(n)}" alt="" loading="lazy" data-av="${esc(n)}" title="Tocca per cambiare la foto">`:`<span class="avi none ${cls}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>`;
 /* iniziali e colore fisso per ogni richiedente (podio delle statistiche) */
 const initials=n=>n.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
 const AVCOL=['#f9a8d4','#7dd3fc','#fde047','#86efac','#c4b5fd','#fdba74','#5eead4','#fca5a5'];
@@ -913,6 +917,15 @@ function toggle(t,el){
   if(!t.done){ding(true);if(cardEl&&D.set.anim){dot.classList.add('pop');confetti(dot);setTimeout(()=>{cardEl.classList.add('leave');setTimeout(go2,300);},380);}else go2();}
   else{ding(false);if(cardEl&&D.set.anim){cardEl.classList.add('leave');setTimeout(go2,280);}else go2();}
 }
+/* tocca un avatar (card, podio…) per caricare la foto di quella persona: ritagliata quadrata e rimpicciolita a 96 px */
+let avFor=null;
+document.addEventListener('click',e=>{const a=e.target.closest('.avi[data-av]');if(!a||document.body.classList.contains('editing'))return;
+  e.stopPropagation();e.preventDefault();avFor=a.dataset.av;$('avfile').value='';$('avfile').click();},true);
+$('avfile').addEventListener('change',()=>{const f=$('avfile').files[0];if(!f||!avFor)return;const who=avFor,u=URL.createObjectURL(f),img=new Image();
+  img.onload=()=>{const s=96,c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d'),m=Math.min(img.width,img.height);
+    x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);URL.revokeObjectURL(u);
+    D.set.photos=D.set.photos||{};D.set.photos[avKey(who)]=c.toDataURL('image/jpeg',.8);save();renderAll();toast('Foto di '+who+' salvata');};
+  img.onerror=()=>{URL.revokeObjectURL(u);toast('Questa immagine non si apre: prova con un\'altra');};img.src=u;});
 $('l-all').addEventListener('click',e=>{
   if(document.body.classList.contains('editing'))return;
   if(e.target.closest('[data-a="more"]')){doneLimit+=30;renderAtt();return;}
