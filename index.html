@@ -622,7 +622,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 /* ═══ DATI: in locale nel browser e online su Firebase (sincronizzazione più sotto) ═══ */
 const KEY='todo-app-v2',OLDKEY='todo-app-v1';
 const PRIO=[{n:'Bassa',c:'var(--p0)'},{n:'Media',c:'var(--p1)'},{n:'Alta',c:'var(--p2)'}];
-const DEF_SET={mode:'dark',theme:'mezzanotte',font:'jakarta',accent:'#8fa2ff',bg:{dark:'#0a0e1a',light:''},fs:14,sound:true,anim:true,confetti:true,glow:true,defDays:7,
+const DEF_SET={mode:'dark',theme:'mezzanotte',font:'jakarta',accent:'#8fa2ff',bg:{dark:'#0a0e1a',light:''},fs:14,sound:true,anim:true,confetti:true,glow:true,joined:true,defDays:7,
   fields:{req:true,prio:true,due:true,rec:true},custom:[],labels:{},layout:{}};
 /* temi colori: sfondo + colore principale (+ sfumatura del testo); in Impostazioni si possono poi ritoccare */
 const PALS={
@@ -1001,9 +1001,10 @@ function renderAtt(){
   const q=$('q').value.trim();
   let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
   // ogni sezione è un unico riquadro con le card una sotto l'altra, separate da una riga (stile iPhone)
-  h+=todo.length?`<div class="lgrp">${todo.map(t=>card(t)).join('')}</div>`:`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
+const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Impostazioni › Card unite) oppure separate
+  h+=todo.length?`<div class="${gc}">${todo.map(t=>card(t)).join('')}</div>`:`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
   if(done.length)h+=`<div class="dsep"><span data-el="c-done" data-def="Completate">${esc(T('c-done','Completate'))}</span><b>${done.length}</b></div>`
-    +`<div class="lgrp">${done.slice(0,doneLimit).map(t=>card(t)).join('')}</div>`+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'');
+    +`<div class="${gc}">${done.slice(0,doneLimit).map(t=>card(t)).join('')}</div>`+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'');
   // saluto: cosa c'è da fare, cosa hai chiuso oggi e cosa è in ritardo (nel profilo attuale)
   const PTn=PT(),hr=new Date().getHours(),nTodo=PTn.filter(t=>!t.done).length,nToday=PTn.filter(t=>t.done&&dkey(new Date(t.doneAt))===today()).length,nLate=PTn.filter(t=>!t.done&&t.due&&t.due<today()).length;
   $('greet').innerHTML=`${hr<5||hr>=18?'Buonasera':hr<13?'Buongiorno':'Buon pomeriggio'}, <b>${nTodo} da fare</b> e <b>${nToday} ${nToday===1?'completata':'completate'} oggi</b>${nLate?` · <em>${nLate} in ritardo</em>`:''}`;
@@ -1461,6 +1462,7 @@ function renderSets(){
       ${row('#64748b',ICS.fs,'Dimensione testo',`<select class="sel" id="s-fs">${[[13,'Piccolo'],[14,'Normale'],[16,'Grande']].map(([k,v])=>`<option value="${k}" ${S.fs===k?'selected':''}>${v}</option>`).join('')}</select>`)}
       ${row('#eab308',ICS.glow,'Luce sfondo',tg('glow',S.glow!==false))}
       ${row('#ec4899',ICS.anim,'Animazioni',tg('anim',S.anim))}
+${row('#0891b2',ICS.card,'Card unite',tg('joined',S.joined!==false))}
       ${row('#22c55e',ICS.sound,'Suoni',tg('sound',S.sound))}`)}
     ${sb('pf','Profili',P.map(p=>{const n=D.tasks.filter(t=>pfOf(t)===p.id).length;
         return row(p.id===cp?'var(--accent)':'#64748b',ICS.pf,esc(p.n),(n===1?'1 attività':n+' attività')+(p.id===cp?' <i class="cur">✓</i>':chv),`data-spf="${p.id}"`,'button');}).join('')
@@ -1529,7 +1531,7 @@ $('sets').addEventListener('click',e=>{
   if(document.body.classList.contains('editing')&&!e.target.closest('#s-ed'))return;
   if(b=e.target.closest('[data-g] [data-v]')){const g=b.closest('[data-g]').dataset.g,v=b.dataset.v;
     if(g==='mode')S.mode=v;if(g==='accent')S.accent=v;if(g==='bg')S.bg[m]=v;if(g==='fs')S.fs=+v;save();applyLook();renderSets();return;}
-  if(b=e.target.closest('.tg[data-k]')){S[b.dataset.k]=!S[b.dataset.k];save();applyLook();renderSets();if(b.dataset.k==='sound'&&S.sound)ding(true);return;}
+  if(b=e.target.closest('.tg[data-k]')){S[b.dataset.k]=!S[b.dataset.k];save();applyLook();renderSets();renderAtt();if(b.dataset.k==='sound'&&S.sound)ding(true);return;}
   if(b=e.target.closest('.tg[data-f]')){S.fields[b.dataset.f]=!S.fields[b.dataset.f];save();renderSets();renderAtt();return;}
   if(b=e.target.closest('[data-rm]')){const f=S.custom.find(x=>x.id===b.dataset.rm);if(!confirm(`Rimuovere il campo "${f.name}"? I valori già inseriti restano salvati ma non si vedono più.`))return;S.custom=S.custom.filter(x=>x!==f);save();renderSets();renderAtt();return;}
   if(b=e.target.closest('[data-rn]')){const o=b.dataset.rn,n=prompt('Nuovo nome per "'+o+'" (se esiste già, i due vengono uniti):',o);if(n===null)return;
