@@ -144,7 +144,7 @@ input,textarea,select{font:inherit;color:inherit}
 .qk[hidden]{display:none}
 .qk.qd{justify-content:flex-start}   /* fila dei giorni per la scadenza */
 /* i pulsanti della barra si dividono la larghezza dello schermo; Ripeti è solo icona finché non lo scegli */
-.qk:not(.qd) .q{flex:1 1 0;min-width:0;justify-content:center;padding:0 6px;font-size:12.5px}
+.qk:not(.qd) .q{flex:1 1 auto;min-width:0;justify-content:center;padding:0 6px;font-size:12px;overflow:hidden}   /* lo spazio si divide secondo la lunghezza delle scritte */
 .qk .q.rp{flex:0 0 auto;padding:0 11px}
 .q.set{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
 .q{position:relative;flex-shrink:0;height:36px;padding:0 13px;border-radius:14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--text);cursor:pointer}
@@ -152,6 +152,7 @@ input,textarea,select{font:inherit;color:inherit}
 .q.on{background:var(--accent);color:var(--onacc);border-color:transparent}
 .q.pr{background:color-mix(in srgb,var(--pc) 22%,transparent);color:var(--pc);border-color:color-mix(in srgb,var(--pc) 45%,transparent)}
 .q input[type=date]{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.q select{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}
 .qi{display:flex;align-items:center;gap:10px;height:56px;border-radius:24px;padding:0 6px 0 18px}
 .qi[hidden]{display:none}
 .qi>svg{width:18px;height:18px;color:var(--soft);flex-shrink:0}
@@ -1122,14 +1123,14 @@ $('n-todo').onclick=()=>{D.ui.cnt=D.ui.cnt==='todo'?'done':'todo';save();renderA
 /* ═══ AGGIUNTA RAPIDA: si scrive e si invia, come un messaggio ═══ */
 /* barra del +: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi);
    Scadenza, Ripeti e Priorità cambiano valore a ogni tocco, così niente si sposta e la tastiera resta aperta */
-const QDUE=[null,0,1,3,7,14,30];   // null = scadenza predefinita (Impostazioni)
-const QDUEL=['Scadenza','Oggi','Domani','Tra 3 g','Tra 1 sett','Tra 2 sett','Tra 1 mese'];
-const QREC=['','daily','weekly','monthly'],QRECL=['','Ogni giorno','Ogni sett.','Ogni mese'];
-const IC_REP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>';
-let qv={prio:1,title:'',req:'',due:0,rec:0,mode:'t'};
+/* barra del +: Attività e Richiedente usano lo stesso campo; Scadenza apre il calendario e Ricorrenza il menu a tendina
+   (come nella finestra di modifica); Priorità cambia a ogni tocco */
+const QREC=['','daily','weekdays','weekly','biweekly','monthly','yearly'];   // le ricorrenze con dettagli (giorni scelti, ogni N…) restano nella modifica
+const QRECS={daily:'Ogni giorno',weekdays:'Feriali',weekly:'Ogni sett.',biweekly:'Ogni 2 sett.',monthly:'Ogni mese',yearly:'Ogni anno'};
+let qv={prio:1,title:'',req:'',due:'',rec:'',mode:'t'};
 function openQuick(){
   if(!$('p-att').classList.contains('on'))go('att');
-  qv={prio:1,title:'',req:'',due:0,rec:0,mode:'t'};qField();
+  qv={prio:1,title:'',req:'',due:'',rec:'',mode:'t'};qField();
   renderQk();document.body.classList.add('quick');$('qdim').classList.add('on');$('qa').classList.add('on');$('qt').focus();kbFit();   // focus subito: su iPhone apre la tastiera solo dentro al tocco
 }
 function closeQuick(){document.body.classList.remove('quick');$('qa').classList.remove('on');$('qdim').classList.remove('on');if(document.activeElement)document.activeElement.blur();}
@@ -1137,38 +1138,42 @@ function renderQk(){
   const F=D.set.fields,r=qv.mode==='r';
   let h=`<button class="q gl ${r?'':'on'}" data-mode="t">Attività</button>`;
   if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">Richiedente</button>`;   // la scritta resta sempre Richiedente (il nome si vede nell'anteprima)
-  if(F.due)h+=`<button class="q gl ${qv.due?'set':''}" data-due>${QDUEL[qv.due]}</button>`;
-  if(F.rec)h+=`<button class="q gl rp ${qv.rec?'set':''}" data-rec aria-label="Ripeti">${IC_REP}${qv.rec?QRECL[qv.rec]:''}</button>`;
-  if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
+  if(F.due)h+=`<label class="q gl ${qv.due?'set':''}">${qv.due?dShort(qv.due):'Scadenza'}<input type="date" id="qdate" value="${qv.due}" aria-label="Scadenza"></label>`;
+  if(F.prio)h+=`<button class="q gl" data-prio title="Tocca per cambiare">${PRIO[qv.prio].n}</button>`;
+  if(F.rec)h+=`<label class="q gl ${qv.rec?'set':''}">${qv.rec?QRECS[qv.rec]:'Ricorrenza'}<select id="qrec" aria-label="Ricorrenza">${QREC.map(k=>`<option value="${k}" ${qv.rec===k?'selected':''}>${REC[k]}</option>`).join('')}</select></label>`;
   $('qk').innerHTML=h;qSug();qPreview();
 }
 /* anteprima: la card come apparirà, aggiornata mentre scrivi */
 function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
-  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?v:qv.req,prio:qv.prio,created:Date.now(),due:addD(today(),QDUE[qv.due]==null?D.set.defDays:QDUE[qv.due]),done:false});}
+  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?v:qv.req,prio:qv.prio,created:Date.now(),due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,done:false});}
 /* suggerimenti dei richiedenti: sopra il campo dove scrivi */
 function qSug(){const box=$('qsug');if(qv.mode!=='r'){box.hidden=true;return;}
   const v=$('qt').value.trim().toLowerCase(),cnt={};PT().forEach(t=>{if(t.req)cnt[t.req]=(cnt[t.req]||0)+1;});
   const l=Object.keys(cnt).filter(n=>!v||n.toLowerCase().includes(v)).sort((a,b)=>cnt[b]-cnt[a]).slice(0,10);
   box.hidden=!l.length;box.innerHTML=l.map(n=>`<button class="q gl" data-sug="${esc(n)}">${esc(n)}</button>`).join('');}
 $('qt').addEventListener('input',()=>{qSug();qPreview();});
-/* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta (niente scritta grigia: la cursore lampeggiava sopra) */
+/* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta */
 function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.maxLength=r?60:200;f.setAttribute('aria-label',r?'Richiedente':'Nuova attività');}
 function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
-/* i pulsanti non tolgono il cursore dal campo, così la tastiera resta aperta */
-['qk','qsug'].forEach(id=>$(id).addEventListener('mousedown',e=>e.preventDefault()));
-$('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+/* i pulsanti non tolgono il cursore dal campo (tastiera aperta); calendario e tendina invece devono aprirsi */
+['qk','qsug'].forEach(id=>$(id).addEventListener('mousedown',e=>{if(!e.target.closest('label'))e.preventDefault();}));
+$('qk').addEventListener('click',e=>{
+  const lb=e.target.closest('label');if(lb){const d=lb.querySelector('input[type=date]');if(d&&e.target!==d&&d.showPicker){try{d.showPicker();}catch(_){}}return;}   // PC: apre il calendario
+  const b=e.target.closest('button');if(!b)return;
   if(b.dataset.mode&&b.dataset.mode!==qv.mode){qStore();qv.mode=b.dataset.mode;qField();}
   else if(b.hasAttribute('data-prio'))qv.prio=(qv.prio+1)%3;
-  else if(b.hasAttribute('data-due'))qv.due=(qv.due+1)%QDUE.length;
-  else if(b.hasAttribute('data-rec'))qv.rec=(qv.rec+1)%QREC.length;
+  renderQk();$('qt').focus();});
+$('qk').addEventListener('change',e=>{
+  if(e.target.id==='qdate')qv.due=e.target.value;
+  if(e.target.id==='qrec')qv.rec=e.target.value;
   renderQk();$('qt').focus();});
 $('qsug').addEventListener('click',e=>{const b=e.target.closest('[data-sug]');if(!b)return;
   qv.req=b.dataset.sug;qv.mode='t';qField();renderQk();$('qt').focus();});
 function sendQuick(){
   qStore();
   if(!qv.title){if(qv.mode!=='t'){qv.mode='t';qField();renderQk();}$('qt').focus();return;}
-  const days=QDUE[qv.due]==null?D.set.defDays:QDUE[qv.due];
-  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:addD(today(),days),rec:qv.rec?{type:QREC[qv.rec]}:null,cf:{},done:false,doneAt:0,created:Date.now()};
+
+  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,cf:{},done:false,doneAt:0,created:Date.now()};
   o.pf=curPf();D.tasks.push(o);save();closeQuick();go('att');toast('Aggiunta: '+o.title);
   const ne=document.querySelector(`.card[data-id="${o.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
 }
