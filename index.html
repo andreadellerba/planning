@@ -166,15 +166,12 @@ input,textarea,select{font:inherit;color:inherit}
 .avi.none svg{width:17px;height:17px}
 .avi.big{width:46px;height:46px}
 /* stili della card (Impostazioni › Card) */
-/* priorità: bagliore attaccato al testo, alto quanto titolo + dettagli (su tutti gli stili di card) */
-.card .cb{position:relative;isolation:isolate}
-.card .cb::before{content:"";position:absolute;left:-8px;top:1px;bottom:1px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px 1px color-mix(in srgb,var(--pc) 70%,transparent)}
-.card .cb::after{content:"";position:absolute;left:-8px;top:-5px;bottom:-5px;width:75%;z-index:-1;pointer-events:none;border-radius:6px;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 24%,transparent),transparent)}
+/* priorità: barretta luminosa prima dell'avatar, alta quanto il contenuto, con la sfumatura che parte da lì */
+.card{isolation:isolate}
+.card::before{content:"";position:absolute;left:7px;top:11px;bottom:11px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px 1px color-mix(in srgb,var(--pc) 70%,transparent)}
+.card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:55%;z-index:-1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 24%,transparent),transparent)}
 .card.card{padding-left:18px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
-.card.cs-filo{padding-left:20px}
-.card.cs-filo::before{display:none;content:"";position:absolute;left:7px;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px var(--pc)}
 .card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:0 10px 26px var(--csh),inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
 .card.cs-moderna .cm{gap:5px}
 .card.cs-moderna .cm span{height:22px;padding:0 9px;border-radius:11px;background:color-mix(in srgb,var(--text) 8%,transparent)}
@@ -1427,8 +1424,9 @@ function applyLayout(){
 })();
 
 /* ═══ NAVIGAZIONE, AVVISI, SCORCIATOIE ═══ */
-function go(p){fillDates();document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.bar.main .tb').forEach(b=>b.classList.toggle('on',b.dataset.go===p));
-  D.ui.page=p;save();if(p==='stat')renderStats();if(p==='set')renderSets();if(p==='att')renderAtt();applyLayout();scrollTo(0,0);$('tip').style.display='none';}
+function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));document.querySelectorAll('.bar.main .tb').forEach(b=>b.classList.toggle('on',b.dataset.go===p));
+  D.ui.page=p;save();if(p==='stat')renderStats();if(p==='set')renderSets();if(p==='att')renderAtt();applyLayout();fillDates();scrollTo(0,0);   // la data si misura quando la pagina è già visibile (prima non si può e restava vuota)
+  $('tip').style.display='none';}
 document.querySelector('.bar.main').onclick=e=>{if(document.querySelector('[data-el][contenteditable="true"]'))return;const b=e.target.closest('[data-go]');if(b)go(b.dataset.go);};
 let undoFn=null,tT;
 function toast(m,u){$('toast').classList.toggle('top',$('qa').classList.contains('on'));   // con la barra rapida aperta l'avviso va in alto
