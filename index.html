@@ -478,7 +478,10 @@ body.editing .edbar{display:flex}
 .lock-in input::placeholder{color:var(--soft)}
 .lock-in button{height:42px;padding:0 14px;border-radius:18px;background:var(--card2);font-weight:800;font-size:12.5px;flex-shrink:0}
 .lock-err{min-height:18px;color:var(--danger);font-size:12.5px;margin-bottom:8px}
-.lock #lock-go{width:100%;height:52px}
+.lock #lock-go,.lock #fid-go{width:100%;height:52px}
+#fid{z-index:110}
+#fid .lock-in{margin-top:6px}
+#fid-cw[hidden]{display:none}
 .lock-new{margin-top:16px;color:var(--muted);font-size:12.5px;text-decoration:underline}
 .sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted)}
 .sync i{width:8px;height:8px;border-radius:50%;background:var(--soft)}.sync.ok i{background:var(--ok)}.sync.off i{background:var(--danger)}
@@ -577,6 +580,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <button class="btn pri" id="lock-go">Entra</button>
   <button class="btn" id="lock-up" hidden style="width:100%;margin-top:8px;height:auto;min-height:46px;padding:10px 18px">Crea online con questo codice e carica le attività di questo dispositivo</button>
   <button class="lock-new" id="lock-new">Non ho ancora un codice: creane uno nuovo</button>
+</div></div>
+<!-- blocco con Face ID / impronta (se attivato in Impostazioni › Sicurezza su questo dispositivo) -->
+<div class="lock" id="fid" hidden><div class="lock-box gl">
+  <img class="lock-ic" src="icon-180.png?v=3" alt="">
+  <h2 class="dsp">Le mie attività</h2>
+  <p>L'app è bloccata: sbloccala col viso o con l'impronta.</p>
+  <button class="btn pri" id="fid-go">Sblocca con Face ID</button>
+  <div class="lock-err" id="fid-err"></div>
+  <div class="lock-in gl" id="fid-cw" hidden><input id="fid-in" placeholder="Codice segreto" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="fid-ok" type="button">Entra</button></div>
+  <button class="lock-new" id="fid-code">Usa il codice segreto</button>
 </div></div>
 <div class="toast" id="toast"><span id="toast-t"></span><button id="toast-u">Annulla</button></div>
 <div class="tip" id="tip"></div>
@@ -1404,6 +1417,7 @@ function renderSets(){
     ${sb('att','Attività',row('#f43f5e',ICS.dd,'Scadenza predefinita (giorni)',`<input class="num" type="number" min="0" max="365" id="s-dd" value="${S.defDays}">`)
       +fl.map(([k,v,c])=>row(c,ICS[k],v,`<button class="tg ${S.fields[k]?'on':''}" data-f="${k}"></button>`)).join(''))}
     ${sb('edit','Personalizza',row('#6366f1',ICS.ed,'Modalità editor',`<button class="tg ${D.ui.editor?'on':''}" id="s-ed"></button>`))}
+    ${sb('sec','Sicurezza',row('#0f766e',sv('<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 9v1M15 9v1M12 9v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/>'),'Face ID su questo dispositivo',`<button class="tg ${fidOn()?'on':''}" id="s-fid"></button>`))}
     ${sb('sync','Sincronizzazione',row('#10b981',ICS.sync,'Stato','<span class="sync"><i></i> Sincronizzo…</span>')
       +row('#f59e0b',ICS.key,'Codice segreto',`<button class="sbtn" id="s-show">Mostra</button><button class="sbtn" id="s-copy">Copia</button>`)
       +`<div class="code" id="s-code">${localStorage.getItem(CODEKEY)?'•'.repeat(36):'—'}</div>`
@@ -1460,6 +1474,7 @@ $('ed-done').onclick=()=>setEditor(false);
 $('sets').addEventListener('click',e=>{
   const S=D.set,m=mode();let b;
   if(e.target.id==='s-ed'){setEditor(!D.ui.editor);return;}
+  if(e.target.id==='s-fid'){if(fidOn()){localStorage.removeItem(FIDKEY);toast('Face ID disattivato su questo dispositivo');renderSets();}else fidEnable().then(()=>renderSets());return;}
   if(document.body.classList.contains('editing')&&!e.target.closest('#s-ed'))return;
   if(b=e.target.closest('[data-g] [data-v]')){const g=b.closest('[data-g]').dataset.g,v=b.dataset.v;
     if(g==='mode')S.mode=v;if(g==='accent')S.accent=v;if(g==='bg')S.bg[m]=v;if(g==='fs')S.fs=+v;save();applyLook();renderSets();return;}
@@ -1567,8 +1582,36 @@ window.addEventListener('storage',e=>{if(e.key===KEY){load();applyLook();renderA
 ["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();renderAll();}},60000);
 
+/* ═══ FACE ID (o impronta / Windows Hello): blocca l'app quando la apri o ci torni dopo più di un minuto.
+   Si attiva per ogni dispositivo (Impostazioni › Sicurezza): il telefono crea una chiave che si usa solo col viso o l'impronta.
+   Se non riconosce, si può entrare col codice segreto. ═══ */
+const FIDKEY='todo-faceid';
+const b64=a=>btoa(String.fromCharCode(...new Uint8Array(a))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const fidOn=()=>{try{return !!localStorage.getItem(FIDKEY);}catch(e){return false;}};
+async function fidEnable(){
+  try{
+    if(!window.PublicKeyCredential||!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())){toast('Su questo dispositivo Face ID / impronta non sono disponibili per le app web');return false;}
+    const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Le mie attività',id:location.hostname},
+      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'attivita',displayName:'Le mie attività'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},timeout:60000}});
+    localStorage.setItem(FIDKEY,b64(cred.rawId));toast('Face ID attivo su questo dispositivo');return true;
+  }catch(e){toast('Face ID non attivato');return false;}
+}
+async function fidUnlock(manual){
+  try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64(localStorage.getItem(FIDKEY))}],
+      userVerification:'required',timeout:60000}});
+    $('fid').hidden=true;$('fid-err').textContent='';
+  }catch(e){if(manual)$('fid-err').textContent='Non riconosciuto: riprova o usa il codice segreto';}
+}
+function fidLock(){if(!fidOn()||!localStorage.getItem(CODEKEY))return;$('fid').hidden=false;$('fid-cw').hidden=true;$('fid-err').textContent='';fidUnlock(false);}
+$('fid-go').onclick=()=>fidUnlock(true);
+$('fid-code').onclick=()=>{$('fid-cw').hidden=false;$('fid-in').value='';$('fid-in').focus();};
+$('fid-ok').onclick=()=>{if($('fid-in').value.trim().replace(/\s+/g,'')===localStorage.getItem(CODEKEY)){$('fid').hidden=true;}else $('fid-err').textContent='Codice sbagliato';};
+$('fid-in').addEventListener('keydown',e=>{if(e.key==='Enter')$('fid-ok').click();});
+let fidHid=0;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)fidHid=Date.now();else if(fidHid&&Date.now()-fidHid>60000)fidLock();});
 load();applyLook();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}go(D.ui.page||'att');
-{const c=localStorage.getItem(CODEKEY);if(c)connect(c,false);else showLock();}
+{const c=localStorage.getItem(CODEKEY);if(c){connect(c,false);fidLock();}else showLock();}
 </script>
 </body>
 </html>
