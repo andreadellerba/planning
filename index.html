@@ -130,7 +130,7 @@ input,textarea,select{font:inherit;color:inherit}
   padding:10px max(12px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 14px) max(12px,env(safe-area-inset-left))}
 .qa.on{display:flex;animation:shIn .22s ease}
 .qa.kb{padding-bottom:10px}
-.qk{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.qk{display:flex;justify-content:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
 .qk::-webkit-scrollbar{display:none}
 .q{position:relative;flex-shrink:0;height:36px;padding:0 13px;border-radius:14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--text);cursor:pointer}
 .q svg{width:15px;height:15px}
@@ -208,14 +208,18 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .spx{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--soft);margin-bottom:18px}
 .boxes{display:flex;flex-direction:column;gap:12px}
 .box{border-radius:22px;padding:16px 18px;min-width:0}
-.box h3{margin:0 0 3px;font-size:15px}
+.box h3{margin:0 0 10px;font-size:15px;text-align:center}
+.leg{display:flex;justify-content:center;gap:16px;margin:0 0 16px;font-size:12px;font-weight:600;color:var(--muted)}
+.leg span{display:inline-flex;align-items:center;gap:6px}
+.leg .pdot{width:9px;height:9px}
 .box .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
 .box .sub:empty{display:none}
 .hb{display:flex;flex-direction:column;gap:12px}
 .hb .r{display:grid;grid-template-columns:minmax(0,120px) 1fr auto;gap:10px;align-items:center;font-size:13px}
 .hb .r .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;display:flex;align-items:center;gap:7px}
-.hb .r .t{height:10px;border-radius:5px;background:var(--card2);overflow:hidden}
-.hb .r .t i{display:block;height:100%;border-radius:5px;background:var(--hc,var(--t-stat))}
+.hb .r .t{display:flex;height:12px;border-radius:6px;background:var(--card2);overflow:hidden}
+.hb .r .t i{display:block;height:100%;flex-shrink:0}
+.hb .r .t i+i{box-shadow:inset 2px 0 0 var(--card2)}
 .hb .r .v{font-weight:800;font-size:14px;min-width:28px;text-align:right;font-variant-numeric:tabular-nums}
 .hb .r .x{grid-column:2 / 4;font-size:11.5px;color:var(--muted);margin-top:-7px}
 .tip{position:fixed;z-index:95;pointer-events:none;background:#0b0c0f;color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:7px 10px;font-size:12px;line-height:1.4;display:none;max-width:240px;box-shadow:0 8px 22px rgba(0,0,0,.5)}
@@ -223,7 +227,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 /* ═══ IMPOSTAZIONI ═══ */
 .sets{columns:2;column-gap:12px}
 .sbox{break-inside:avoid;margin-bottom:12px;background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12);border-radius:22px;padding:6px 16px 10px;display:inline-block;width:100%}
-.sbox h3{margin:12px 0 4px;font-size:12px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--t-set)}
+.sbox h3{margin:12px 0 4px;text-align:center;font-size:12px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--t-set)}
 .sr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .sr:last-child{border-bottom:0}
 .sr .l{min-width:0}.sr .l b{display:block;font-weight:650}.sr .l small{color:var(--muted);font-size:12px}
@@ -250,7 +254,9 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .sbtn{height:38px;padding:0 15px;border-radius:999px;font-weight:800;font-size:12px;letter-spacing:.3px;flex-shrink:0}
 .sbtn.dng{color:var(--danger)}
 @media(max-width:820px){.sets{columns:1}}
-@media(max-width:640px){.sr{flex-wrap:wrap}.sw{justify-content:flex-start}}
+/* telefono: una cosa per riga, tutto centrato (titolo e spiegazione sopra, comando sotto) */
+@media(max-width:640px){.sr{flex-direction:column;align-items:center;text-align:center;gap:10px;padding:14px 0}.sr .l{width:100%}.sw{justify-content:center}.sr>.sel,.sr>.inp{width:100%;max-width:320px}
+  .cfi{justify-content:center}.cfadd{grid-template-columns:1fr}}
 
 /* ═══ MODALITÀ EDITOR: tieni premuto per spostare, doppio tocco per rinominare ═══ */
 body.editing{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;padding-top:calc(env(safe-area-inset-top) + 64px)}
@@ -361,9 +367,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 <div class="qdim" id="qdim"></div>
 <div class="qa" id="qa">
   <div class="qk" id="qk"></div>
-  <div class="qi sm gl" id="qreqw" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
-    <input id="qreq" list="qreqs" placeholder="Chi l'ha chiesta?" autocomplete="off" enterkeyhint="next"><datalist id="qreqs"></datalist></div>
-  <div class="qi gl"><input id="qt" placeholder="Nuova attività…" autocomplete="off" enterkeyhint="send" maxlength="200">
+  <div class="qi gl"><input id="qt" placeholder="Nuova attività…" autocomplete="off" enterkeyhint="send" maxlength="200"><datalist id="qreqs"></datalist>
     <button class="sd" id="qsend" aria-label="Aggiungi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
 </div>
 <!-- primo avvio su un dispositivo: si incolla il codice segreto (o se ne crea uno nuovo) -->
@@ -600,14 +604,11 @@ function filtered(){
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function card(t){
-  const F=D.set.fields,m=[`<span title="Creata il">${IC.plus}${dShort(dkey(new Date(t.created)))}</span>`];
-  if(t.done)m.push(`<span class="okc">${IC.chk}Fatta ${dShort(dkey(new Date(t.doneAt)))} · in ${dur(t.doneAt-t.created)}</span>`);
-  else if(F.due&&t.due)m.push(`<span class="${t.due<today()?'late':t.due===today()?'today':''}" title="Scadenza">${IC.cal}${dueLbl(t.due)}</span>`);
-  if(F.prio)m.push(`<span><i class="pdot"></i>${PRIO[t.prio].n}</span>`);
+  // dentro la card, in quest'ordine: richiedente, data di creazione, priorità
+  const F=D.set.fields,m=[];
   if(F.req&&t.req)m.push(`<span>${IC.user}${esc(t.req)}</span>`);
-  if(F.rec&&t.rec&&t.rec.type)m.push(`<span>${IC.rep}${esc(recLabel(t.rec))}</span>`);
-  (D.set.custom||[]).forEach(f=>{const v=(t.cf||{})[f.id];if(v===undefined||v===''||v===false)return;
-    m.push(`<span>${esc(f.name)}: ${esc(f.type==='check'?'sì':f.type==='date'?dShort(v):v)}</span>`);});
+  m.push(`<span title="Creata il">${IC.cal}${dShort(dkey(new Date(t.created)))}</span>`);
+  if(F.prio)m.push(`<span><i class="pdot"></i>${PRIO[t.prio].n}</span>`);
   return`<div class="card ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
     <div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('')}</div></div></div>`;
@@ -618,7 +619,8 @@ function renderAtt(){
   const all=filtered(),todo=all.filter(t=>!t.done).sort((a,b)=>old?a.created-b.created:b.created-a.created),done=all.filter(t=>t.done).sort((a,b)=>b.doneAt-a.doneAt);
   $('n-todo').textContent=D.tasks.filter(t=>!t.done).length;
   const q=$('q').value.trim();
-  let h=todo.length?todo.map(card).join(''):`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
+  let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
+  h+=todo.length?todo.map(card).join(''):`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
   if(done.length)h+=`<div class="dsep"><span data-el="c-done" data-def="Completate">${esc(T('c-done','Completate'))}</span><b>${done.length}</b></div>`
     +done.slice(0,doneLimit).map(card).join('')+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'');
   $('l-all').innerHTML=h;
@@ -650,45 +652,44 @@ $('q').addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();s
 $('sortbtn').onclick=()=>{D.ui.sort=D.ui.sort==='old'?'new':'old';save();renderAtt();toast(D.ui.sort==='old'?'Più vecchie in alto':'Più recenti in alto');};
 
 /* ═══ AGGIUNTA RAPIDA: si scrive e si invia, come un messaggio ═══ */
-let qv={prio:1,due:'',req:false};
+/* tre pulsanti: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi), la priorità si cambia toccandola */
+let qv={prio:1,title:'',req:'',mode:'t'};
 function openQuick(){
   if(!$('p-att').classList.contains('on'))go('att');
-  qv={prio:1,due:'',req:false};$('qt').value='';$('qreq').value='';$('qreqw').hidden=true;
+  qv={prio:1,title:'',req:'',mode:'t'};qField();
   $('qreqs').innerHTML=[...new Set(D.tasks.map(x=>x.req).filter(Boolean))].map(r=>`<option value="${esc(r)}">`).join('');
   renderQk();document.body.classList.add('quick');$('qdim').classList.add('on');$('qa').classList.add('on');$('qt').focus();kbFit();   // focus subito: su iPhone apre la tastiera solo dentro al tocco
 }
 function closeQuick(){document.body.classList.remove('quick');$('qa').classList.remove('on');$('qdim').classList.remove('on');if(document.activeElement)document.activeElement.blur();}
 function renderQk(){
-  const F=D.set.fields,t=today(),tom=addD(t,1),dd=D.set.defDays,own=qv.due&&qv.due!==t&&qv.due!==tom;
-  const dc=(v,l)=>`<button class="q gl ${qv.due===v?'on':''}" data-due="${v}">${l}</button>`;
-  let h='';
-  if(F.due)h+=dc('',dd===0?'Oggi':dd===1?'Domani':'Tra '+dd+' g')+dc(t,'Oggi')+dc(tom,'Domani')
-    +`<label class="q gl ${own?'on':''}">${IC.cal}${own?dShort(qv.due):'Data'}<input type="date" id="qdate" value="${own?qv.due:''}"></label>`;
+  const F=D.set.fields,r=qv.mode==='r';
+  let h=`<button class="q gl ${r?'':'on'}" data-mode="t">${IC.note}Attività</button>`;
+  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${IC.user}${qv.req&&!r?esc(qv.req):'Richiedente'}</button>`;
   if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
-  if(F.req)h+=`<button class="q gl ${qv.req?'on':''}" data-req>${IC.user}Chi</button>`;
-  h+=`<button class="q gl" data-more>${IC.note}Dettagli</button>`;
   $('qk').innerHTML=h;
 }
+/* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta */
+function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.placeholder=r?"Chi l'ha chiesta?":'Nuova attività…';
+  if(r)f.setAttribute('list','qreqs');else f.removeAttribute('list');f.maxLength=r?60:200;}
+function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
 /* i pulsanti non tolgono il cursore dal campo, così la tastiera resta aperta */
-$('qk').addEventListener('mousedown',e=>{if(!e.target.closest('label'))e.preventDefault();});
+$('qk').addEventListener('mousedown',e=>e.preventDefault());
 $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.due!==undefined)qv.due=b.dataset.due;
+  if(b.dataset.mode&&b.dataset.mode!==qv.mode){qStore();qv.mode=b.dataset.mode;qField();}
   else if(b.hasAttribute('data-prio'))qv.prio=(qv.prio+1)%3;
-  else if(b.hasAttribute('data-req')){qv.req=!qv.req;$('qreqw').hidden=!qv.req;if(qv.req)$('qreq').focus();else{$('qreq').value='';$('qt').focus();}}
-  else if(b.hasAttribute('data-more')){const pre={title:$('qt').value.trim(),prio:qv.prio,due:qv.due,req:$('qreq').value.trim()};closeQuick();openForm(null,pre);return;}
-  renderQk();});
-$('qk').addEventListener('change',e=>{if(e.target.id==='qdate'){qv.due=e.target.value;renderQk();$('qt').focus();}});
+  renderQk();$('qt').focus();});
 function sendQuick(){
-  const title=$('qt').value.trim();if(!title){$('qt').focus();return;}
-  const o={id:uid(),title,desc:'',req:$('qreq').value.trim(),prio:qv.prio,due:qv.due||addD(today(),D.set.defDays),rec:null,cf:{},done:false,doneAt:0,created:Date.now()};
-  D.tasks.push(o);save();renderAll();toast('Aggiunta: '+title);
-  qv={prio:1,due:'',req:false};$('qt').value='';$('qreq').value='';$('qreqw').hidden=true;renderQk();$('qt').focus();
+  qStore();
+  if(!qv.title){if(qv.mode!=='t'){qv.mode='t';qField();renderQk();}$('qt').focus();return;}
+  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:addD(today(),D.set.defDays),rec:null,cf:{},done:false,doneAt:0,created:Date.now()};
+  D.tasks.push(o);save();closeQuick();go('att');toast('Aggiunta: '+o.title);
   const ne=document.querySelector(`.card[data-id="${o.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
 }
 $('qsend').addEventListener('mousedown',e=>e.preventDefault());
 $('qsend').onclick=sendQuick;
-$('qt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendQuick();}if(e.key==='Escape')closeQuick();});
-$('qreq').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('qt').focus();}if(e.key==='Escape')closeQuick();});
+$('qt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();
+  if(qv.mode==='r'){qStore();qv.mode='t';qField();renderQk();}else sendQuick();}   // invio sul richiedente: torna all'attività
+  if(e.key==='Escape')closeQuick();});
 $('qdim').onclick=closeQuick;
 /* la barra segue la tastiera dell'iPhone (che copre la parte bassa dello schermo) */
 function kbFit(){const vv=window.visualViewport;if(!vv)return;const h=Math.max(0,Math.round(innerHeight-vv.height-vv.offsetTop));
@@ -803,18 +804,13 @@ function renderStats(){
       <div class="spx"><span>${esc(B[0].lbl)}</span><span>${esc(B[n-1].lbl)}</span></div>`;}
   const box=(key,title,sub,body)=>`<div class="box gl" data-ek="${key}"><h3 data-el="b-${key}" data-def="${title}">${esc(T('b-'+key,title))}</h3><div class="sub">${sub}</div>${body}</div>`;
   h+=`<div class="boxes" data-ec="box">`;
-  // priorità
-  const pc=PRIO.map((x,i)=>({x,n:don.filter(t=>t.prio===i).length,o:open.filter(t=>t.prio===i).length})).reverse(),pm=Math.max(1,...pc.map(x=>x.n));
-  h+=box('pr','Per priorità',don.length?'Su '+don.length+' completate':'Nessuna attività completata nel periodo',`<div class="hb">${pc.map(x=>
-    `<div class="r" style="--hc:${x.x.c}" data-tip="<b>${x.x.n}</b><br>Completate: ${x.n}<br>Aperte ora: ${x.o}"><span class="n"><i class="pdot" style="--pc:${x.x.c}"></i>${x.x.n}</span><span class="t"><i style="width:${x.n/pm*100}%"></i></span><span class="v">${x.n}</span><span class="x">${x.o} aperte ora</span></div>`).join('')}</div>`);
-  // richiedenti, con il numero di richieste
-  const rq={};cre.forEach(t=>{const n=t.req||'(nessuno)';rq[n]=rq[n]||{n:0,d:0,ms:0};rq[n].n++;});
-  don.forEach(t=>{const n=t.req||'(nessuno)';rq[n]=rq[n]||{n:0,d:0,ms:0};rq[n].d++;rq[n].ms+=t.doneAt-t.created;});
+  // richiedenti, in ordine di richieste: la barra è divisa nei colori delle priorità (legenda sotto il titolo)
+  const rq={};cre.forEach(t=>{const n=t.req||'(nessuno)';rq[n]=rq[n]||{n:0,d:0,p:[0,0,0]};rq[n].n++;rq[n].p[t.prio]++;});
+  don.forEach(t=>{const n=t.req||'(nessuno)';if(rq[n])rq[n].d++;});
   const rl=Object.entries(rq).sort((a,b)=>b[1].n-a[1].n||b[1].d-a[1].d),rm=Math.max(1,...rl.map(x=>x[1].n));
-  const topR=rl.find(x=>x[0]!=='(nessuno)'&&x[1].n);
-  h+=box('rq','Richiedenti',topR?'In testa '+esc(topR[0])+' con '+topR[1].n+(topR[1].n===1?' richiesta':' richieste'):'Attività create nel periodo, per chi le ha chieste',
-    `<div class="hb">${rl.length?rl.map(([n,v])=>`<div class="r" data-tip="<b>${esc(n)}</b><br>Richieste: ${v.n}<br>Completate: ${v.d}${v.d?'<br>Chiusura media: '+dur(v.ms/v.d):''}"><span class="n">${esc(n)}</span><span class="t"><i style="width:${v.n/rm*100}%"></i></span><span class="v">${v.n}</span>
-      <span class="x">${v.d} completate${v.d?' · chiusura media '+dur(v.ms/v.d):''}</span></div>`).join(''):'<div class="empty" style="padding:20px">Nessun dato nel periodo</div>'}</div>`);
+  const leg=`<div class="leg">${[2,1,0].map(i=>`<span><i class="pdot" style="--pc:${PRIO[i].c}"></i>${PRIO[i].n}</span>`).join('')}</div>`;
+  h+=box('rq','Richiedenti','',leg+`<div class="hb">${rl.length?rl.map(([n,v])=>`<div class="r" data-tip="<b>${esc(n)}</b><br>Richieste: ${v.n}<br>Alta ${v.p[2]} · Media ${v.p[1]} · Bassa ${v.p[0]}<br>Completate: ${v.d}"><span class="n">${esc(n)}</span>
+      <span class="t">${[2,1,0].map(i=>v.p[i]?`<i style="width:${v.p[i]/rm*100}%;background:${PRIO[i].c}"></i>`:'').join('')}</span><span class="v">${v.n}</span></div>`).join(''):'<div class="empty" style="padding:20px">Nessuna richiesta nel periodo</div>'}</div>`);
   $('stats').innerHTML=h+'</div>';
   applyLayout();
 }
