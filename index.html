@@ -161,6 +161,14 @@ input,textarea,select{font:inherit;color:inherit}
 .sd{width:44px;height:44px;border-radius:18px;background:var(--accent);color:var(--onacc);display:grid;place-items:center;flex-shrink:0;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 45%,transparent)}
 .sd svg{width:20px;height:20px}
 .toast.top{bottom:auto;top:calc(env(safe-area-inset-top) + 14px)}
+/* finestra della foto: anteprima tonda da trascinare, zoom col cursore */
+.phed{display:flex;justify-content:center;margin:4px 0 8px}
+.phed canvas{width:min(240px,62vw);height:min(240px,62vw);border-radius:50%;background:var(--card2);touch-action:none;cursor:grab;box-shadow:0 0 0 3px var(--accent),0 16px 40px rgba(0,0,0,.4)}
+.phed canvas:active{cursor:grabbing}
+.phh{text-align:center;color:var(--muted);font-size:13px;margin:6px 0 10px}
+.phz{display:flex;align-items:center;gap:10px;margin:0 8px 6px}
+.phz span{font-weight:800;color:var(--muted);width:14px;text-align:center}
+.phz input{flex:1;accent-color:var(--accent)}
 /* impostazioni stile iPhone: righe con icona colorata, nome a sinistra, valore o comando a destra */
 .srw{display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:6px 0;text-align:left;font-size:14px;border-bottom:.5px solid var(--line);background:none;color:inherit}
 .srw:last-child{border-bottom:0}
@@ -963,15 +971,45 @@ function toggle(t,el){
   if(!t.done){ding(true);if(cardEl&&D.set.anim){dot.classList.add('pop');confetti(dot);setTimeout(()=>{cardEl.classList.add('leave');setTimeout(go2,300);},380);}else go2();}
   else{ding(false);if(cardEl&&D.set.anim){cardEl.classList.add('leave');setTimeout(go2,280);}else go2();}
 }
-/* tocca un avatar (card, podio…) per caricare la foto di quella persona: ritagliata quadrata e rimpicciolita a 96 px */
-let avFor=null;
+/* ═══ FOTO DEI RICHIEDENTI: tocca un avatar (card, podio, statistiche) → finestra con la foto tonda:
+   trascinala per centrarla, cursore (o rotella) per lo zoom, Cambia foto / Togli / Salva.
+   Si salva ritagliata a 160 px in D.set.photos, quindi si sincronizza su tutti i dispositivi ═══ */
+let avFor=null,phI=null,phZ=1,phX=0,phY=0,phNew=false;
 document.addEventListener('click',e=>{const a=e.target.closest('.avi[data-av]');if(!a||document.body.classList.contains('editing'))return;
-  e.stopPropagation();e.preventDefault();avFor=a.dataset.av;$('avfile').value='';$('avfile').click();},true);
-$('avfile').addEventListener('change',()=>{const f=$('avfile').files[0];if(!f||!avFor)return;const who=avFor,u=URL.createObjectURL(f),img=new Image();
-  img.onload=()=>{const s=96,c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d'),m=Math.min(img.width,img.height);
-    x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);URL.revokeObjectURL(u);
-    D.set.photos=D.set.photos||{};D.set.photos[avKey(who)]=c.toDataURL('image/jpeg',.8);save();renderAll();toast('Foto di '+who+' salvata');};
-  img.onerror=()=>{URL.revokeObjectURL(u);toast('Questa immagine non si apre: prova con un\'altra');};img.src=u;});
+  e.stopPropagation();e.preventDefault();openPhoto(a.dataset.av);},true);
+function openPhoto(name){
+  avFor=name;phNew=false;const has=!!(D.set.photos&&D.set.photos[avKey(name)]);
+  $('sheet').innerHTML=`<h2 class="dsp">Foto di ${esc(name)}</h2>
+    <div class="phed"><canvas id="phc" width="480" height="480" aria-label="Trascina per centrare la foto"></canvas></div>
+    <p class="phh" id="phh">${has?'Trascina per centrarla, usa il cursore per lo zoom':'Ancora nessuna foto: sceglila dal telefono o dal PC'}</p>
+    <div class="phz"><span>−</span><input type="range" id="phz" min="1" max="4" step="0.01" value="1" aria-label="Zoom"><span>+</span></div>
+    <div class="acts"><button class="btn" id="ph-pick">${has?'Cambia foto':'Scegli foto'}</button>${has?'<button class="btn del" id="ph-del">Togli</button>':''}<button class="btn pri" id="ph-ok">Salva</button></div>`;
+  $('ov').classList.add('on');
+  loadPh(has?D.set.photos[avKey(name)]:fakeAv(name));
+  $('phz').oninput=e=>{phZ=+e.target.value;drawPh();};
+  $('ph-pick').onclick=()=>{$('avfile').value='';$('avfile').click();};
+  if(has)$('ph-del').onclick=()=>{delete D.set.photos[avKey(name)];save();closeForm();renderAll();toast('Foto di '+name+' tolta');};
+  $('ph-ok').onclick=savePh;
+  const c=$('phc');let drag=null;
+  c.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};try{c.setPointerCapture(e.pointerId);}catch(_){}});
+  c.addEventListener('pointermove',e=>{if(!drag)return;const k=480/c.clientWidth;phX+=(e.clientX-drag.x)*k;phY+=(e.clientY-drag.y)*k;drag={x:e.clientX,y:e.clientY};drawPh();});
+  ['pointerup','pointercancel'].forEach(ev=>c.addEventListener(ev,()=>drag=null));
+  c.addEventListener('wheel',e=>{e.preventDefault();phZ=Math.max(1,Math.min(4,phZ*(e.deltaY<0?1.06:.94)));$('phz').value=phZ;drawPh();},{passive:false});
+}
+function loadPh(src){const im=new Image();im.onload=()=>{phI=im;phZ=1;phX=phY=0;if($('phz'))$('phz').value=1;drawPh();};
+  im.onerror=()=>toast('Questa immagine non si apre: prova con un\'altra');im.src=src;}
+/* disegna la foto: coperta dal cerchio, spostamento limitato così non restano bordi vuoti */
+function drawPh(c,S){c=c||$('phc');if(!c||!phI)return;S=S||480;const k=S/480,x=c.getContext('2d'),b=Math.max(480/phI.width,480/phI.height),s=b*phZ,w=phI.width*s,h=phI.height*s;
+  const mx=(w-480)/2,my=(h-480)/2;phX=Math.max(-mx,Math.min(mx,phX));phY=Math.max(-my,Math.min(my,phY));
+  x.clearRect(0,0,S,S);x.drawImage(phI,((480-w)/2+phX)*k,((480-h)/2+phY)*k,w*k,h*k);}
+function savePh(){
+  const has=!!(D.set.photos&&D.set.photos[avKey(avFor)]);
+  if(!phNew&&!has){closeForm();return;}   // nessuna foto scelta: c'è ancora il disegno
+  const c=document.createElement('canvas');c.width=c.height=160;drawPh(c,160);
+  D.set.photos=D.set.photos||{};D.set.photos[avKey(avFor)]=c.toDataURL('image/jpeg',.82);save();closeForm();renderAll();toast('Foto di '+avFor+' salvata');
+}
+$('avfile').addEventListener('change',()=>{const f=$('avfile').files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{phNew=true;loadPh(r.result);if($('phh'))$('phh').textContent='Trascina per centrarla, usa il cursore per lo zoom';};r.readAsDataURL(f);});
 $('l-all').addEventListener('click',e=>{
   if(document.body.classList.contains('editing'))return;
   if(e.target.closest('[data-a="more"]')){doneLimit+=30;renderAtt();return;}
