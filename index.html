@@ -166,6 +166,8 @@ input,textarea,select{font:inherit;color:inherit}
 .avi.none svg{width:17px;height:17px}
 .avi.big{width:46px;height:46px}
 /* stili della card (Impostazioni › Card) */
+.card::before{content:"";position:absolute;left:7px;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--pc)}   /* riga della priorità, su tutti gli stili */
+.card.card{padding-left:18px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
 .card.cs-filo{padding-left:20px}
 .card.cs-filo::before{content:"";position:absolute;left:7px;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px var(--pc)}
@@ -182,15 +184,15 @@ input,textarea,select{font:inherit;color:inherit}
 .pkc>span{text-align:center;font-size:13px}
 .pkc .card{pointer-events:none;text-align:left}
 /* titolo: prima il giorno grande e sotto il mese, alto quanto la maiuscola del titolo, nel colore della pagina */
-.ph h1.tt{display:flex;align-items:flex-start;gap:.26em}
+.ph h1.tt{display:flex;align-items:flex-start;gap:.08em;min-width:0}
 .dd{display:block;flex-shrink:0;line-height:0}
 .dd svg{display:block;overflow:visible}
 .dd .d2{fill:var(--muted)}
 #p-att .dd .d1{fill:var(--accent)}#p-stat .dd .d1{fill:var(--t-stat)}#p-set .dd .d1{fill:var(--t-set)}
 /* freccia dopo il titolo: c'è più di un profilo */
-.pfc{display:block;width:.4em;height:.4em;flex-shrink:0;color:var(--muted);cursor:pointer;margin-left:-.06em}
+.pfc{display:block;width:.36em;height:.36em;flex-shrink:0;color:var(--muted);cursor:pointer;margin-left:.04em}
 .pfc svg{display:block;width:100%;height:100%}
-#pfname{cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#pfname{min-width:0;overflow:hidden;text-overflow:ellipsis;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* finestra profili */
 .pfl{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .pfr{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:16px;background:var(--card)}
@@ -841,11 +843,11 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
   // dentro la card, in quest'ordine: creazione – scadenza (tutte e due rosse se scaduta), richiedente, priorità
   const F=D.set.fields,late=!t.done&&t.due&&t.due<today();cs=cs||D.set.card||'ombra';
   const m=[`<span class="${late?'late':''}" title="Creata il … scade il …">${IC.cal}${dShort(dkey(new Date(t.created)))}${F.due&&t.due?' – '+dShort(t.due):''}</span>`];
-  // richiedente accorciato (Massimiliano G.) e, se non basta, tagliato: i dettagli stanno sempre su una riga
-  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}">${IC.user}<em>${esc(shortName(t.req))}</em></span>`);
-  if(F.prio)m.push(`<span><i class="pdot"></i>${PRIO[t.prio].n}</span>`);
-  // niente pallino: si completa scorrendo a destra (o dal menu tenendo premuto)
-  return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}">
+  // richiedente con nome e cognome; se non ci sta viene tagliato, così i dettagli restano su una riga.
+  // la priorità non è scritta: la dice la riga colorata a sinistra (su tutti gli stili di card)
+  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}">${IC.user}<em>${esc(t.req)}</em></span>`);
+  return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
+    <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
     ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('')}</div></div></div>`;
 }
 const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)?p[0]+' '+p[1][0].toUpperCase()+'.':n;};
@@ -855,9 +857,14 @@ function fillDates(){
   const now=new Date(),day=String(now.getDate()),mon=MON[now.getMonth()].toUpperCase(),cv=document.createElement('canvas').getContext('2d');
   document.querySelectorAll('.ph h1.tt').forEach(h=>{
     const dd=h.querySelector('.dd'),t=dd&&dd.nextElementSibling;if(!t||!h.offsetParent)return;
-    const cs=getComputedStyle(t),fs=parseFloat(cs.fontSize),fam=cs.fontFamily;
+    const cs=getComputedStyle(t),fam=cs.fontFamily,ph0=h.closest('.ph'),hb0=ph0.querySelector('.hbtn');
     const ink=(txt,w)=>{cv.font=`${w} 100px ${fam}`;return cv.measureText(txt).actualBoundingBoxAscent/100;};
-    const cap=ink('H',cs.fontWeight)*fs,gap=cap*.12,ci=cap*.24,cb=cap-gap-ci,fb=cb/ink(day,800),fi=ci/ink(mon,800);
+    // maiuscola del titolo alta quanto i pulsanti a destra (46 px); se il titolo non ci sta, si rimpicciolisce quanto basta
+    const rH=ink('H',cs.fontWeight),avail=ph0.clientWidth-(hb0?hb0.offsetWidth+12:0);
+    let fs=46/rH;h.style.fontSize=fs+'px';
+    const est=()=>h.scrollWidth-dd.offsetWidth+fs*rH*1.05;   // larghezza col blocco data della misura giusta
+    if(est()>avail){fs=Math.max(22,fs*avail/est());h.style.fontSize=fs+'px';}
+    const cap=rH*fs,gap=cap*.12,ci=cap*.24,cb=cap-gap-ci,fb=cb/ink(day,800),fi=ci/ink(mon,800);
     cv.font=`800 ${fb}px ${fam}`;const wb=cv.measureText(day).width;cv.font=`800 ${fi}px ${fam}`;const wi=cv.measureText(mon).width*1.12;
     const W=Math.ceil(Math.max(wb,wi))+2;
     dd.innerHTML=`<svg width="${W}" height="${cap.toFixed(2)}" viewBox="0 0 ${W} ${cap.toFixed(2)}"><text x="${W/2}" y="${cb.toFixed(2)}" text-anchor="middle" font-size="${fb.toFixed(2)}" font-weight="800" class="d1">${day}</text><text x="${W/2}" y="${cap.toFixed(2)}" text-anchor="middle" font-size="${fi.toFixed(2)}" font-weight="800" letter-spacing="${(fi*.08).toFixed(2)}" class="d2">${mon}</text></svg>`;
@@ -879,9 +886,9 @@ function renderAtt(){
   $('n-todo').textContent=(ntd?PTs.length-nd:nd)+'/'+PTs.length;$('n-todo').title=ntd?'Da completare sul totale':'Completate sul totale';
   const q=$('q').value.trim();
   let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
-  h+=todo.length?todo.map(card).join(''):`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
+  h+=todo.length?todo.map(t=>card(t)).join(''):`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
   if(done.length)h+=`<div class="dsep"><span data-el="c-done" data-def="Completate">${esc(T('c-done','Completate'))}</span><b>${done.length}</b></div>`
-    +done.slice(0,doneLimit).map(card).join('')+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'');
+    +done.slice(0,doneLimit).map(t=>card(t)).join('')+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'');
   $('l-all').innerHTML=h;
   applyLayout();
 }
