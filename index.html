@@ -168,9 +168,9 @@ input,textarea,select{font:inherit;color:inherit}
 /* stili della card (Impostazioni › Card) */
 /* priorità: barretta luminosa prima dell'avatar, alta quanto il contenuto, con la sfumatura che parte da lì */
 .card{isolation:isolate}
-.card::before{content:"";position:absolute;left:7px;top:11px;bottom:11px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px 1px color-mix(in srgb,var(--pc) 70%,transparent)}
+.card::before{display:none}   /* niente barretta: la priorità la dice la sfumatura */
 .card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:55%;z-index:-1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 24%,transparent),transparent)}
-.card.card{padding-left:18px}
+.card.card{padding-left:12px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
 .card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:0 10px 26px var(--csh),inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
 .card.cs-moderna .cm{gap:5px}
