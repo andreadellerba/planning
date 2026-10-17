@@ -118,6 +118,7 @@ input,textarea,select{font:inherit;color:inherit}
 .cm{display:flex;flex-wrap:nowrap;min-width:0;gap:4px 8px;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
 .cm span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
 .cm .rq{flex-shrink:1;min-width:0}
+.cm .ms{font-style:normal;flex-shrink:0;opacity:.7}   /* puntino tra le informazioni della card */
 .cm .rq em{font-style:normal;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .cm svg{width:14px;height:14px;flex-shrink:0}
 .cm .late{color:var(--danger);font-weight:650}.cm .today{color:var(--accent);font-weight:650}.cm .okc{color:var(--ok)}
@@ -843,14 +844,14 @@ const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wid
 function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impostazioni)
   // dentro la card, in quest'ordine: creazione – scadenza (tutte e due rosse se scaduta), richiedente, priorità
   const F=D.set.fields,late=!t.done&&t.due&&t.due<today();cs=cs||D.set.card||'ombra';
-  const m=[`<span class="${late?'late':''}" title="Creata il … scade il …">${IC.cal}${dShort(dkey(new Date(t.created)))}${F.due&&t.due?' · '+dShort(t.due):''}</span>`];
+  const m=[`<span class="${late?'late':''}" title="Creata il … scade il …">${dShort(dkey(new Date(t.created)))}${F.due&&t.due?' – '+dShort(t.due):''}</span>`];
   // richiedente con nome e cognome; se non ci sta viene tagliato, così i dettagli restano su una riga.
   // la priorità non è scritta: la dice la riga colorata a sinistra (su tutti gli stili di card)
-  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}">${IC.user}<em>${esc(t.req)}</em></span>`);
+  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}"><em>${esc(t.req)}</em></span>`);
   if(F.prio)m.push(`<span class="pr">${PRIO[t.prio].n}</span>`);   // priorità scritta, senza pallino né colore (il colore è nella sfumatura)
   return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
-    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('')}</div></div></div>`;
+    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div></div>`;
 }
 const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)?p[0]+' '+p[1][0].toUpperCase()+'.':n;};
 /* giorno grande + mese prima del titolo, in tutte le pagine: alto esattamente quanto la maiuscola del titolo
