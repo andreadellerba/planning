@@ -17,13 +17,13 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
 /* ═══ Colori: sfondo e accento si cambiano da Impostazioni; card e linee derivano dallo sfondo ═══ */
-:root{--accent:#8fa2ff;--onacc:#111;--bg:#0a0e1a;
+:root{--accent:#8fa2ff;--onacc:#111;--bg:#0a0e1a;--csh:rgba(0,0,0,.38);
   --fd:'Plus Jakarta Sans',system-ui,-apple-system,"Segoe UI",sans-serif;--fb:var(--fd);--fdw:800;--fdls:-.035em;--fdt:none;--fdz:.9;--card:color-mix(in srgb,var(--bg),#fff 6%);--card2:color-mix(in srgb,var(--bg),#fff 10%);
   --line:color-mix(in srgb,var(--bg),#fff 13%);--text:#eef0f4;--muted:#a3a9b5;--soft:#6e7582;
   --glass:rgba(255,255,255,.08);--glassb:rgba(255,255,255,.2);--sheen:rgba(255,255,255,.1);
   --shadow:0 10px 30px rgba(0,0,0,.35);--ok:#22c55e;--danger:#ef4444;--fs:14px;
   --p0:#22c55e;--p1:#eab308;--p2:#ef4444;--t-stat:#a78bfa;--t-set:#fbbf24}
-:root[data-mode="light"]{--bg:#f2f3f7;--card:color-mix(in srgb,var(--bg),#fff 80%);--card2:color-mix(in srgb,var(--bg),#000 4%);--line:color-mix(in srgb,var(--bg),#000 10%);
+:root[data-mode="light"]{--csh:rgba(20,30,50,.13);--bg:#f2f3f7;--card:color-mix(in srgb,var(--bg),#fff 80%);--card2:color-mix(in srgb,var(--bg),#000 4%);--line:color-mix(in srgb,var(--bg),#000 10%);
   --text:#1b1f27;--muted:#5d6472;--soft:#9aa1ad;--glass:rgba(255,255,255,.62);--glassb:rgba(0,0,0,.1);--sheen:rgba(255,255,255,.5);
   --shadow:0 10px 30px rgba(20,30,50,.12);--t-set:#d97706;--t-stat:#7c3aed;--p1:#ca8a04}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -87,18 +87,18 @@ input,textarea,select{font:inherit;color:inherit}
 .srch input:focus{border-color:var(--accent)}
 .srch svg{position:absolute;left:17px;top:17px;width:18px;height:18px;color:var(--soft);z-index:2;pointer-events:none}
 .list{display:flex;flex-direction:column;gap:10px}
-/* card morbida di vetro: stesso vetro del menu (senza sfocatura, dietro c'è solo lo sfondo) */
-.card{position:relative;display:flex;gap:14px;align-items:center;padding:15px 14px 15px 18px;border-radius:22px;cursor:pointer;
-  background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);
+/* card piena, compatta, con ombra profonda; si può scorrere (fatta / elimina) o tenere premuta (menu) */
+.card{position:relative;display:flex;gap:14px;align-items:center;padding:11px 12px 11px 16px;border-radius:18px;cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  background:var(--card);border:0;box-shadow:0 10px 26px var(--csh);   /* card piena con ombra profonda */
   transition:transform .15s,box-shadow .15s,opacity .3s,max-height .35s,margin .35s,padding .35s;max-height:600px;overflow:hidden}
-.card:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),var(--shadow)}
+.card:hover{transform:translateY(-1px)}
 .card.leave{opacity:0;max-height:0;margin:0;padding-top:0;padding-bottom:0;transform:scale(.97)}
 .card.enter{animation:cardIn .4s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
 /* pallino per completare: a destra, centrato in verticale */
 .dot{position:relative;order:2;width:30px;height:30px;border-radius:50%;border:2.5px solid var(--pc);flex-shrink:0;display:grid;place-items:center;transition:.2s}
-.dot svg{width:16px;height:16px;opacity:0;color:#fff;transition:.2s}
-.dot:hover svg{opacity:.55;color:var(--pc)}
+.dot svg{width:16px;height:16px;opacity:.4;color:var(--pc);transition:.2s}
+.dot:hover svg{opacity:.75;color:var(--pc)}
 .card.isdone .dot,.dot.pop{background:var(--ok);border-color:var(--ok)}
 .card.isdone .dot svg,.dot.pop svg{opacity:1;color:#fff}
 .dot.pop{animation:dotPop .45s cubic-bezier(.3,1.6,.5,1)}
@@ -107,17 +107,18 @@ input,textarea,select{font:inherit;color:inherit}
 @keyframes ring{from{transform:scale(1);opacity:1}to{transform:scale(2.3);opacity:0}}
 .cb{flex:1;min-width:0}
 /* il titolo sta su una riga e sfuma prima del pallino */
-.ct{font-weight:650;font-size:calc(var(--fs) + 1.5px);line-height:1.3;white-space:nowrap;overflow:hidden;
+.ct{font-weight:650;font-size:calc(var(--fs) + .5px);line-height:1.3;white-space:nowrap;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
 .card.isdone{opacity:.62}
 .card.isdone .ct{text-decoration:line-through;text-decoration-color:var(--soft);color:var(--muted)}
-.cm{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:8px;font-size:calc(var(--fs) - 1.5px);font-weight:500;color:var(--muted)}
+.cm{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
 .cm span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .cm svg{width:14px;height:14px;flex-shrink:0}
 .cm .late{color:var(--danger);font-weight:650}.cm .today{color:var(--accent);font-weight:650}.cm .okc{color:var(--ok)}
 .pdot{width:7px;height:7px;border-radius:50%;background:var(--pc);display:inline-block;flex-shrink:0}
 .dsep{display:flex;align-items:center;justify-content:center;gap:8px;margin:18px 0 0;font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.dsep b{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--card2);color:var(--text);font-size:11px;display:inline-grid;place-items:center;letter-spacing:0}
+.dsep b{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--onacc);font-size:11px;display:inline-grid;place-items:center;letter-spacing:0}
+.dsep::before,.dsep::after{content:"";flex:1;height:1px;background:var(--line)}
 .empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:13px}
 .empty b{display:block;font-size:30px;margin-bottom:6px}
 .more{display:block;width:100%;padding:10px;border-radius:12px;color:var(--muted);font-weight:600;font-size:12.5px}
@@ -147,6 +148,45 @@ input,textarea,select{font:inherit;color:inherit}
 .sd{width:44px;height:44px;border-radius:18px;background:var(--accent);color:var(--onacc);display:grid;place-items:center;flex-shrink:0;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 45%,transparent)}
 .sd svg{width:20px;height:20px}
 .toast.top{bottom:auto;top:calc(env(safe-area-inset-top) + 14px)}
+/* scorrimento: dietro la card compare l'azione (verde = fatta, rossa = elimina) */
+.swp{position:relative;border-radius:18px}
+.swp .sa{position:absolute;inset:0;border-radius:18px;display:flex;align-items:center;gap:8px;padding:0 22px;font-weight:800;font-size:13px;color:#fff;opacity:0;transition:filter .15s}
+.swp .sa svg{width:20px;height:20px}
+.swp.r .sa.r{opacity:1;background:var(--ok)}
+.swp:not(.r) .sa.l{opacity:1;background:var(--danger);justify-content:flex-end}
+.swp.go .sa{filter:brightness(1.15) saturate(1.2)}
+.swp .card:hover{transform:none}
+/* menu della card (tieni premuto) */
+.cmo{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:none}
+.cmo.on{display:block;animation:fadeIn .15s}
+.card.lift{z-index:66;transform:scale(1.03);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+.cmm{position:fixed;width:240px;border-radius:20px;padding:6px;background:color-mix(in srgb,var(--bg) 72%,#2a2d38);border:.5px solid var(--glassb);box-shadow:0 20px 50px rgba(0,0,0,.5);animation:shIn .18s ease}
+:root[data-mode="light"] .cmm{background:#fff}
+.cmm>*{display:flex;width:100%;align-items:center;justify-content:space-between;min-height:44px;padding:0 14px;border-radius:13px;font-weight:600;font-size:14px;text-align:left}
+.cmm>*+*{border-top:.5px solid var(--line)}
+.cmm button:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
+.cmm .rd{color:var(--danger)}
+.cmp span:last-child{display:flex;gap:8px}
+.cmp i{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--pc);cursor:pointer}
+.cmp i.on{background:var(--pc);box-shadow:0 0 10px var(--pc)}
+/* anteprima della card mentre scrivi nella barra del + */
+.qpv{pointer-events:none;padding:0 2px}
+.qpv .card{box-shadow:0 10px 30px rgba(0,0,0,.45)}
+/* statistiche: podio dei richiedenti */
+.pod{display:flex;justify-content:center;align-items:flex-end;gap:10px;padding-top:4px}
+.pod>div{display:flex;flex-direction:column;align-items:center;gap:6px;width:96px;font-size:12px;font-weight:700;text-align:center;min-width:0}
+.pod>div>span:not(.av){max-width:100%;overflow-wrap:anywhere;line-height:1.2}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:800;color:#111;background:var(--avc);flex-shrink:0}
+.pod s{display:grid;place-items:center;width:100%;border-radius:14px 14px 6px 6px;text-decoration:none;font-size:18px;font-weight:800;background:color-mix(in srgb,var(--t-stat) 22%,var(--card2))}
+.pod .p1 s{background:var(--t-stat);color:#111;box-shadow:0 0 18px color-mix(in srgb,var(--t-stat) 45%,transparent)}
+/* impostazioni: temi pronti e anteprima dal vivo */
+.live{padding:12px 0 4px;pointer-events:none}
+.themes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.th{border-radius:16px;padding:10px 8px 8px;display:flex;flex-direction:column;gap:5px;background:var(--tb);border:1.5px solid color-mix(in srgb,var(--tt) 12%,transparent);font-size:11px;font-weight:700;color:var(--tt);text-align:center;cursor:pointer;min-width:0}
+.th.on{border-color:var(--accent);box-shadow:0 0 14px color-mix(in srgb,var(--accent) 35%,transparent)}
+.th i{display:block;height:7px;border-radius:4px;background:color-mix(in srgb,var(--tt) 22%,transparent)}
+.th i.a{background:var(--ta);width:60%;margin:0 auto}
+.th span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.quick .nav{opacity:0;pointer-events:none;transition:opacity .15s}
 
 /* coriandoli del completamento */
@@ -392,9 +432,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 
 <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
 <div class="pko" id="pko"><div class="pks" id="pks"></div></div>
+<div class="cmo" id="cmo"><div class="cmm" id="cmm"></div></div>
 <!-- aggiunta rapida: la barra sta sopra la tastiera -->
 <div class="qdim" id="qdim"></div>
 <div class="qa" id="qa">
+  <div class="qpv" id="qpv"></div>
   <div class="qk" id="qk"></div>
   <div class="qi gl"><input id="qt" placeholder="Nuova attività…" autocomplete="off" enterkeyhint="send" maxlength="200"><datalist id="qreqs"></datalist>
     <button class="sd" id="qsend" aria-label="Aggiungi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
@@ -507,6 +549,8 @@ function norm(){
   D.ui={sort:'new',per:'m',...(D.ui||{})};if(D.ui.sort!=='old')D.ui.sort='new';   // ora solo ordine di creazione
   // nuovo aspetto (ottobre 2026): una volta sola passa a Mezzanotte + Plus Jakarta; poi resta quello scelto in Impostazioni
   if(!D.set.look2){D.set.look2=1;D.set.theme='mezzanotte';D.set.font='jakarta';D.set.mode='dark';D.set.accent=PALS.mezzanotte.ac;D.set.bg.dark=PALS.mezzanotte.bg;migrated=true;}
+  // proposte scelte (ottobre 2026): Navy + Mandarino, una volta sola
+  if(!D.set.look3){D.set.look3=1;D.set.theme='';D.set.mode='dark';D.set.accent='#ff8a3d';D.set.bg.dark='#0c1530';migrated=true;}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('⚠️ Spazio pieno: fai un Backup');}push();}
 const T=(k,d)=>(D&&D.set.labels&&D.set.labels[k])||d;   /* testo rinominato in modalità editor, oppure quello standard */
@@ -577,6 +621,8 @@ function applyLook(){
     else{r.style.setProperty('--bg',`color-mix(in srgb,${c},${m==='dark'?'#000 84%':'#fff 82%'})`);
       const a=x=>`rgba(${rr},${gg},${bb},${x})`;
       r.style.setProperty('--bgimg',`radial-gradient(120% 75% at 50% -12%,${a(m==='dark'?.62:.42)},transparent 72%),radial-gradient(70% 55% at 100% 100%,${a(m==='dark'?.3:.22)},transparent 70%),radial-gradient(60% 45% at 0% 70%,${a(m==='dark'?.18:.14)},transparent 70%)`);}}
+  // sfondo in tinta unita: una luce del colore principale scende dall'alto
+  if(r.style.getPropertyValue('--bgimg')==='none')r.style.setProperty('--bgimg',`radial-gradient(120% 55% at 50% -10%,color-mix(in srgb,${D.set.accent} ${m==='dark'?34:22}%,transparent),transparent 70%)`);
   // tema colori: sfumatura del testo del tema (solo se il tema è della stessa modalità chiaro/scuro)
   const P=PALS[D.set.theme];
   [['--text','tx'],['--muted','mu'],['--soft','so']].forEach(([v,k])=>{if(P&&P[k]&&!!P.light===(m==='light'))r.style.setProperty(v,P[k]);else r.style.removeProperty(v);});
@@ -638,6 +684,10 @@ function nextDate(due,r){
 /* ═══ DATE E ICONE DELLE CARD ═══ */
 const MON=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 const dShort=k=>{const d=kd(k);return d.getDate()+' '+MON[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'');};
+/* iniziali e colore fisso per ogni richiedente (podio delle statistiche) */
+const initials=n=>n.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const AVCOL=['#f9a8d4','#7dd3fc','#fde047','#86efac','#c4b5fd','#fdba74','#5eead4','#fca5a5'];
+const avColor=n=>AVCOL[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%AVCOL.length];
 function dueLbl(k){const n=Math.round((kd(k)-kd(today()))/864e5);return n===0?'Oggi':n===1?'Domani':n===-1?'Ieri':dShort(k);}
 const svg=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const IC={plus:svg('<path d="M12 6v12M6 12h12"/>'),cal:svg('<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/>'),
@@ -694,6 +744,61 @@ $('l-all').addEventListener('click',e=>{
   if(e.target.closest('[data-a="tog"]')){e.stopPropagation();toggle(t,e.target);return;}
   openForm(t);
 });
+/* ═══ GESTI SULLE CARD: scorri a destra = fatta (o di nuovo da fare), a sinistra = elimina; tieni premuto = menu ═══ */
+const taskOf=c=>c&&D.tasks.find(x=>x.id===c.dataset.id);
+function eatClick(){const stop=ev=>{ev.stopPropagation();ev.preventDefault();};document.addEventListener('click',stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',stop,{capture:true}),60);}
+function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;D.tasks.splice(i,1);save();renderAll();toast('Attività eliminata',()=>{D.tasks.splice(i,0,t);});}
+(function(){
+  let st=null;const L=$('l-all'),GO=90;
+  const wrap=(c,t)=>{if(c.parentNode.classList.contains('swp'))return c.parentNode;const w=document.createElement('div');w.className='swp';
+    w.innerHTML=`<div class="sa r">${IC.chk}${t.done?'Da fare':'Fatta'}</div><div class="sa l">Elimina<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div>`;
+    c.replaceWith(w);w.appendChild(c);return w;};
+  const back=s=>{s.c.style.transition='transform .25s ease';s.c.style.transform='';setTimeout(()=>{s.c.style.transition='';if(s.w&&s.w.isConnected){s.w.replaceWith(s.c);}},260);};
+  L.addEventListener('pointerdown',e=>{
+    if(document.body.classList.contains('editing')||e.button>0)return;
+    const c=e.target.closest('.card');if(!c||e.target.closest('.dot'))return;
+    st={c,x:e.clientX,y:e.clientY,dx:0,mode:'',id:e.pointerId,lp:setTimeout(()=>{if(st&&!st.mode){st.mode='menu';if(navigator.vibrate)navigator.vibrate(12);openCardMenu(c);}},450)};
+  });
+  L.addEventListener('pointermove',e=>{
+    if(!st||e.pointerId!==st.id)return;const dx=e.clientX-st.x,dy=e.clientY-st.y;
+    if(!st.mode){
+      if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3){clearTimeout(st.lp);st.mode='swipe';st.w=wrap(st.c,taskOf(st.c));try{st.c.setPointerCapture(e.pointerId);}catch(_){}}
+      else if(Math.abs(dy)>10||Math.abs(dx)>10){clearTimeout(st.lp);st=null;return;}else return;}
+    if(st.mode==='swipe'){st.dx=dx;st.c.style.transform=`translateX(${dx}px)`;st.w.classList.toggle('r',dx>0);st.w.classList.toggle('go',Math.abs(dx)>GO);}
+  });
+  const end=()=>{if(!st)return;clearTimeout(st.lp);const s=st;st=null;
+    if(s.mode==='menu'){eatClick();return;}
+    if(s.mode!=='swipe')return;eatClick();
+    const t=taskOf(s.c);if(!t||Math.abs(s.dx)<=GO){back(s);return;}
+    s.c.style.transition='transform .22s ease';s.c.style.transform=`translateX(${s.dx>0?'':'-'}115%)`;
+    setTimeout(()=>{if(s.dx>0)toggle(t,null);else delTask(t);},200);
+  };
+  L.addEventListener('pointerup',end);
+  L.addEventListener('pointercancel',()=>{if(!st)return;clearTimeout(st.lp);const s=st;st=null;if(s.mode==='swipe')back(s);});
+})();
+/* menu della card (tieni premuto) */
+function openCardMenu(c){
+  const t=taskOf(c);if(!t)return;
+  c.classList.add('lift');
+  $('cmm').innerHTML=`<button data-m="edit">Modifica</button><button data-m="dup">Duplica</button>
+    <div class="cmp"><span>Priorità</span><span>${PRIO.map((p,i)=>`<i data-p="${i}" class="${t.prio===i?'on':''}" style="--pc:${p.c}" title="${p.n}"></i>`).join('')}</span></div>
+    <button data-m="tog">${t.done?'Riporta in da fare':'Segna come fatta'}</button><button data-m="del" class="rd">Elimina</button>`;
+  $('cmo').classList.add('on');$('cmo').dataset.id=t.id;
+  const r=c.getBoundingClientRect(),m=$('cmm'),h=m.offsetHeight,w=m.offsetWidth;
+  m.style.left=Math.max(12,Math.min(innerWidth-w-12,r.right-w))+'px';
+  m.style.top=(r.bottom+8+h<innerHeight-20?r.bottom+8:Math.max(12,r.top-8-h))+'px';
+}
+function closeCardMenu(){$('cmo').classList.remove('on');document.querySelectorAll('.card.lift').forEach(x=>x.classList.remove('lift'));}
+$('cmo').addEventListener('click',e=>{
+  const t=D.tasks.find(x=>x.id===$('cmo').dataset.id),b=e.target.closest('[data-m],[data-p]');
+  if(!b||!t){closeCardMenu();return;}
+  if(b.dataset.p!==undefined){t.prio=+b.dataset.p;save();closeCardMenu();renderAll();return;}
+  closeCardMenu();const m=b.dataset.m;
+  if(m==='edit')openForm(t);
+  if(m==='dup'){const n={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)'};D.tasks.push(n);save();renderAll();toast('Attività duplicata');}
+  if(m==='tog')toggle(t,null);
+  if(m==='del')delTask(t);
+});
 $('q').addEventListener('input',renderAtt);
 function showSearch(on){$('srch').classList.toggle('on',on);$('srchbtn').classList.toggle('on',on);if(on)$('q').focus();else if($('q').value){$('q').value='';renderAtt();}}
 $('srchbtn').onclick=()=>showSearch(!$('srch').classList.contains('on'));
@@ -717,8 +822,12 @@ function renderQk(){
   // scadenza: si apre il calendario; se non la scegli valgono i giorni impostati in Impostazioni
   if(F.due)h+=`<label class="q gl">${IC.cal}${qv.due?dShort(qv.due):'Scadenza'}<input type="date" id="qdate" value="${qv.due}" aria-label="Scadenza"></label>`;
   if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
-  $('qk').innerHTML=h;
+  $('qk').innerHTML=h;qPreview();
 }
+/* anteprima: la card come apparirà, aggiornata mentre scrivi */
+function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
+  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?v:qv.req,prio:qv.prio,created:Date.now(),done:false});}
+$('qt').addEventListener('input',qPreview);
 /* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta */
 function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.placeholder=r?"Chi l'ha chiesta?":'Nuova attività…';
   if(r)f.setAttribute('list','qreqs');else f.removeAttribute('list');f.maxLength=r?60:200;}
@@ -861,6 +970,10 @@ function renderStats(){
   don.forEach(t=>{const n=t.req||'(nessuno)';if(rq[n])rq[n].d++;});
   const rl=Object.entries(rq).sort((a,b)=>b[1].n-a[1].n||b[1].d-a[1].d),rm=Math.max(1,...rl.map(x=>x[1].n));
   const leg=`<div class="leg">${[0,1,2].map(i=>`<span><i class="pdot" style="--pc:${PRIO[i].c}"></i>${PRIO[i].n}</span>`).join('')}</div>`;
+  // podio: i primi tre richiedenti (il primo al centro, più alto)
+  const top=rl.filter(x=>x[0]!=='(nessuno)').slice(0,3);
+  if(top.length){const hm=top[0][1].n,ord=top.length===1?[0]:top.length===2?[1,0]:[1,0,2];
+    h+=box('pod','Chi chiede di più','',`<div class="pod">${ord.map(i=>{const[n,v]=top[i];return `<div class="${i===0?'p1':''}"><span class="av" style="--avc:${avColor(n)}">${esc(initials(n))}</span><span>${esc(n)}</span><s style="height:${30+v.n/hm*56}px">${v.n}</s></div>`;}).join('')}</div>`);}
   h+=box('rq','Richiedenti','',leg+`<div class="hb">${rl.length?rl.map(([n,v])=>`<div class="r" data-tip="<b>${esc(n)}</b><br>Richieste: ${v.n}<br>Alta ${v.p[2]} · Media ${v.p[1]} · Bassa ${v.p[0]}<br>Completate: ${v.d}"><span class="n">${esc(n)}</span>
       <span class="t">${[0,1,2].map(i=>v.p[i]?`<i style="width:${v.p[i]/rm*100}%;background:${PRIO[i].c}"></i>`:'').join('')}</span><span class="v">${v.n}</span></div>`).join(''):'<div class="empty" style="padding:20px">Nessuna richiesta nel periodo</div>'}</div>`);
   $('stats').innerHTML=h+'</div>';
@@ -911,6 +1024,8 @@ function renderSets(){
   const sb=(key,title,body)=>`<div class="sbox" data-ek="${key}"><h3 data-el="s-${key}" data-def="${title}">${esc(T('s-'+key,title))}</h3>${body}</div>`;
   $('sets').innerHTML=`<div class="sets" data-ec="set">
     ${sb('look','Aspetto',`
+      <div class="live">${card({id:'demo',title:'Esempio di attività',req:'Marco',prio:2,created:Date.now(),done:false})}</div>
+      <div class="themes">${THEMES.map(([n,b,a])=>{const l=isLight(b);return `<button class="th ${b===bg&&a===ac?'on':''}" data-th="${b}|${a}" style="--tb:${b};--ta:${a};--tt:${l?'#16171a':'#eef1f7'}"><i class="a"></i><i></i><i style="width:70%"></i><span>${n}</span></button>`;}).join('')}</div>
       <div class="g2">${c('Sfondo',pk('bg',bg,colName(BGN,bg)))}${c('Colore principale',pk('acc',ac,colName(ACN,ac)))}</div>
       <div class="g2">${c('Font',pk('font','',F.n))}
         ${c('Dimensione testo',`<select class="sel" id="s-fs">${[[13,'Piccolo'],[14,'Normale'],[16,'Grande']].map(([k,v])=>`<option value="${k}" ${S.fs===k?'selected':''}>${v}</option>`).join('')}</select>`)}</div>
@@ -950,12 +1065,18 @@ function openPicker(k){
 function closePicker(){$('pko').classList.remove('on');}
 $('pko').addEventListener('click',e=>{if(e.target===$('pko')){closePicker();return;}
   const b=e.target.closest('.pki');if(!b)return;const k=$('pks').dataset.k,v=b.dataset.v,S=D.set;
-  if(k==='bg'){S.mode=isLight(v)?'light':'dark';S.bg[S.mode]=v;S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];}
+  if(k==='bg')setBg(v);
   if(k==='acc')S.accent=v;
   if(k==='font')S.font=v;
   save();applyLook();renderSets();closePicker();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pko').classList.contains('on')){e.stopImmediatePropagation();closePicker();}},true);
-$('sets').addEventListener('click',e=>{const b=e.target.closest('[data-pk]');if(b&&!document.body.classList.contains('editing'))openPicker(b.dataset.pk);});
+function setBg(v){const S=D.set;S.mode=isLight(v)?'light':'dark';S.bg[S.mode]=v;S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];}
+/* temi pronti: sfondo + colore principale con un tocco */
+const THEMES=[['Navy','#0c1530','#ff8a3d'],['Mezzanotte','#0a0e1a','#8fa2ff'],['Nero','#000000','#e8ff00'],['Petrolio','#08191d','#38d6e8'],['Bosco','#0a1210','#4fe0a3'],
+  ['Prugna','#1a0f1f','#f9a8d4'],['Caffè','#1c1611','#f0b44c'],['Carta','#f3f3ef','#2f5bea'],['Pesca','#fbf2ec','#c2410c']];
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&($('pko').classList.contains('on')||$('cmo').classList.contains('on'))){e.stopImmediatePropagation();closePicker();closeCardMenu();}},true);
+$('sets').addEventListener('click',e=>{if(document.body.classList.contains('editing'))return;
+  const b=e.target.closest('[data-pk]');if(b){openPicker(b.dataset.pk);return;}
+  const t=e.target.closest('[data-th]');if(t){const[bg,ac]=t.dataset.th.split('|');setBg(bg);D.set.accent=ac;save();applyLook();renderSets();}});
 function setEditor(on){D.ui.editor=on;save();applyLook();if($('p-set').classList.contains('on'))renderSets();
   if(on)toast('Tieni premuto per spostare · doppio tocco per rinominare');}
 $('ed-done').onclick=()=>setEditor(false);
