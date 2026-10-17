@@ -166,11 +166,15 @@ input,textarea,select{font:inherit;color:inherit}
 .avi.none svg{width:17px;height:17px}
 .avi.big{width:46px;height:46px}
 /* stili della card (Impostazioni › Card) */
-.card::before{content:"";position:absolute;left:7px;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--pc)}   /* riga della priorità, su tutti gli stili */
+/* priorità: bagliore attaccato al testo, alto quanto titolo + dettagli (su tutti gli stili di card) */
+.card .cb{position:relative;isolation:isolate}
+.card .cb::before{content:"";position:absolute;left:-8px;top:1px;bottom:1px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px 1px color-mix(in srgb,var(--pc) 70%,transparent)}
+.card .cb::after{content:"";position:absolute;left:-8px;top:-5px;bottom:-5px;width:75%;z-index:-1;pointer-events:none;border-radius:6px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 24%,transparent),transparent)}
 .card.card{padding-left:18px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
 .card.cs-filo{padding-left:20px}
-.card.cs-filo::before{content:"";position:absolute;left:7px;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px var(--pc)}
+.card.cs-filo::before{display:none;content:"";position:absolute;left:7px;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--pc);box-shadow:0 0 10px var(--pc)}
 .card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:0 10px 26px var(--csh),inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
 .card.cs-moderna .cm{gap:5px}
 .card.cs-moderna .cm span{height:22px;padding:0 9px;border-radius:11px;background:color-mix(in srgb,var(--text) 8%,transparent)}
@@ -859,11 +863,17 @@ function fillDates(){
     const dd=h.querySelector('.dd'),t=dd&&dd.nextElementSibling;if(!t||!h.offsetParent)return;
     const cs=getComputedStyle(t),fam=cs.fontFamily,ph0=h.closest('.ph'),hb0=ph0.querySelector('.hbtn');
     const ink=(txt,w)=>{cv.font=`${w} 100px ${fam}`;return cv.measureText(txt).actualBoundingBoxAscent/100;};
-    // maiuscola del titolo alta quanto i pulsanti a destra (46 px); se il titolo non ci sta, si rimpicciolisce quanto basta
-    const rH=ink('H',cs.fontWeight),avail=ph0.clientWidth-(hb0?hb0.offsetWidth+12:0);
-    let fs=46/rH;h.style.fontSize=fs+'px';
-    const est=()=>h.scrollWidth-dd.offsetWidth+fs*rH*1.05;   // larghezza col blocco data della misura giusta
-    if(est()>avail){fs=Math.max(22,fs*avail/est());h.style.fontSize=fs+'px';}
+    // una sola misura per tutte le pagine: la più grande (al massimo maiuscola = pulsanti, 46 px) con cui
+    // TUTTI i titoli stanno interi: i nomi dei profili accanto ai 3 pulsanti, Statistiche e Impostazioni da soli
+    const rH=ink('H',cs.fontWeight),ls=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fdls'))||0;
+    const up=getComputedStyle(document.documentElement).getPropertyValue('--fdt').trim()==='uppercase';
+    const tw=txt=>{txt=up?txt.toUpperCase():txt;cv.font=`${cs.fontWeight} 100px ${fam}`;return(cv.measureText(txt).width+ls*100*txt.length)/100;};
+    const pw=ph0.clientWidth,btn=190;   // spazio dei 3 pulsanti di Attività (contatore fino a "99/99"), uguale per tutte le pagine
+    const need=(txt,chev)=>rH*1.08+.08+tw(txt)+(chev?.44:0);   // larghezza per 1 px di font: data + spazio + titolo (+ freccia)
+    let fs=46/rH;
+    [...D.set.profiles.map(p=>[p.n,pw-btn,1]),[T('t-stat','Statistiche'),pw,0],[T('t-set','Impostazioni'),pw,0]]
+      .forEach(([txt,av,ch])=>{fs=Math.min(fs,av/need(txt,ch));});
+    fs=Math.max(22,Math.floor(fs*10)/10);h.style.fontSize=fs+'px';
     const cap=rH*fs,gap=cap*.12,ci=cap*.24,cb=cap-gap-ci,fb=cb/ink(day,800),fi=ci/ink(mon,800);
     cv.font=`800 ${fb}px ${fam}`;const wb=cv.measureText(day).width;cv.font=`800 ${fi}px ${fam}`;const wi=cv.measureText(mon).width*1.12;
     const W=Math.ceil(Math.max(wb,wi))+2;
@@ -1316,7 +1326,7 @@ $('pko').addEventListener('click',e=>{if(e.target===$('pko')){closePicker();retu
   if(k==='card')S.card=v;
   save();applyLook();renderAll();renderSets();closePicker();});
 /* stili della card: le proposte (vetro, moderna, colorata…) */
-const CARDS=[['ombra','Ombra'],['vetro','Vetro'],['moderna','Moderna'],['tinta','Colorata'],['filo','Filo luminoso'],['grande','Grande'],['bordo','Solo bordo'],['piena','Piena']];
+const CARDS=[['ombra','Ombra'],['vetro','Vetro'],['moderna','Moderna'],['tinta','Colorata'],['grande','Grande'],['bordo','Solo bordo'],['piena','Piena']];
 function setBg(v){const S=D.set;S.mode=isLight(v)?'light':'dark';S.bg[S.mode]=v;S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];}
 /* temi pronti: sfondo + colore principale con un tocco */
 const THEMES=[['Navy','#0c1530','#ff8a3d'],['Mezzanotte','#0a0e1a','#8fa2ff'],['Nero','#000000','#e8ff00'],
