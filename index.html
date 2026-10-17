@@ -323,7 +323,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .leg{display:flex;justify-content:center;gap:16px;margin:0 0 16px;font-size:12px;font-weight:600;color:var(--muted)}
 .leg span{display:inline-flex;align-items:center;gap:6px}
 .leg .pdot{width:9px;height:9px}
-.box .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.box .sub{font-size:12px;color:var(--muted);margin:-6px 0 14px;text-align:center}   /* il periodo scelto */
 .box .sub:empty{display:none}
 .hb{display:flex;flex-direction:column;gap:12px}
 .hb .r{display:grid;grid-template-columns:minmax(0,1fr) minmax(60px,34%) 26px;gap:12px;align-items:center;font-size:13px}
@@ -1202,8 +1202,8 @@ function renderStats(){
   // podio: i primi tre richiedenti (il primo al centro, più alto)
   const top=rl.filter(x=>x[0]!=='(nessuno)').slice(0,3);
   if(top.length){const hm=top[0][1].n,ord=top.length===1?[0]:top.length===2?[1,0]:[1,0,2];
-    h+=box('pod','Chi chiede di più','',`<div class="pod">${ord.map(i=>{const[n,v]=top[i];return `<div class="${i===0?'p1':''}">${avImg(n,"big")}<span>${esc(n)}</span><s style="height:${30+v.n/hm*56}px">${v.n}</s></div>`;}).join('')}</div>`);}
-  h+=box('rq','Richiedenti','',leg+`<div class="hb">${rl.length?rl.map(([n,v])=>`<div class="r" data-tip="<b>${esc(n)}</b><br>Richieste: ${v.n}<br>Alta ${v.p[2]} · Media ${v.p[1]} · Bassa ${v.p[0]}<br>Completate: ${v.d}"><span class="n">${esc(n)}</span>
+    h+=box('pod','Chi chiede di più','Attività create '+per,`<div class="pod">${ord.map(i=>{const[n,v]=top[i];return `<div class="${i===0?'p1':''}">${avImg(n,"big")}<span>${esc(n)}</span><s style="height:${30+v.n/hm*56}px">${v.n}</s></div>`;}).join('')}</div>`);}
+  h+=box('rq','Richiedenti','Attività create '+per,leg+`<div class="hb">${rl.length?rl.map(([n,v])=>`<div class="r" data-tip="<b>${esc(n)}</b><br>Richieste: ${v.n}<br>Alta ${v.p[2]} · Media ${v.p[1]} · Bassa ${v.p[0]}<br>Completate: ${v.d}"><span class="n">${esc(n)}</span>
       <span class="t">${[0,1,2].map(i=>v.p[i]?`<i style="width:${v.p[i]/v.n*100}%;background:${PRIO[i].c}"></i>`:'').join('')}</span><span class="v">${v.n}</span></div>`).join(''):'<div class="empty" style="padding:20px">Nessuna richiesta nel periodo</div>'}</div>`);
   $('stats').innerHTML=h+'</div>';
   applyLayout();
