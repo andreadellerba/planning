@@ -847,6 +847,7 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
   // richiedente con nome e cognome; se non ci sta viene tagliato, così i dettagli restano su una riga.
   // la priorità non è scritta: la dice la riga colorata a sinistra (su tutti gli stili di card)
   if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}">${IC.user}<em>${esc(t.req)}</em></span>`);
+  if(F.prio)m.push(`<span class="pr">${PRIO[t.prio].n}</span>`);   // priorità scritta, senza pallino né colore (il colore è nella sfumatura)
   return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
     ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('')}</div></div></div>`;
