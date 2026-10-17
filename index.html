@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--text);font:400 var(--fs)/1.4 var(--fb);min
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
 .wrap{max-width:1180px;margin:0 auto}
-.page{display:none}.page.on{display:block;animation:pgIn .25s ease}
+.page{display:none}.page.on{display:block}   /* niente animazione: con il vetro faceva lampeggiare i riquadri */
 @keyframes pgIn{from{opacity:0}to{opacity:1}}
 /* striscia in alto: il contenuto che scorre non finisce sotto la notch / la barra di stato */
 .topcover{position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top) + 10px);z-index:35;pointer-events:none;
@@ -162,6 +162,7 @@ input,textarea,select{font:inherit;color:inherit}
 .sd{width:44px;height:44px;border-radius:18px;background:var(--accent);color:var(--onacc);display:grid;place-items:center;flex-shrink:0;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 45%,transparent)}
 .sd svg{width:20px;height:20px}
 .toast.top{bottom:auto;top:calc(env(safe-area-inset-top) + 14px)}
+/* riquadri di vetro dentro le pagine: senza sfocatura (dietro c'è solo lo sfondo), così cambiando pagina non lampeggiano */.page .gl,.page .box,.page .sbox,.lock-box{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* finestra della foto: anteprima tonda da trascinare, zoom col cursore */
 .phed{display:flex;justify-content:center;margin:4px 0 8px}
 .phed canvas{width:min(240px,62vw);height:min(240px,62vw);border-radius:50%;background:var(--card2);touch-action:none;cursor:grab;box-shadow:0 0 0 3px var(--accent),0 16px 40px rgba(0,0,0,.4)}
@@ -188,10 +189,10 @@ button.srw:active{opacity:.7}
 .sbox .code{padding:0 0 10px 42px;border-bottom:.5px solid var(--line)}
 .sbox .live{padding-bottom:10px}
 /* i tre pulsanti dell'intestazione uniti in un'unica pillola di vetro, separati da una riga sottile */
-.hbtn.grp{gap:0;padding:4px;border-radius:22px}
-.hbtn.grp .ib{height:40px;min-width:40px;border-radius:16px;background:none;border:0;box-shadow:none}
+.hbtn.grp{gap:0;padding:4px;border-radius:16px}
+.hbtn.grp .ib{height:30px;min-width:34px;padding:0 8px;border-radius:12px;font-size:13.5px;background:none;border:0;box-shadow:none}
 .hbtn.grp .ib+.ib{position:relative}
-.hbtn.grp .ib+.ib::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:.5px;background:var(--glassb)}
+.hbtn.grp .ib+.ib::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:.5px;background:var(--glassb)}
 .hbtn.grp .ib.on::before,.hbtn.grp .ib.on+.ib::before{display:none}
 /* saluto sotto il titolo */
 .greet{margin:-8px 2px 16px;font-size:calc(var(--fs) - .5px);font-weight:500;color:var(--muted)}
@@ -930,17 +931,17 @@ function fillDates(){
     const dd=h.querySelector('.dd'),t=dd&&dd.nextElementSibling;if(!t||!h.offsetParent)return;
     const cs=getComputedStyle(t),fam=cs.fontFamily,ph0=h.closest('.ph'),hb0=ph0.querySelector('.hbtn');
     const ink=(txt,w)=>{cv.font=`${w} 100px ${fam}`;return cv.measureText(txt).actualBoundingBoxAscent/100;};
-    // una sola misura per tutte le pagine: la più grande (al massimo maiuscola = pulsanti, 46 px) con cui
-    // TUTTI i titoli stanno interi: i nomi dei profili accanto ai 3 pulsanti, Statistiche e Impostazioni da soli
+    // altezza fissa su tutte le pagine: maiuscola del titolo (e 17 OTT) alta quanto la pillola dei pulsanti a destra.
+    // la larghezza non cambia l'altezza: se il titolo non ci sta si stringe un po' in orizzontale (fino all'80%), poi "…"
     const rH=ink('H',cs.fontWeight),ls=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fdls'))||0;
     const up=getComputedStyle(document.documentElement).getPropertyValue('--fdt').trim()==='uppercase';
     const tw=txt=>{txt=up?txt.toUpperCase():txt;cv.font=`${cs.fontWeight} 100px ${fam}`;return(cv.measureText(txt).width+ls*100*txt.length)/100;};
-    const pw=ph0.clientWidth,btn=190;   // spazio dei 3 pulsanti di Attività (contatore fino a "99/99"), uguale per tutte le pagine
-    const need=(txt,chev)=>rH*1.08+.03+tw(txt)+(chev?.44:0);   // larghezza per 1 px di font: data + spazio + titolo (+ freccia)
-    let fs=46/rH;
-    [...D.set.profiles.map(p=>[p.n,pw-btn,1]),[T('t-stat','Statistiche'),pw,0],[T('t-set','Impostazioni'),pw,0]]
-      .forEach(([txt,av,ch])=>{fs=Math.min(fs,av/need(txt,ch));});
-    fs=Math.max(22,Math.floor(fs*10)/10);h.style.fontSize=fs+'px';
+    if(hb0&&hb0.offsetHeight)window._hbH=hb0.offsetHeight;
+    const HB=window._hbH||48,fs=HB/rH;h.style.fontSize=fs+'px';
+    const chv=!!h.querySelector('.pfc'),avail=ph0.clientWidth-(hb0?hb0.offsetWidth+12:0);
+    const twpx=tw(t.textContent)*fs,need=(rH*1.08+.03+(chv?.44:0))*fs+twpx;
+    let k=need>avail?(avail-(need-twpx))/twpx:1;if(k<.78)k=1;   // se nemmeno stretto ci sta, resta normale e si taglia con …
+    t.style.transformOrigin='left center';t.style.transform=k<1?`scaleX(${k.toFixed(3)})`:'';t.style.marginRight=k<1?(-twpx*(1-k)).toFixed(1)+'px':'';
     const cap=rH*fs,gap=cap*.12,ci=cap*.24,cb=cap-gap-ci,fb=cb/ink(day,800),fi=ci/ink(mon,800);
     cv.font=`800 ${fb}px ${fam}`;const wb=cv.measureText(day).width;cv.font=`800 ${fi}px ${fam}`;const wi=cv.measureText(mon).width*1.12;
     const W=Math.ceil(Math.max(wb,wi))+2;
