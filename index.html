@@ -12,7 +12,7 @@
 <link id="fontlink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=3">
 <link rel="icon" type="image/png" sizes="16x16" href="icon-16.png?v=3">
-<link rel="manifest" href="manifest.json?v=3">
+<link rel="manifest" href="manifest.json?v=4">
 <link rel="apple-touch-icon" href="icon-180.png?v=3">
 <meta name="theme-color" content="#0a0e1a">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -39,6 +39,8 @@ input,textarea,select{font:inherit;color:inherit}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 /* striscia in alto: il contenuto che scorre non finisce sotto la notch / la barra di stato */
 .topcover{position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top) + 10px);z-index:35;pointer-events:none;
+/* app installata su PC senza barra del titolo: la striscia in alto trascina la finestra, i pulsanti riduci/chiudi restano a destra */
+.drag{position:fixed;left:env(titlebar-area-x,0);top:env(titlebar-area-y,0);width:env(titlebar-area-width,0);height:env(titlebar-area-height,0);z-index:36;-webkit-app-region:drag;app-region:drag}
   background:linear-gradient(180deg,var(--bg) 0,var(--bg) calc(100% - 10px),color-mix(in srgb,var(--bg) 0%,transparent))}
 
 /* intestazione stile iOS: data piccola + titolo a sinistra, pulsanti a destra */
@@ -240,17 +242,20 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .pbar{position:relative;display:flex;justify-content:center;margin-bottom:6px}
 .pone{display:flex;align-items:center;gap:4px;padding:5px;border-radius:24px;max-width:100%}
 .pone button{height:44px;border-radius:18px;font-weight:800}
-#pprev,#pnext{width:44px;flex-shrink:0;font-size:20px;color:var(--t-stat)}
-#pper{display:flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;min-width:0}
-#pper b{color:var(--t-stat)}
-#pper b:not(:empty)::before{content:"· ";color:var(--muted)}
-#pper i{font-style:normal;font-size:10px;color:var(--muted)}
-.pmenu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:20;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:20px;min-width:200px;
+.pmenu{position:fixed;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:20px;min-width:200px;
   background:color-mix(in srgb,var(--bg) 72%,#2a2d38);border:.5px solid var(--glassb);box-shadow:0 20px 50px rgba(0,0,0,.45);animation:shIn .15s ease}
 :root[data-mode="light"] .pmenu{background:#fff}
 .pmenu[hidden]{display:none}
 .pmenu button{height:42px;border-radius:14px;font-weight:700;font-size:14px}
 .pmenu button.on{background:var(--t-stat);color:#111}
+/* periodo dentro la frase sotto il numero + puntini dei periodi recenti */
+.big{touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.pper{display:inline-flex;align-items:center;gap:4px;color:var(--t-stat);font-weight:800;border-bottom:1.5px dashed color-mix(in srgb,var(--t-stat) 55%,transparent);padding:0 1px 1px}
+.pper i{font-style:normal;font-size:10px}
+.pdots{display:flex;justify-content:center;gap:8px;margin:0 0 14px}
+.pdots button{width:8px;height:8px;padding:0;border-radius:50%;background:color-mix(in srgb,var(--text) 22%,transparent);transition:.2s}
+.pdots button.on{width:22px;border-radius:4px;background:var(--t-stat);box-shadow:0 0 10px color-mix(in srgb,var(--t-stat) 50%,transparent)}
+/* periodo dentro la frase sotto il numero + puntini dei periodi recenti */.big{touch-action:pan-y;-webkit-user-select:none;user-select:none}.pper{display:inline-flex;align-items:center;gap:4px;color:var(--t-stat);font-weight:800;border-bottom:1.5px dashed color-mix(in srgb,var(--t-stat) 55%,transparent);padding:0 1px 1px}.pper i{font-style:normal;font-size:10px}.pdots{display:flex;justify-content:center;gap:8px;margin:0 0 14px}.pdots button{width:8px;height:8px;padding:0;border-radius:50%;background:color-mix(in srgb,var(--text) 22%,transparent);transition:.2s}.pdots button.on{width:22px;border-radius:4px;background:var(--t-stat);box-shadow:0 0 10px color-mix(in srgb,var(--t-stat) 50%,transparent)}
 .big{text-align:center;margin:18px 0 6px}
 .big b{display:block;font-family:var(--fd);font-weight:var(--fdw);letter-spacing:var(--fdls);font-size:calc(120px*var(--fdz));line-height:.95;color:var(--t-stat);font-variant-numeric:tabular-nums}
 .big p{margin:8px 0 12px;color:var(--muted);font-size:15px}
@@ -409,6 +414,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 </head>
 <body>
 <div class="topcover"></div>
+<div class="drag"></div><!-- PC (app installata): striscia in alto per trascinare la finestra, al posto della barra del titolo -->
 <div class="edbar gl"><span>✏️ MODALITÀ EDITOR</span><span class="h" style="color:var(--muted);font-weight:600">tieni premuto per spostare · doppio tocco per rinominare</span><button id="ed-done">Fine</button></div>
 <div class="wrap">
 
@@ -428,10 +434,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <!-- ═══ STATISTICHE ═══ -->
   <section class="page" id="p-stat" data-t="stat">
     <div class="ph"><div><small>Il tuo andamento</small><h1 data-el="t-stat" data-def="Statistiche">Statistiche</h1></div></div>
-    <div class="pbar">
-      <div class="pone gl"><button id="pprev" aria-label="Periodo precedente">‹</button><button id="pper" aria-haspopup="true"><span id="plbl"></span><b id="pname"></b><i>▾</i></button><button id="pnext" aria-label="Periodo successivo">›</button></div>
-      <div class="pmenu" id="pseg" hidden><button data-p="w">Settimana</button><button data-p="m">Mese</button><button data-p="y">Anno</button><button data-p="a">Sempre</button></div>
-    </div>
+    <div class="pmenu" id="pseg" hidden><button data-p="w">Settimana</button><button data-p="m">Mese</button><button data-p="y">Anno</button><button data-p="a">Sempre</button></div>
     <div id="stats"></div>
   </section>
 
@@ -727,8 +730,9 @@ function filtered(){
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
 function card(t){
-  // dentro la card, in quest'ordine: data di creazione, richiedente, priorità
-  const F=D.set.fields,m=[`<span title="Creata il">${IC.cal}${dShort(dkey(new Date(t.created)))}</span>`];
+  // dentro la card, in quest'ordine: creazione – scadenza (tutte e due rosse se scaduta), richiedente, priorità
+  const F=D.set.fields,late=!t.done&&t.due&&t.due<today();
+  const m=[`<span class="${late?'late':''}" title="Creata il … scade il …">${IC.cal}${dShort(dkey(new Date(t.created)))}${F.due&&t.due?' – '+dShort(t.due):''}</span>`];
   if(F.req&&t.req)m.push(`<span>${IC.user}${esc(t.req)}</span>`);
   if(F.prio)m.push(`<span><i class="pdot"></i>${PRIO[t.prio].n}</span>`);
   return`<div class="card ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}">
@@ -851,7 +855,7 @@ function closeQuick(){document.body.classList.remove('quick');$('qa').classList.
 function renderQk(){
   const F=D.set.fields,r=qv.mode==='r';
   let h=`<button class="q gl ${r?'':'on'}" data-mode="t">Attività</button>`;
-  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${qv.req&&!r?esc(qv.req):'Richiedente'}</button>`;
+  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">Richiedente</button>`;   // la scritta resta sempre Richiedente (il nome si vede nell'anteprima)
   if(F.due)h+=`<button class="q gl ${qv.due?'set':''}" data-due>${QDUEL[qv.due]}</button>`;
   if(F.rec)h+=`<button class="q gl rp ${qv.rec?'set':''}" data-rec aria-label="Ripeti">${IC_REP}${qv.rec?QRECL[qv.rec]:''}</button>`;
   if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
@@ -859,7 +863,7 @@ function renderQk(){
 }
 /* anteprima: la card come apparirà, aggiornata mentre scrivi */
 function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
-  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?v:qv.req,prio:qv.prio,created:Date.now(),done:false});}
+  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?v:qv.req,prio:qv.prio,created:Date.now(),due:addD(today(),QDUE[qv.due]==null?D.set.defDays:QDUE[qv.due]),done:false});}
 /* suggerimenti dei richiedenti: sopra il campo dove scrivi */
 function qSug(){const box=$('qsug');if(qv.mode!=='r'){box.hidden=true;return;}
   const v=$('qt').value.trim().toLowerCase(),cnt={};D.tasks.forEach(t=>{if(t.req)cnt[t.req]=(cnt[t.req]||0)+1;});
@@ -985,7 +989,6 @@ function buckets(r){
 function renderStats(){
   document.querySelectorAll('#pseg button').forEach(b=>b.classList.toggle('on',b.dataset.p===D.ui.per));
   const p=D.ui.per,r=range(),inR=ts=>ts>=r.s&&ts<r.e;
-  $('plbl').textContent=r.lbl;$('pname').textContent={w:'Settimana',m:'Mese',y:'Anno',a:''}[p];$('pprev').style.visibility=$('pnext').style.visibility=p==='a'?'hidden':'visible';
   const Tk=D.tasks,cre=Tk.filter(t=>inR(t.created)),don=Tk.filter(t=>t.done&&inR(t.doneAt)),open=Tk.filter(t=>!t.done);
   // il numero grande: completate nel periodo, confrontate con il periodo prima
   const mon=x=>x.toLocaleDateString('it-IT',{month:'long'});
@@ -995,7 +998,10 @@ function renderStats(){
     const r2=range(pr),n2=Tk.filter(t=>t.done&&t.doneAt>=r2.s&&t.doneAt<r2.e).length,d=don.length-n2;
     const vs={w:['rispetto alla settimana prima','Come la settimana prima'],m:['rispetto a '+mon(r2.s),'Come a '+mon(r2.s)],y:['rispetto al '+r2.s.getFullYear(),'Come nel '+r2.s.getFullYear()]}[p];
     delta=d===0?`<span class="delta eq">${vs[1]}</span>`:`<span class="delta ${d<0?'neg':''}">${d>0?'+':'−'}${Math.abs(d)} ${vs[0]}</span>`;}
-  let h=`<div class="big"><b>${don.length}</b><p>${don.length===1?'attività completata':'attività completate'} ${p==='w'&&r.e<=new Date()?'nella settimana':where}</p>${delta}</div>`;
+  // il periodo sta dentro la frase sotto il numero: toccandolo si cambia (settimana/mese/anno/sempre), scorrendo il numero si va avanti e indietro
+  const per=p==='w'&&r.e<=new Date()?'nella settimana del '+r.s.getDate()+' '+MON[r.s.getMonth()]:where,off=pOffset();
+  const dots=p==='a'?'':`<div class="pdots" aria-label="Periodi">${[-3,-2,-1,0].map(o=>`<button data-off="${o}" class="${o===Math.max(-3,off)?'on':''}" aria-label="${o===0?'Periodo attuale':o+' periodi fa'}"></button>`).join('')}</div>`;
+  let h=`<div class="big" id="bigp"><b>${don.length}</b><p>${don.length===1?'attività completata':'attività completate'} <button class="pper" id="pper" aria-haspopup="true">${per} <i>▾</i></button></p>${dots}${delta}</div>`;
   // la curva delle completate
   const B=buckets(r),bv=B.map(b=>({b,d:Tk.filter(t=>t.done&&t.doneAt>=b.s&&t.doneAt<b.e).length}));
   if(bv.length>1){const mx=Math.max(1,...bv.map(x=>x.d)),n=bv.length,pts=bv.map((x,i)=>[(i/(n-1)*100).toFixed(2),(92-x.d/mx*84).toFixed(2)]);
@@ -1021,10 +1027,25 @@ function renderStats(){
   applyLayout();
 }
 $('pseg').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;D.ui.per=b.dataset.p;pRef=new Date();$('pseg').hidden=true;save();renderStats();};
-$('pper').onclick=e=>{e.stopPropagation();$('pseg').hidden=!$('pseg').hidden;};
-document.addEventListener('click',e=>{if(!$('pseg').hidden&&!e.target.closest('#pseg,#pper'))$('pseg').hidden=true;});
-$('pprev').onclick=()=>shiftP(-1);$('pnext').onclick=()=>shiftP(1);
-function shiftP(n){const p=D.ui.per;if(p==='w')pRef.setDate(pRef.getDate()+7*n);if(p==='m'){pRef.setDate(1);pRef.setMonth(pRef.getMonth()+n);}if(p==='y')pRef.setFullYear(pRef.getFullYear()+n);renderStats();}
+/* quanti periodi indietro rispetto a oggi (0 = quello attuale) */
+function pOffset(){const p=D.ui.per,n=new Date(),a=new Date(pRef);
+  if(p==='m')return(a.getFullYear()-n.getFullYear())*12+a.getMonth()-n.getMonth();
+  if(p==='y')return a.getFullYear()-n.getFullYear();
+  if(p==='w')return Math.round((range(a).s-range(n).s)/(7*864e5));return 0;}
+function shiftP(n){const p=D.ui.per;if(p==='a'||pOffset()+n>0)return;   // niente periodi nel futuro
+  if(p==='w')pRef.setDate(pRef.getDate()+7*n);if(p==='m'){pRef.setDate(1);pRef.setMonth(pRef.getMonth()+n);}if(p==='y')pRef.setFullYear(pRef.getFullYear()+n);renderStats();}
+document.addEventListener('click',e=>{
+  if(e.target.closest('#pper')){const m=$('pseg'),r=e.target.closest('#pper').getBoundingClientRect();m.hidden=!m.hidden;
+    m.style.left=Math.max(116,Math.min(innerWidth-116,r.left+r.width/2))+'px';m.style.top=(r.bottom+8)+'px';return;}
+  const d=e.target.closest('.pdots [data-off]');if(d){shiftP(+d.dataset.off-pOffset());return;}
+  if(!$('pseg').hidden&&!e.target.closest('#pseg'))$('pseg').hidden=true;});
+/* scorri il numero grande: a destra il periodo prima, a sinistra quello dopo */
+(function(){let sx=null;
+  $('stats').addEventListener('pointerdown',e=>{sx=e.target.closest('#bigp')&&!e.target.closest('button')?e.clientX:null;});
+  $('stats').addEventListener('pointerup',e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>50)shiftP(dx>0?-1:1);});
+  $('stats').addEventListener('pointercancel',()=>sx=null);})();
+document.addEventListener('keydown',e=>{if(!$('p-stat').classList.contains('on')||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
+  if(e.key==='ArrowLeft')shiftP(-1);if(e.key==='ArrowRight')shiftP(1);});
 /* fumetto dei grafici: col mouse su PC, col tocco su telefono */
 document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('[data-tip]'),tp=$('tip');if(!el){tp.style.display='none';return;}tp.innerHTML=el.dataset.tip;tp.style.display='block';});
 document.addEventListener('mousemove',e=>{const tp=$('tip');if(tp.style.display!=='block')return;tp.style.left=Math.max(8,Math.min(innerWidth-tp.offsetWidth-8,e.clientX+14))+'px';tp.style.top=Math.max(8,e.clientY-tp.offsetHeight-12)+'px';});
