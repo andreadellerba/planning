@@ -44,7 +44,7 @@ input,textarea,select{font:inherit;color:inherit}
   background:linear-gradient(180deg,var(--bg) 0,var(--bg) calc(100% - 10px),color-mix(in srgb,var(--bg) 0%,transparent))}
 
 /* intestazione stile iOS: data piccola + titolo a sinistra, pulsanti a destra */
-.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 2px 18px}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:2px 2px 18px}
 .ph>div:first-child{min-width:0}
 .ph small{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ph h1,.dsp{margin:0;font-family:var(--fd);font-weight:var(--fdw);letter-spacing:var(--fdls);text-transform:var(--fdt);line-height:1.02}
@@ -115,8 +115,10 @@ input,textarea,select{font:inherit;color:inherit}
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
 .card.isdone{opacity:.62}
 .card.isdone .ct{text-decoration:line-through;text-decoration-color:var(--soft);color:var(--muted)}
-.cm{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
-.cm span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.cm{display:flex;flex-wrap:nowrap;min-width:0;gap:5px 12px;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
+.cm span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0}
+.cm .rq{flex-shrink:1;min-width:0}
+.cm .rq em{font-style:normal;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .cm svg{width:14px;height:14px;flex-shrink:0}
 .cm .late{color:var(--danger);font-weight:650}.cm .today{color:var(--accent);font-weight:650}.cm .okc{color:var(--ok)}
 .pdot{width:7px;height:7px;border-radius:50%;background:var(--pc);display:inline-block;flex-shrink:0}
@@ -180,15 +182,15 @@ input,textarea,select{font:inherit;color:inherit}
 .pkc>span{text-align:center;font-size:13px}
 .pkc .card{pointer-events:none;text-align:left}
 /* titolo: prima il giorno grande e sotto il mese, alto quanto la maiuscola del titolo, nel colore della pagina */
-.ph h1.tt{display:flex;align-items:center;gap:.28em}
-.dd{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;height:.76em;line-height:1;letter-spacing:0;text-transform:none;flex-shrink:0}
-.dd b{font-size:.5em;line-height:.9;font-weight:800;font-variant-numeric:tabular-nums}
-.dd i{font-style:normal;font-size:.2em;line-height:1;font-weight:800;letter-spacing:.08em;color:var(--muted);margin-top:.12em}
-#p-att .dd b{color:var(--accent)}#p-stat .dd b{color:var(--t-stat)}#p-set .dd b{color:var(--t-set)}
+.ph h1.tt{display:flex;align-items:flex-start;gap:.26em}
+.dd{display:block;flex-shrink:0;line-height:0}
+.dd svg{display:block;overflow:visible}
+.dd .d2{fill:var(--muted)}
+#p-att .dd .d1{fill:var(--accent)}#p-stat .dd .d1{fill:var(--t-stat)}#p-set .dd .d1{fill:var(--t-set)}
+/* freccia dopo il titolo: c'è più di un profilo */
+.pfc{display:block;width:.4em;height:.4em;flex-shrink:0;color:var(--muted);cursor:pointer;margin-left:-.06em}
+.pfc svg{display:block;width:100%;height:100%}
 #pfname{cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.pfd{display:flex;gap:5px;margin:8px 0 0 2px;min-height:6px}
-.pfd i{width:6px;height:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 25%,transparent);transition:.2s}
-.pfd i.on{width:16px;background:var(--accent)}
 /* finestra profili */
 .pfl{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .pfr{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:16px;background:var(--card)}
@@ -463,7 +465,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 
   <!-- ═══ ATTIVITÀ ═══ -->
   <section class="page on" id="p-att" data-t="att">
-    <div class="ph"><div><h1 class="tt"><span class="dd" aria-hidden="true"><b></b><i></i></span><span id="pfname" title="Tocca per cambiare profilo, tieni premuto per gestirli">Attività</span></h1><span class="pfd" id="pfd"></span></div>
+    <div class="ph"><div><h1 class="tt"><span class="dd" aria-hidden="true"><b></b><i></i></span><span id="pfname" title="Tocca per cambiare profilo, tieni premuto per gestirli">Attività</span><span class="pfc" id="pfd" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></h1></div>
       <div class="hbtn">
         <button class="ib gl cnt" id="n-todo" title="Tocca per cambiare">0</button>
         <button class="ib gl" id="sortbtn" aria-label="Ordine"></button>
@@ -704,6 +706,7 @@ function applyLook(){
   // font: si carica solo quello scelto
   const F=FONTS[D.set.font]||FONTS.jakarta,stk=x=>x+",system-ui,-apple-system,'Segoe UI',sans-serif";
   const href=F.q?'https://fonts.googleapis.com/css2?family='+F.q+'&display=swap':'';
+  $('fontlink').onload=()=>fillDates();   // a font caricato si rimisura la data nel titolo
   if(($('fontlink').getAttribute('href')||'')!==href){if(href)$('fontlink').setAttribute('href',href);else $('fontlink').removeAttribute('href');}
   r.style.setProperty('--fd',stk(F.d));r.style.setProperty('--fb',stk(F.b||F.d));r.style.setProperty('--fdw',F.w);
   r.style.setProperty('--fdls',F.ls);r.style.setProperty('--fdt',F.up?'uppercase':'none');r.style.setProperty('--fdz',F.z);
@@ -838,14 +841,35 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
   // dentro la card, in quest'ordine: creazione – scadenza (tutte e due rosse se scaduta), richiedente, priorità
   const F=D.set.fields,late=!t.done&&t.due&&t.due<today();cs=cs||D.set.card||'ombra';
   const m=[`<span class="${late?'late':''}" title="Creata il … scade il …">${IC.cal}${dShort(dkey(new Date(t.created)))}${F.due&&t.due?' – '+dShort(t.due):''}</span>`];
-  if(F.req&&t.req)m.push(`<span>${IC.user}${esc(t.req)}</span>`);
+  // richiedente accorciato (Massimiliano G.) e, se non basta, tagliato: i dettagli stanno sempre su una riga
+  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}">${IC.user}<em>${esc(shortName(t.req))}</em></span>`);
   if(F.prio)m.push(`<span><i class="pdot"></i>${PRIO[t.prio].n}</span>`);
+  // niente pallino: si completa scorrendo a destra (o dal menu tenendo premuto)
   return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}">
-    <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
     ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('')}</div></div></div>`;
 }
-/* giorno grande + mese prima del titolo, in tutte le pagine */
-function fillDates(){const now=new Date();document.querySelectorAll('.dd').forEach(e=>{e.firstChild.textContent=now.getDate();e.lastChild.textContent=MON[now.getMonth()].toUpperCase();});}
+const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)?p[0]+' '+p[1][0].toUpperCase()+'.':n;};
+/* giorno grande + mese prima del titolo, in tutte le pagine: alto esattamente quanto la maiuscola del titolo
+   (misurata sul font in uso) e allineato a lei; anche i pulsanti a destra e la freccia dei profili si centrano sulla maiuscola */
+function fillDates(){
+  const now=new Date(),day=String(now.getDate()),mon=MON[now.getMonth()].toUpperCase(),cv=document.createElement('canvas').getContext('2d');
+  document.querySelectorAll('.ph h1.tt').forEach(h=>{
+    const dd=h.querySelector('.dd'),t=dd&&dd.nextElementSibling;if(!t||!h.offsetParent)return;
+    const cs=getComputedStyle(t),fs=parseFloat(cs.fontSize),fam=cs.fontFamily;
+    const ink=(txt,w)=>{cv.font=`${w} 100px ${fam}`;return cv.measureText(txt).actualBoundingBoxAscent/100;};
+    const cap=ink('H',cs.fontWeight)*fs,gap=cap*.12,ci=cap*.24,cb=cap-gap-ci,fb=cb/ink(day,800),fi=ci/ink(mon,800);
+    cv.font=`800 ${fb}px ${fam}`;const wb=cv.measureText(day).width;cv.font=`800 ${fi}px ${fam}`;const wi=cv.measureText(mon).width*1.12;
+    const W=Math.ceil(Math.max(wb,wi))+2;
+    dd.innerHTML=`<svg width="${W}" height="${cap.toFixed(2)}" viewBox="0 0 ${W} ${cap.toFixed(2)}"><text x="${W/2}" y="${cb.toFixed(2)}" text-anchor="middle" font-size="${fb.toFixed(2)}" font-weight="800" class="d1">${day}</text><text x="${W/2}" y="${cap.toFixed(2)}" text-anchor="middle" font-size="${fi.toFixed(2)}" font-weight="800" letter-spacing="${(fi*.08).toFixed(2)}" class="d2">${mon}</text></svg>`;
+    const pr=document.createElement('i');pr.style.cssText='display:inline-block;width:0;height:0;vertical-align:baseline';t.appendChild(pr);
+    const base=pr.getBoundingClientRect().top;pr.remove();const hr=h.getBoundingClientRect(),capTop=base-cap;
+    dd.style.marginTop=(capTop-hr.top)+'px';
+    const ch=h.querySelector('.pfc');if(ch)ch.style.marginTop=(capTop+cap/2-ch.offsetHeight/2-hr.top)+'px';
+    const ph=h.closest('.ph'),hb=ph.querySelector('.hbtn');if(hb)hb.style.marginTop=(capTop+cap/2-hb.offsetHeight/2-ph.getBoundingClientRect().top)+'px';
+  });
+}
+addEventListener('resize',()=>fillDates());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fillDates());
 function renderAtt(){
   renderPf();fillDates();
   const old=D.ui.sort==='old';$('sortbtn').innerHTML=old?IC.sortOld:IC.sortNew;$('sortbtn').title=old?'Più vecchie in alto':'Più recenti in alto';
@@ -910,6 +934,7 @@ function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;D.tasks.splice(i,1)
     if(s.mode!=='swipe')return;eatClick();
     const t=taskOf(s.c);if(!t||Math.abs(s.dx)<=GO){back(s);return;}
     s.c.style.transition='transform .22s ease';s.c.style.transform=`translateX(${s.dx>0?'':'-'}115%)`;
+    if(s.dx>0&&!t.done)confetti(s.c);   // coriandoli anche quando completi scorrendo
     setTimeout(()=>{if(s.dx>0)toggle(t,null);else delTask(t);},200);
   };
   L.addEventListener('pointerup',end);
@@ -940,7 +965,7 @@ $('cmo').addEventListener('click',e=>{
 });
 /* ═══ PROFILI: tocca il titolo per passare al profilo dopo, tienilo premuto per crearli, rinominarli o eliminarli ═══ */
 function renderPf(){const P=D.set.profiles,c=curPf(),p=P.find(x=>x.id===c);
-  $('pfname').textContent=p.n;$('pfd').innerHTML=P.length>1?P.map(x=>`<i class="${x.id===c?'on':''}"></i>`).join(''):'';
+  $('pfname').textContent=p.n;
 }
 function setPf(id){D.ui.pf=id;doneLimit=30;save();renderAll();}
 (function(){let tm=null,long=false;const h=$('pfname');
@@ -949,6 +974,7 @@ function setPf(id){D.ui.pf=id;doneLimit=30;save();renderAll();}
   h.addEventListener('click',()=>{if(long||document.body.classList.contains('editing'))return;const P=D.set.profiles;if(P.length<2){openProfiles();return;}
     const i=P.findIndex(x=>x.id===curPf()),n=P[(i+1)%P.length];setPf(n.id);toast('Profilo: '+n.n);});
 })();
+$('pfd').addEventListener('click',()=>$('pfname').click());
 let pfDel=null,pfRen=null;
 function openProfiles(){
   const P=D.set.profiles,c=curPf();
@@ -1164,7 +1190,7 @@ function renderStats(){
   if(top.length){const hm=top[0][1].n,ord=top.length===1?[0]:top.length===2?[1,0]:[1,0,2];
     h+=box('pod','Chi chiede di più','',`<div class="pod">${ord.map(i=>{const[n,v]=top[i];return `<div class="${i===0?'p1':''}">${avImg(n,"big")}<span>${esc(n)}</span><s style="height:${30+v.n/hm*56}px">${v.n}</s></div>`;}).join('')}</div>`);}
   h+=box('rq','Richiedenti','',leg+`<div class="hb">${rl.length?rl.map(([n,v])=>`<div class="r" data-tip="<b>${esc(n)}</b><br>Richieste: ${v.n}<br>Alta ${v.p[2]} · Media ${v.p[1]} · Bassa ${v.p[0]}<br>Completate: ${v.d}"><span class="n">${esc(n)}</span>
-      <span class="t">${[0,1,2].map(i=>v.p[i]?`<i style="width:${v.p[i]/rm*100}%;background:${PRIO[i].c}"></i>`:'').join('')}</span><span class="v">${v.n}</span></div>`).join(''):'<div class="empty" style="padding:20px">Nessuna richiesta nel periodo</div>'}</div>`);
+      <span class="t">${[0,1,2].map(i=>v.p[i]?`<i style="width:${v.p[i]/v.n*100}%;background:${PRIO[i].c}"></i>`:'').join('')}</span><span class="v">${v.n}</span></div>`).join(''):'<div class="empty" style="padding:20px">Nessuna richiesta nel periodo</div>'}</div>`);
   $('stats').innerHTML=h+'</div>';
   applyLayout();
 }
