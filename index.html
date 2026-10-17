@@ -96,7 +96,7 @@ input,textarea,select{font:inherit;color:inherit}
 .card.enter{animation:cardIn .4s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
 /* pallino per completare: a destra, centrato in verticale */
-.dot{position:relative;order:2;width:30px;height:30px;border-radius:50%;border:2.5px solid var(--pc);flex-shrink:0;display:grid;place-items:center;transition:.2s}
+.dot{position:relative;order:2;width:30px;height:30px;padding:0;border-radius:50%;border:2.5px solid var(--pc);flex-shrink:0;display:grid;place-items:center;transition:.2s}
 .dot svg{width:16px;height:16px;opacity:.4;color:var(--pc);transition:.2s}
 .dot:hover svg{opacity:.75;color:var(--pc)}
 .card.isdone .dot,.dot.pop{background:var(--ok);border-color:var(--ok)}
@@ -702,7 +702,7 @@ function filtered(){
   const q=$('q').value.trim().toLowerCase();
   return D.tasks.filter(t=>!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q));
 }
-const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
 function card(t){
   // dentro la card, in quest'ordine: data di creazione, richiedente, priorità
   const F=D.set.fields,m=[`<span title="Creata il">${IC.cal}${dShort(dkey(new Date(t.created)))}</span>`];
