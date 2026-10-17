@@ -1598,12 +1598,12 @@ async function fidEnable(){
   }catch(e){toast('Face ID non attivato');return false;}
 }
 async function fidUnlock(manual){
-  try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64(localStorage.getItem(FIDKEY))}],
+  try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64(localStorage.getItem(FIDKEY)),transports:['internal']}],   // solo la chiave di questo telefono: niente scelta tra account
       userVerification:'required',timeout:60000}});
     $('fid').hidden=true;$('fid-err').textContent='';
   }catch(e){if(manual)$('fid-err').textContent='Non riconosciuto: riprova o usa il codice segreto';}
 }
-function fidLock(){if(!fidOn()||!localStorage.getItem(CODEKEY))return;$('fid').hidden=false;$('fid-cw').hidden=true;$('fid-err').textContent='';fidUnlock(false);}
+function fidLock(){if(!fidOn()||!localStorage.getItem(CODEKEY))return;$('fid').hidden=false;$('fid-cw').hidden=true;$('fid-err').textContent='';}   // Face ID parte solo quando tocchi Sblocca
 $('fid-go').onclick=()=>fidUnlock(true);
 $('fid-code').onclick=()=>{$('fid-cw').hidden=false;$('fid-in').value='';$('fid-in').focus();};
 $('fid-ok').onclick=()=>{if($('fid-in').value.trim().replace(/\s+/g,'')===localStorage.getItem(CODEKEY)){$('fid').hidden=true;}else $('fid-err').textContent='Codice sbagliato';};
