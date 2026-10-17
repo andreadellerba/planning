@@ -10,8 +10,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- il font scelto in Impostazioni viene caricato qui (vedi applyLook) -->
 <link id="fontlink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-<link rel="manifest" href="manifest.json?v=2">
-<link rel="apple-touch-icon" href="icon-180.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=3">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png?v=3">
+<link rel="manifest" href="manifest.json?v=3">
+<link rel="apple-touch-icon" href="icon-180.png?v=3">
 <meta name="theme-color" content="#0a0e1a">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -136,6 +138,10 @@ input,textarea,select{font:inherit;color:inherit}
 .qk::-webkit-scrollbar{display:none}
 .qk[hidden]{display:none}
 .qk.qd{justify-content:flex-start}   /* fila dei giorni per la scadenza */
+/* i pulsanti della barra si dividono la larghezza dello schermo; Ripeti è solo icona finché non lo scegli */
+.qk:not(.qd) .q{flex:1 1 0;min-width:0;justify-content:center;padding:0 6px;font-size:12.5px}
+.qk .q.rp{flex:0 0 auto;padding:0 11px}
+.q.set{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
 .q{position:relative;flex-shrink:0;height:36px;padding:0 13px;border-radius:14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--text);cursor:pointer}
 .q svg{width:15px;height:15px}
 .q.on{background:var(--accent);color:var(--onacc);border-color:transparent}
@@ -230,12 +236,21 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 }
 
 /* ═══ STATISTICHE: un numero grande, la curva, priorità e richiedenti ═══ */
-.pbar{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
-.pseg{display:flex}
-.pseg button{padding:0 14px;font-weight:800;font-size:12px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}
-.pnav{display:flex;align-items:center;gap:8px}
-.pnav button{font-weight:800}
-.pnav span{min-width:150px;text-align:center;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+/* periodo su una riga sola: ‹  OTTOBRE 2026 · MESE ▾  › ; toccando il centro si sceglie il periodo */
+.pbar{position:relative;display:flex;justify-content:center;margin-bottom:6px}
+.pone{display:flex;align-items:center;gap:4px;padding:5px;border-radius:24px;max-width:100%}
+.pone button{height:44px;border-radius:18px;font-weight:800}
+#pprev,#pnext{width:44px;flex-shrink:0;font-size:20px;color:var(--t-stat)}
+#pper{display:flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;min-width:0}
+#pper b{color:var(--t-stat)}
+#pper b:not(:empty)::before{content:"· ";color:var(--muted)}
+#pper i{font-style:normal;font-size:10px;color:var(--muted)}
+.pmenu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:20;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:20px;min-width:200px;
+  background:color-mix(in srgb,var(--bg) 72%,#2a2d38);border:.5px solid var(--glassb);box-shadow:0 20px 50px rgba(0,0,0,.45);animation:shIn .15s ease}
+:root[data-mode="light"] .pmenu{background:#fff}
+.pmenu[hidden]{display:none}
+.pmenu button{height:42px;border-radius:14px;font-weight:700;font-size:14px}
+.pmenu button.on{background:var(--t-stat);color:#111}
 .big{text-align:center;margin:18px 0 6px}
 .big b{display:block;font-family:var(--fd);font-weight:var(--fdw);letter-spacing:var(--fdls);font-size:calc(120px*var(--fdz));line-height:.95;color:var(--t-stat);font-variant-numeric:tabular-nums}
 .big p{margin:8px 0 12px;color:var(--muted);font-size:15px}
@@ -296,6 +311,11 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
 .g2:last-child{border-bottom:0}
 .g2.one{grid-template-columns:minmax(0,1fr)}
+.g2.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* riga compatta: nome a sinistra, comando a destra */
+.ir{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ir:last-child{border-bottom:0}
+.ir>b{font-weight:650;font-size:13px}
 .c{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:9px;min-width:0;text-align:center}
 .c>b{font-weight:650;font-size:13px}
 .c .sel{width:100%;max-width:260px;padding:0 30px 0 14px;text-overflow:ellipsis}
@@ -409,8 +429,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <section class="page" id="p-stat" data-t="stat">
     <div class="ph"><div><small>Il tuo andamento</small><h1 data-el="t-stat" data-def="Statistiche">Statistiche</h1></div></div>
     <div class="pbar">
-      <div class="pseg" id="pseg"><button data-p="w">Settimana</button><button data-p="m" class="on">Mese</button><button data-p="y">Anno</button><button data-p="a">Sempre</button></div>
-      <div class="pnav"><button id="pprev" aria-label="Periodo precedente">‹</button><span id="plbl"></span><button id="pnext" aria-label="Periodo successivo">›</button></div>
+      <div class="pone gl"><button id="pprev" aria-label="Periodo precedente">‹</button><button id="pper" aria-haspopup="true"><span id="plbl"></span><b id="pname"></b><i>▾</i></button><button id="pnext" aria-label="Periodo successivo">›</button></div>
+      <div class="pmenu" id="pseg" hidden><button data-p="w">Settimana</button><button data-p="m">Mese</button><button data-p="y">Anno</button><button data-p="a">Sempre</button></div>
     </div>
     <div id="stats"></div>
   </section>
@@ -439,14 +459,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 <div class="qdim" id="qdim"></div>
 <div class="qa" id="qa">
   <div class="qpv" id="qpv"></div>
-  <div class="qk qd" id="qd" hidden></div>
   <div class="qk" id="qk"></div>
-  <div class="qi gl"><input id="qt" placeholder="Nuova attività…" autocomplete="off" enterkeyhint="send" maxlength="200"><datalist id="qreqs"></datalist>
+  <div class="qk qd" id="qsug" hidden></div>
+  <div class="qi gl"><input id="qt" autocomplete="off" enterkeyhint="send" maxlength="200" aria-label="Nuova attività">
     <button class="sd" id="qsend" aria-label="Aggiungi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
 </div>
 <!-- primo avvio su un dispositivo: si incolla il codice segreto (o se ne crea uno nuovo) -->
 <div class="lock" id="lock" hidden><div class="lock-box gl">
-  <img class="lock-ic" src="icon-180.png?v=2" alt="">
+  <img class="lock-ic" src="icon-180.png?v=3" alt="">
   <h2 class="dsp">Bentornato</h2>
   <p>Incolla il tuo codice segreto: un codice, le tue attività su ogni dispositivo. Lo chiede solo la prima volta.</p>
   <div class="lock-in gl"><input id="lock-in" placeholder="Codice segreto" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="lock-paste" type="button">Incolla</button></div>
@@ -462,7 +482,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 /* ═══ DATI: in locale nel browser e online su Firebase (sincronizzazione più sotto) ═══ */
 const KEY='todo-app-v2',OLDKEY='todo-app-v1';
 const PRIO=[{n:'Bassa',c:'var(--p0)'},{n:'Media',c:'var(--p1)'},{n:'Alta',c:'var(--p2)'}];
-const DEF_SET={mode:'dark',theme:'mezzanotte',font:'jakarta',accent:'#8fa2ff',bg:{dark:'#0a0e1a',light:''},fs:14,sound:true,anim:true,confetti:true,defDays:7,
+const DEF_SET={mode:'dark',theme:'mezzanotte',font:'jakarta',accent:'#8fa2ff',bg:{dark:'#0a0e1a',light:''},fs:14,sound:true,anim:true,confetti:true,glow:true,defDays:7,
   fields:{req:true,prio:true,due:true,rec:true},custom:[],labels:{},layout:{}};
 /* temi colori: sfondo + colore principale (+ sfumatura del testo); in Impostazioni si possono poi ritoccare */
 const PALS={
@@ -625,7 +645,7 @@ function applyLook(){
       const a=x=>`rgba(${rr},${gg},${bb},${x})`;
       r.style.setProperty('--bgimg',`radial-gradient(120% 75% at 50% -12%,${a(m==='dark'?.62:.42)},transparent 72%),radial-gradient(70% 55% at 100% 100%,${a(m==='dark'?.3:.22)},transparent 70%),radial-gradient(60% 45% at 0% 70%,${a(m==='dark'?.18:.14)},transparent 70%)`);}}
   // sfondo in tinta unita: una luce del colore principale scende dall'alto
-  if(r.style.getPropertyValue('--bgimg')==='none')r.style.setProperty('--bgimg',`radial-gradient(120% 55% at 50% -10%,color-mix(in srgb,${D.set.accent} ${m==='dark'?34:22}%,transparent),transparent 70%)`);
+  if(D.set.glow!==false&&r.style.getPropertyValue('--bgimg')==='none')r.style.setProperty('--bgimg',`radial-gradient(120% 55% at 50% -10%,color-mix(in srgb,${D.set.accent} ${m==='dark'?34:22}%,transparent),transparent 70%)`);
   // tema colori: sfumatura del testo del tema (solo se il tema è della stessa modalità chiaro/scuro)
   const P=PALS[D.set.theme];
   [['--text','tx'],['--muted','mu'],['--soft','so']].forEach(([v,k])=>{if(P&&P[k]&&!!P.light===(m==='light'))r.style.setProperty(v,P[k]);else r.style.removeProperty(v);});
@@ -815,52 +835,55 @@ $('sortbtn').onclick=()=>{D.ui.sort=D.ui.sort==='old'?'new':'old';save();renderA
 $('n-todo').onclick=()=>{D.ui.cnt=D.ui.cnt==='todo'?'done':'todo';save();renderAtt();toast(D.ui.cnt==='todo'?'Da completare sul totale':'Completate sul totale');};
 
 /* ═══ AGGIUNTA RAPIDA: si scrive e si invia, come un messaggio ═══ */
-/* tre pulsanti: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi), la priorità si cambia toccandola */
-let qv={prio:1,title:'',req:'',due:'',mode:'t'};
+/* barra del +: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi);
+   Scadenza, Ripeti e Priorità cambiano valore a ogni tocco, così niente si sposta e la tastiera resta aperta */
+const QDUE=[null,0,1,3,7,14,30];   // null = scadenza predefinita (Impostazioni)
+const QDUEL=['Scadenza','Oggi','Domani','Tra 3 g','Tra 1 sett','Tra 2 sett','Tra 1 mese'];
+const QREC=['','daily','weekly','monthly'],QRECL=['','Ogni giorno','Ogni sett.','Ogni mese'];
+const IC_REP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>';
+let qv={prio:1,title:'',req:'',due:0,rec:0,mode:'t'};
 function openQuick(){
   if(!$('p-att').classList.contains('on'))go('att');
-  qv={prio:1,title:'',req:'',due:'',mode:'t'};qField();
-  $('qreqs').innerHTML=[...new Set(D.tasks.map(x=>x.req).filter(Boolean))].map(r=>`<option value="${esc(r)}">`).join('');
+  qv={prio:1,title:'',req:'',due:0,rec:0,mode:'t'};qField();
   renderQk();document.body.classList.add('quick');$('qdim').classList.add('on');$('qa').classList.add('on');$('qt').focus();kbFit();   // focus subito: su iPhone apre la tastiera solo dentro al tocco
 }
 function closeQuick(){document.body.classList.remove('quick');$('qa').classList.remove('on');$('qdim').classList.remove('on');if(document.activeElement)document.activeElement.blur();}
 function renderQk(){
   const F=D.set.fields,r=qv.mode==='r';
   let h=`<button class="q gl ${r?'':'on'}" data-mode="t">Attività</button>`;
-  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${qv.req&&!r?esc(qv.req):'Chi'}</button>`;
-  // scadenza: si sceglie da una fila di giorni (niente calendario di sistema, così la tastiera resta aperta);
-  // se non la scegli valgono i giorni impostati in Impostazioni
-  if(F.due)h+=`<button class="q gl ${qv.dOpen?'on':''}" data-due>${qv.due?'Scadenza · '+dShort(qv.due):'Scadenza'}</button>`;
+  if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">${qv.req&&!r?esc(qv.req):'Richiedente'}</button>`;
+  if(F.due)h+=`<button class="q gl ${qv.due?'set':''}" data-due>${QDUEL[qv.due]}</button>`;
+  if(F.rec)h+=`<button class="q gl rp ${qv.rec?'set':''}" data-rec aria-label="Ripeti">${IC_REP}${qv.rec?QRECL[qv.rec]:''}</button>`;
   if(F.prio)h+=`<button class="q gl pr" data-prio style="--pc:${PRIO[qv.prio].c}" title="Tocca per cambiare"><i class="pdot"></i>${PRIO[qv.prio].n}</button>`;
-  $('qk').innerHTML=h;
-  const t=today();
-  $('qd').hidden=!qv.dOpen;
-  if(qv.dOpen)$('qd').innerHTML=[...Array(22)].map((_,i)=>{const k=addD(t,i),d=kd(k);
-    const l=i===0?'Oggi':i===1?'Domani':['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][d.getDay()]+' '+d.getDate();
-    return `<button class="q gl ${qv.due===k?'on':''}" data-day="${k}">${l}</button>`;}).join('')
-    +(qv.due?'<button class="q gl" data-day="">Togli</button>':'');
-  qPreview();
+  $('qk').innerHTML=h;qSug();qPreview();
 }
 /* anteprima: la card come apparirà, aggiornata mentre scrivi */
 function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
   $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?v:qv.req,prio:qv.prio,created:Date.now(),done:false});}
-$('qt').addEventListener('input',qPreview);
-/* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta */
-function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.placeholder=r?"Chi l'ha chiesta?":'Nuova attività…';
-  if(r)f.setAttribute('list','qreqs');else f.removeAttribute('list');f.maxLength=r?60:200;}
+/* suggerimenti dei richiedenti: sopra il campo dove scrivi */
+function qSug(){const box=$('qsug');if(qv.mode!=='r'){box.hidden=true;return;}
+  const v=$('qt').value.trim().toLowerCase(),cnt={};D.tasks.forEach(t=>{if(t.req)cnt[t.req]=(cnt[t.req]||0)+1;});
+  const l=Object.keys(cnt).filter(n=>!v||n.toLowerCase().includes(v)).sort((a,b)=>cnt[b]-cnt[a]).slice(0,10);
+  box.hidden=!l.length;box.innerHTML=l.map(n=>`<button class="q gl" data-sug="${esc(n)}">${esc(n)}</button>`).join('');}
+$('qt').addEventListener('input',()=>{qSug();qPreview();});
+/* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta (niente scritta grigia: la cursore lampeggiava sopra) */
+function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.maxLength=r?60:200;f.setAttribute('aria-label',r?'Richiedente':'Nuova attività');}
 function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
 /* i pulsanti non tolgono il cursore dal campo, così la tastiera resta aperta */
-['qk','qd'].forEach(id=>$(id).addEventListener('mousedown',e=>e.preventDefault()));
+['qk','qsug'].forEach(id=>$(id).addEventListener('mousedown',e=>e.preventDefault()));
 $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.mode&&b.dataset.mode!==qv.mode){qStore();qv.mode=b.dataset.mode;qField();}
   else if(b.hasAttribute('data-prio'))qv.prio=(qv.prio+1)%3;
-  else if(b.hasAttribute('data-due'))qv.dOpen=!qv.dOpen;
+  else if(b.hasAttribute('data-due'))qv.due=(qv.due+1)%QDUE.length;
+  else if(b.hasAttribute('data-rec'))qv.rec=(qv.rec+1)%QREC.length;
   renderQk();$('qt').focus();});
-$('qd').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b)return;qv.due=b.dataset.day;qv.dOpen=false;renderQk();$('qt').focus();});
+$('qsug').addEventListener('click',e=>{const b=e.target.closest('[data-sug]');if(!b)return;
+  qv.req=b.dataset.sug;qv.mode='t';qField();renderQk();$('qt').focus();});
 function sendQuick(){
   qStore();
   if(!qv.title){if(qv.mode!=='t'){qv.mode='t';qField();renderQk();}$('qt').focus();return;}
-  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:qv.due||addD(today(),D.set.defDays),rec:null,cf:{},done:false,doneAt:0,created:Date.now()};
+  const days=QDUE[qv.due]==null?D.set.defDays:QDUE[qv.due];
+  const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:addD(today(),days),rec:qv.rec?{type:QREC[qv.rec]}:null,cf:{},done:false,doneAt:0,created:Date.now()};
   D.tasks.push(o);save();closeQuick();go('att');toast('Aggiunta: '+o.title);
   const ne=document.querySelector(`.card[data-id="${o.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
 }
@@ -962,7 +985,7 @@ function buckets(r){
 function renderStats(){
   document.querySelectorAll('#pseg button').forEach(b=>b.classList.toggle('on',b.dataset.p===D.ui.per));
   const p=D.ui.per,r=range(),inR=ts=>ts>=r.s&&ts<r.e;
-  $('plbl').textContent=r.lbl;$('pprev').style.visibility=$('pnext').style.visibility=p==='a'?'hidden':'visible';
+  $('plbl').textContent=r.lbl;$('pname').textContent={w:'Settimana',m:'Mese',y:'Anno',a:''}[p];$('pprev').style.visibility=$('pnext').style.visibility=p==='a'?'hidden':'visible';
   const Tk=D.tasks,cre=Tk.filter(t=>inR(t.created)),don=Tk.filter(t=>t.done&&inR(t.doneAt)),open=Tk.filter(t=>!t.done);
   // il numero grande: completate nel periodo, confrontate con il periodo prima
   const mon=x=>x.toLocaleDateString('it-IT',{month:'long'});
@@ -997,7 +1020,9 @@ function renderStats(){
   $('stats').innerHTML=h+'</div>';
   applyLayout();
 }
-$('pseg').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;D.ui.per=b.dataset.p;pRef=new Date();save();renderStats();};
+$('pseg').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;D.ui.per=b.dataset.p;pRef=new Date();$('pseg').hidden=true;save();renderStats();};
+$('pper').onclick=e=>{e.stopPropagation();$('pseg').hidden=!$('pseg').hidden;};
+document.addEventListener('click',e=>{if(!$('pseg').hidden&&!e.target.closest('#pseg,#pper'))$('pseg').hidden=true;});
 $('pprev').onclick=()=>shiftP(-1);$('pnext').onclick=()=>shiftP(1);
 function shiftP(n){const p=D.ui.per;if(p==='w')pRef.setDate(pRef.getDate()+7*n);if(p==='m'){pRef.setDate(1);pRef.setMonth(pRef.getMonth()+n);}if(p==='y')pRef.setFullYear(pRef.getFullYear()+n);renderStats();}
 /* fumetto dei grafici: col mouse su PC, col tocco su telefono */
@@ -1050,14 +1075,14 @@ function renderSets(){
       <div class="g2">${c('Sfondo',pk('bg',bg,colName(BGN,bg)))}${c('Colore principale',pk('acc',ac,colName(ACN,ac)))}</div>
       <div class="g2">${c('Font',pk('font','',F.n))}
         ${c('Dimensione testo',`<select class="sel" id="s-fs">${[[13,'Piccolo'],[14,'Normale'],[16,'Grande']].map(([k,v])=>`<option value="${k}" ${S.fs===k?'selected':''}>${v}</option>`).join('')}</select>`)}</div>
-      <div class="g2">${c('Animazioni',tg('anim',S.anim))}${c('Suoni',tg('sound',S.sound))}</div>`)}
+      <div class="g2 g3">${c('Luce sfondo',tg('glow',S.glow!==false))}${c('Animazioni',tg('anim',S.anim))}${c('Suoni',tg('sound',S.sound))}</div>`)}
     ${sb('att','Attività',`
-      <div class="g2 one">${c('Scadenza predefinita (giorni)',`<input class="num" type="number" min="0" max="365" id="s-dd" value="${S.defDays}">`)}</div>
+      <div class="ir"><b>Scadenza predefinita (giorni)</b><input class="num" type="number" min="0" max="365" id="s-dd" value="${S.defDays}"></div>
       <div class="g2">${Object.entries(fl).slice(0,2).map(([k,v])=>c(v,`<button class="tg ${S.fields[k]?'on':''}" data-f="${k}"></button>`)).join('')}</div>
       <div class="g2">${Object.entries(fl).slice(2).map(([k,v])=>c(v,`<button class="tg ${S.fields[k]?'on':''}" data-f="${k}"></button>`)).join('')}</div>`)}
-    ${sb('edit','Personalizza',`<div class="g2 one">${c('Modalità editor',`<button class="tg ${D.ui.editor?'on':''}" id="s-ed"></button>`)}</div>`)}
+    ${sb('edit','Personalizza',`<div class="ir"><b>Modalità editor</b><button class="tg ${D.ui.editor?'on':''}" id="s-ed"></button></div>`)}
     ${sb('sync','Sincronizzazione',`
-      <div class="g2 one">${c('Stato','<span class="sync"><i></i> Sincronizzo…</span>')}</div>
+      <div class="ir"><b>Stato</b><span class="sync"><i></i> Sincronizzo…</span></div>
       <div class="g2 one">${c('Codice segreto',`<div class="code" id="s-code">${localStorage.getItem(CODEKEY)?'•'.repeat(36):'—'}</div><div style="display:flex;gap:6px"><button class="sbtn" id="s-show">Mostra</button><button class="sbtn" id="s-copy">Copia</button></div>`)}</div>
       <div class="g2 one">${c('Scollega questo dispositivo','<button class="sbtn dng" id="s-out">Scollega</button>')}</div>`)}
   </div>`;
