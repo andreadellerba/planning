@@ -99,6 +99,23 @@ input,textarea,select{font:inherit;color:inherit}
 .card.leave{opacity:0;max-height:0;margin:0;padding-top:0;padding-bottom:0;transform:scale(.97)}
 .card.enter{animation:cardIn .4s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+.swp:has(.snz){overflow:hidden}
+.lgrp .swp .card{background:var(--card)}
+.swp .snz{position:absolute;top:0;right:0;bottom:0;width:198px;display:flex;z-index:0}
+.swp .snz button{flex:1;border:0;font:inherit;font-size:12px;font-weight:800;color:#fff;cursor:pointer}
+.swp .snz button:nth-child(1){background:#2f6fed}.swp .snz button:nth-child(2){background:#5b4bd6}.swp .snz button:nth-child(3){background:#7a3fd0}
+.swp:has(.snz) .sa.l{display:none}
+.swp .card{position:relative;z-index:1}
+.hist{display:flex;flex-direction:column;padding-left:6px}
+.hi{position:relative;display:flex;gap:10px;align-items:baseline;padding:0 0 9px 14px;border-left:2px solid var(--line)}
+.hi:last-child{padding-bottom:0}
+.hi i{position:absolute;left:-6px;top:3px;width:10px;height:10px;border-radius:50%}
+.hi b{flex:none;width:52px;font-size:11.5px;color:var(--soft);font-weight:700}
+.hi span{font-size:13px}
+.hage{font-weight:500;color:var(--soft);text-transform:none;letter-spacing:0}
+.hwarn{margin:2px 0 10px;padding:11px 12px;border-radius:14px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:#f8c96a;font-size:13px;line-height:1.45}
+.hwb{display:flex;gap:8px;margin-top:9px}.hwb .btn{flex:1}
+.card .pp{color:#f59e0b;font-weight:700}
 .card.ghost{box-shadow:0 14px 34px rgba(0,0,0,.45)!important;overflow:hidden;will-change:transform,width,height;padding:0!important}
 .card.ghost .gchk{position:absolute;inset:0;display:grid;place-items:center;color:#fff;opacity:0}
 .card.ghost .gchk svg{width:58%;height:58%}   /* la pallina che vola su Completate */
@@ -993,7 +1010,9 @@ const I18={ // italiano: [inglese, turco]
 'Rubino':['Ruby','Yakut'],'Ruggine':['Rust','Pas'],'Sabbia':['Sand','Kum'],'Sabbia notte':['Night sand','Gece kumu'],'Salmone':['Salmon','Somon'],'Salvia':['Sage','Adaçayı'],
 'Smeraldo':['Emerald','Zümrüt'],'Sole':['Sun','Güneş'],'Terracotta':['Terracotta','Kiremit'],'Turchese':['Turquoise','Turkuaz'],'Vaniglia':['Vanilla','Vanilya'],'Verde acqua':['Teal','Deniz yeşili'],
 'Verde':['Green','Yeşil'],'Vinaccia':['Wine','Şarap'],'Viola scuro':['Dark purple','Koyu mor'],'Viola':['Purple','Mor'],'Zaffiro':['Sapphire','Safir'],'Zucca':['Pumpkin','Balkabağı'],
-'Solo':['Only','Sadece'],'Togli filtro':['Remove filter','Filtreyi kaldır'],
+'Solo':['Only','Sadece'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
+'Tienila':['Keep it','Kalsın'],'Toglila':['Remove it','Kaldır'],'+1 sett':['+1 week','+1 hafta'],'Tocca per vedere la storia':['Tap to see the history','Geçmişi görmek için dokun'],
+'domani':['tomorrow','yarın'],'oggi':['today','bugün'],'Togli filtro':['Remove filter','Filtreyi kaldır'],
 'Esempio di attività':['Sample task','Örnek görev']
 };
 // frasi con numeri, nomi o date: [schema italiano, inglese, turco]
@@ -1015,6 +1034,12 @@ const I18P=[
  [/^Sostituire tutto con il backup \((\d+) attività\)\?$/,'Replace everything with the backup ($1 tasks)?','Her şey yedekle değiştirilsin mi ($1 görev)?'],
  [/^Ogni mese il (\d+)$/,'Every month on the $1','Her ayın $1. günü'],[/^Ogni (\d+) (giorni|giorno)$/,'Every $1 days','Her $1 günde bir'],
  [/^Ogni (\d+) (settimane|settimana)$/,'Every $1 weeks','Her $1 haftada bir'],[/^Ogni (\d+) (mesi|mese)$/,'Every $1 months','Her $1 ayda bir'],
+ [/^↻ rimandata (\d+) volte$/,'↻ postponed $1 times','↻ $1 kez ertelendi'],[/^Creata, scadenza (.+)$/,'Created, due $1','Oluşturuldu, bitiş $1'],
+ [/^Rimandata dal (.+) al (.+)$/,'Postponed from $1 to $2','$1 → $2 ertelendi'],[/^Anticipata dal (.+) al (.+)$/,'Brought forward from $1 to $2','$1 → $2 öne alındı'],
+ [/^Priorità da (\S+) a (\S+)$/,m=>'Priority from '+trS(m[1])+' to '+trS(m[2]),m=>'Öncelik '+trS(m[1])+' → '+trS(m[2])],
+ [/^· nata oggi$/,'· created today','· bugün oluşturuldu'],[/^· nata ieri$/,'· created yesterday','· dün oluşturuldu'],[/^· nata (\d+) giorni fa$/,'· created $1 days ago','· $1 gün önce oluşturuldu'],
+ [/^Rimandata (\d+) volte\. È ancora da fare così o va tolta\?$/,'Postponed $1 times. Is it still needed as it is, or should it go?','$1 kez ertelendi. Hâlâ böyle mi yapılacak, yoksa kaldırılsın mı?'],
+ [/^Rimandata a (.+) · (\d+) volte$/,'Postponed to $1 · $2 times','$1 tarihine ertelendi · $2 kez'],[/^Rimandata a (.+)$/,'Postponed to $1','$1 tarihine ertelendi'],
  [/^Completate: (\d+)$/,'Completed: $1','Tamamlanan: $1'],[/^(<b>.*<\/b><br>)Completate: (\d+)$/,'$1Completed: $2','$1Tamamlanan: $2'],[/^Priorità (alta|media|bassa)$/,m=>({alta:'High',media:'Medium',bassa:'Low'}[m[1]])+' priority',m=>({alta:'Yüksek',media:'Orta',bassa:'Düşük'}[m[1]])+' öncelik'],
  [/^ Non sincronizzato(.*): riprovo da solo$/,' Not synced$1: retrying',' Senkronize değil$1: tekrar deneniyor'],[/^ Sincronizzato$/,' Synced',' Senkronize edildi'],[/^ Sincronizzo…$/,' Syncing…',' Senkronize ediliyor…'],
  [/^Rimuovere il campo "(.+)"\? I valori già inseriti restano salvati ma non si vedono più\.$/,'Remove the field "$1"? Values already entered stay saved but are no longer shown.','"$1" alanı kaldırılsın mı? Girilen değerler kayıtlı kalır ama artık görünmez.'],
@@ -1146,6 +1171,7 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
   const m=[`<span class="${late?'late':''}" title="Creata il … scade il …">${dShort(dkey(new Date(t.created)))}${F.due&&t.due?' – '+dShort(t.due):''}</span>`];
   // richiedente con nome e cognome; se non ci sta viene tagliato, così i dettagli restano su una riga.
   // la priorità non è scritta: la dice la riga colorata a sinistra (su tutti gli stili di card)
+  {const pn=postponed(t);if(!t.done&&pn>=3)m.push(`<span class="pp" title="Tocca per vedere la storia">↻ rimandata ${pn} volte</span>`);}   // storia: si vede sulla card
   if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}"><em>${esc(t.req)}</em></span>`);
   if(F.prio)m.push(`<span class="pr">${PRIO[t.prio].n}</span>`);   // priorità scritta, senza pallino né colore (il colore è nella sfumatura)
 if(F.rec&&t.rec&&t.rec.type)m.push(`<span class="rc" title="${esc(recLabel(t.rec))}">${IC.rep}</span>`);   // si ripete
@@ -1238,10 +1264,10 @@ function bumpDone(){const b=document.querySelector('#l-all .dsep:not(.first) b')
 function toggle(t,el){
   const cardEl=el&&el.closest('.card'),dot=cardEl&&cardEl.querySelector('.dot');
   const go2=()=>{
-    if(!t.done){t.done=true;t.doneAt=Date.now();
-      if(t.rec&&t.rec.type){const n={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),due:nextDate(t.due,t.rec)};D.tasks.push(n);t.rec=null;
+    if(!t.done){t.done=true;t.doneAt=Date.now();hist(t,'done');
+      if(t.rec&&t.rec.type){const n={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),due:nextDate(t.due,t.rec),hist:[],hAck:0};hist(n,'new',null,n.due);D.tasks.push(n);t.rec=null;
         toast('Fatta! Prossima: '+dShort(n.due));}
-    }else{t.done=false;t.doneAt=0;}
+    }else{t.done=false;t.doneAt=0;hist(t,'undo');}
     save();renderAtt();const ne=document.querySelector(`.card[data-id="${t.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
   };
   if(!t.done){ding(true);if(cardEl&&D.set.anim){dot.classList.add('pop');confetti(dot);setTimeout(()=>crumpleFly(cardEl,()=>{go2();bumpDone();}),340);}else go2();}
@@ -1290,6 +1316,7 @@ $('l-all').addEventListener('click',e=>{
   if(document.body.classList.contains('editing'))return;
   if(e.target.closest('[data-a="more"]')){doneLimit+=30;renderAtt();return;}
   if(e.target.closest('[data-a="rqf-x"]')){reqFilter='';renderAtt();return;}
+  const sz=e.target.closest('[data-snz]');if(sz){const t=taskOf(sz.closest('.swp').querySelector('.card'));if(t)snooze(t,sz.dataset.snz);return;}
   const c=e.target.closest('.card');if(!c)return;const t=D.tasks.find(x=>x.id===c.dataset.id);if(!t)return;
   if(e.target.closest('[data-a="tog"]')){e.stopPropagation();toggle(t,e.target);return;}
   if(t.req&&e.target.closest('.rq,.avi')){reqFilter=reqFilter===t.req?'':t.req;window.scrollTo({top:0,behavior:'smooth'});renderAtt();return;}   // tocco sul richiedente: solo le sue
@@ -1299,12 +1326,20 @@ $('l-all').addEventListener('click',e=>{
 const taskOf=c=>c&&D.tasks.find(x=>x.id===c.dataset.id);
 function eatClick(){const stop=ev=>{ev.stopPropagation();ev.preventDefault();};document.addEventListener('click',stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',stop,{capture:true}),60);}
 function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;D.tasks.splice(i,1);save();renderAll();toast('Attività eliminata',()=>{D.tasks.splice(i,0,t);});}
+/* rimanda con un gesto: scorri a sinistra e scegli quando (le attività completate invece si eliminano scorrendo) */
+const SNZ=[['d1','Domani'],['mon','Lunedì'],['w1','+1 sett']],SNZW=198;
+let openSw=null;
+function snzDate(k){const t0=today();if(k==='d1')return addD(t0,1);if(k==='w1')return addD(t0,7);const d=kd(t0).getDay();return addD(t0,((8-d)%7)||7);}
+function snooze(t,k){const nd=snzDate(k);if(nd!==t.due){hist(t,'due',t.due,nd);t.due=nd;}openSw=null;save();renderAtt();
+  const n=postponed(t);toast('Rimandata a '+dueLbl(nd).toLowerCase()+(n>=3&&n>(t.hAck||0)?' · '+n+' volte':''));}
 (function(){
   let st=null;const L=$('l-all'),GO=90;
   const wrap=(c,t)=>{if(c.parentNode.classList.contains('swp'))return c.parentNode;const w=document.createElement('div');w.className='swp';
-    w.innerHTML=`<div class="sa r">${IC.chk}${t.done?'Da fare':'Fatta'}</div><div class="sa l">Elimina<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div>`;
+    w.innerHTML=`<div class="sa r">${IC.chk}${t.done?'Da fare':'Fatta'}</div>${t.done?'':`<div class="snz">${SNZ.map(([k,n])=>`<button type="button" data-snz="${k}">${n}</button>`).join('')}</div>`}<div class="sa l">Elimina<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div>`;
     c.replaceWith(w);w.appendChild(c);return w;};
   const back=s=>{s.c.style.transition='transform .25s ease';s.c.style.transform='';setTimeout(()=>{s.c.style.transition='';if(s.w&&s.w.isConnected){s.w.replaceWith(s.c);}},260);};
+  // tocco fuori dai pulsanti di rimando: la card torna al suo posto
+  document.addEventListener('pointerdown',e=>{if(openSw&&!e.target.closest('.snz')){const s=openSw;openSw=null;back(s);}},true);
   L.addEventListener('pointerdown',e=>{
     if(document.body.classList.contains('editing')||e.button>0)return;
     const c=e.target.closest('.card');if(!c||e.target.closest('.dot'))return;
@@ -1323,7 +1358,9 @@ function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;D.tasks.splice(i,1)
   const end=()=>{if(!st)return;clearTimeout(st.lp);const s=st;st=null;
     if(s.mode==='menu'){eatClick();return;}
     if(s.mode!=='swipe')return;eatClick();
-    const t=taskOf(s.c);if(!t||Math.abs(s.dx)<=GO){back(s);return;}
+    const t=taskOf(s.c);
+    if(t&&!t.done&&s.dx<-45){s.c.style.transition='transform .22s ease';s.c.style.transform=`translateX(-${SNZW}px)`;s.w.classList.add('open');openSw=s;return;}   // resta aperta sui pulsanti per rimandare
+    if(!t||Math.abs(s.dx)<=GO){back(s);return;}
     s.c.style.transition='transform .22s ease';s.c.style.transform=`translateX(${s.dx>0?'':'-'}115%)`;
     if(s.dx>0&&!t.done)confetti(s.c);   // coriandoli anche quando completi scorrendo
     setTimeout(()=>{if(s.dx>0)toggle(t,null);else delTask(t);},200);
@@ -1347,10 +1384,10 @@ function closeCardMenu(){$('cmo').classList.remove('on');document.querySelectorA
 $('cmo').addEventListener('click',e=>{
   const t=D.tasks.find(x=>x.id===$('cmo').dataset.id),b=e.target.closest('[data-m],[data-p]');
   if(!b||!t){closeCardMenu();return;}
-  if(b.dataset.p!==undefined){t.prio=+b.dataset.p;save();closeCardMenu();renderAll();return;}
+  if(b.dataset.p!==undefined){const np=+b.dataset.p;if(np!==t.prio)hist(t,'prio',t.prio,np);t.prio=np;save();closeCardMenu();renderAll();return;}
   closeCardMenu();const m=b.dataset.m;
   if(m==='edit')openForm(t);
-  if(m==='dup'){const n={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)'};D.tasks.push(n);save();renderAll();toast('Attività duplicata');}
+  if(m==='dup'){const n={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)',hist:[],hAck:0};hist(n,'new',null,n.due);D.tasks.push(n);save();renderAll();toast('Attività duplicata');}
   if(m==='tog')toggle(t,null);
   if(m==='del')delTask(t);
 });
@@ -1469,7 +1506,7 @@ function sendQuick(){
   if(!qv.title){if(qv.mode!=='t'){qv.mode='t';qField();renderQk();}$('qt').focus();return;}
 
   const o={id:uid(),title:qv.title,desc:'',req:qv.req,prio:qv.prio,due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,cf:{},done:false,doneAt:0,created:Date.now()};
-  o.pf=curPf();D.tasks.push(o);save();closeQuick();go('att');toast('Aggiunta: '+o.title);
+  o.pf=curPf();hist(o,'new',null,o.due);D.tasks.push(o);save();closeQuick();go('att');toast('Aggiunta: '+o.title);
   const ne=document.querySelector(`.card[data-id="${o.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
 }
 $('qsend').addEventListener('mousedown',e=>e.preventDefault());
@@ -1522,6 +1559,7 @@ function openForm(t,pre){   /* pre: valori già scelti nella barra rapida ("Dett
     ${F.rec?`<div class="f"><label>Ricorrenza</label><select class="inp sel" id="i-rec">${Object.entries(REC).map(([k,v])=>`<option value="${k}" ${rt===k?'selected':''}>${v}</option>`).join('')}</select>
       <div id="i-recx"></div></div>`:''}
     ${(D.set.custom||[]).map(f=>`<div class="f"><label>${esc(f.name)}</label>${cfInput(f,(fv.cf||{})[f.id])}</div>`).join('')}
+    ${t?histHtml(t):''}
     <div class="acts">${t?'<button class="btn del" id="b-del" title="Elimina">🗑</button><button class="btn" id="b-dup" title="Duplica">⧉</button>':''}
       <button class="btn" id="b-cancel">Annulla</button><button class="btn pri" id="b-save">${t?'Salva':'Aggiungi'}</button></div>`;
   recExtra();
@@ -1530,8 +1568,9 @@ function openForm(t,pre){   /* pre: valori già scelti nella barra rapida ("Dett
   if($('i-rec'))$('i-rec').onchange=e=>{fv.rec={type:e.target.value,n:fv.rec.n||2,u:fv.rec.u||'d',day:fv.rec.day||kd(($('i-due')&&$('i-due').value)||today()).getDate(),wd:fv.rec.wd||[]};recExtra();};
   if($('i-due'))$('i-due').oninput=e=>{const h=e.target.parentNode.querySelector('.hint');if(h)h.textContent=e.target.value?'':'Se la lasci vuota: tra '+D.set.defDays+' giorni';};
   $('b-cancel').onclick=closeForm;$('b-save').onclick=saveForm;
+  $('sheet').querySelectorAll('[data-hw]').forEach(b=>b.onclick=()=>{if(b.dataset.hw==='keep'){t.hAck=postponed(t);save();b.closest('.hwarn').remove();renderAtt();}else $('b-del').click();});   // storia: rimandata troppe volte
   if(t){$('b-del').onclick=()=>{const i=D.tasks.indexOf(t);D.tasks.splice(i,1);save();closeForm();renderAll();toast('Attività eliminata',()=>{D.tasks.splice(i,0,t);});};
-    $('b-dup').onclick=()=>{const c={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)'};D.tasks.push(c);save();renderAll();openForm(c);toast('Attività duplicata');};}
+    $('b-dup').onclick=()=>{const c={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)',hist:[],hAck:0};hist(c,'new',null,c.due);D.tasks.push(c);save();renderAll();openForm(c);toast('Attività duplicata');};}
 }
 function cfInput(f,v){
   const id='cf-'+f.id;
@@ -1551,13 +1590,29 @@ function recExtra(){
   if($('r-u'))$('r-u').onchange=e=>r.u=e.target.value;
   if($('r-wd'))$('r-wd').onclick=e=>{const b=e.target.closest('[data-i]');if(!b)return;const i=+b.dataset.i;r.wd=r.wd||[];r.wd=r.wd.includes(i)?r.wd.filter(x=>x!==i):[...r.wd,i].sort();b.classList.toggle('on');};
 }
+/* ═══ STORIA DI OGNI ATTIVITÀ: t.hist = [{d:quando, k:tipo, a:prima, b:dopo}]
+   tipi: new (creata), due (scadenza cambiata), prio (priorità), done (completata), undo (riportata in da fare) ═══ */
+function hist(t,k,a,b){t.hist=t.hist||[];t.hist.push({d:Date.now(),k,a:a??null,b:b??null});if(t.hist.length>40)t.hist.splice(1,t.hist.length-40);}
+const postponed=t=>(t.hist||[]).filter(h=>h.k==='due'&&h.a&&h.b&&h.b>h.a).length;   // quante volte è stata spostata più avanti
+function histHtml(t){
+  const b0=t.hist||[],H=(b0.some(h=>h.k==='new')?b0:[{d:t.created,k:'new',a:null,b:null},...b0]).slice().reverse();   // attività nate prima della storia: la nascita si ricava dalla data di creazione
+  const txt=h=>h.k==='new'?(h.b?`Creata, scadenza ${dShort(h.b)}`:'Creata'):h.k==='due'?(h.b>h.a?`Rimandata dal ${dShort(h.a)} al ${dShort(h.b)}`:`Anticipata dal ${dShort(h.a)} al ${dShort(h.b)}`)
+    :h.k==='prio'?`Priorità da ${PRIO[h.a].n} a ${PRIO[h.b].n}`:h.k==='done'?'Completata':'Riportata in da fare';
+  const col=h=>h.k==='due'&&h.b>h.a?'var(--warn,#f59e0b)':h.k==='done'?'var(--ok,#22c55e)':h.k==='prio'?'#38bdf8':'var(--soft)';
+  const n=postponed(t),days=Math.max(0,Math.round((Date.now()-t.created)/864e5));
+  return `<div class="f"><label>Storia <span class="hage">· nata ${days===0?'oggi':days===1?'ieri':days+' giorni fa'}</span></label>
+    ${n>=3&&!t.done&&n>(t.hAck||0)?`<div class="hwarn">Rimandata ${n} volte. È ancora da fare così o va tolta?<div class="hwb"><button type="button" class="btn" data-hw="keep">Tienila</button><button type="button" class="btn" data-hw="del">Toglila</button></div></div>`:''}
+    <div class="hist">${H.map(h=>`<div class="hi"><i style="background:${col(h)}"></i><b>${dShort(dkey(new Date(h.d)))}</b><span>${txt(h)}</span></div>`).join('')}</div></div>`;
+}
 function saveForm(){
   const title=$('i-title').value.trim();if(!title){$('i-title').focus();$('i-title').style.borderColor='var(--danger)';return;}
   const v=id=>$(id)?$(id).value.trim():undefined;
   const o=edit||{id:uid(),done:false,doneAt:0,created:Date.now(),desc:'',cf:{}};
+  const oldDue=o.due,oldPrio=o.prio;
   o.title=title;if(v('i-req')!==undefined)o.req=v('i-req');
   o.prio=fv.prio;
   const due=v('i-due');if(due!==undefined)o.due=due||addD(today(),D.set.defDays);else if(!o.due)o.due=addD(today(),D.set.defDays);
+  if(!edit)hist(o,'new',null,o.due);else{if(oldDue&&o.due!==oldDue)hist(o,'due',oldDue,o.due);if(oldPrio!==o.prio)hist(o,'prio',oldPrio,o.prio);}
   o.rec=fv.rec&&fv.rec.type?fv.rec:null;
   o.cf=o.cf||{};(D.set.custom||[]).forEach(f=>{const el=$('cf-'+f.id);if(el)o.cf[f.id]=f.type==='check'?el.checked:el.value.trim();});
   const isNew=!edit;if(isNew){o.pf=curPf();D.tasks.push(o);}
