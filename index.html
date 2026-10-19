@@ -60,7 +60,7 @@ input,textarea,select{font:inherit;color:inherit}
 .ph{position:relative}
 body.topnav .page>.ph{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start}
 body.topnav .page>.ph>:first-child{grid-column:1;justify-self:start;min-width:0}
-body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end}
+body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;margin-top:0!important}
 .ph>.nav{grid-column:2;grid-row:1;position:static;flex:1 1 auto;min-width:0;align-self:center;transform:none;margin:0 8px;max-width:none;width:auto;display:flex;justify-content:center;align-items:center;gap:14px;z-index:5;overflow:hidden;padding-bottom:4px}
 .ph>.nav.icons .tb .tl{display:none}   /* poco spazio fra titolo e pulsanti: solo icone */
 .ph>.nav .bar{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border:0!important;padding:0;gap:6px}
@@ -74,6 +74,46 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end}
 .ph>.nav .bar.side .tb{padding:10px 12px;color:var(--accent)}
 .ph>.nav .bar.side .tb svg{width:22px;height:22px}
 .ph>.nav .tb::before,.ph>.nav .ind,.ph>.nav .bar::before,.ph>.nav .bar::after{display:none!important}
+/* persone sotto la ricerca */
+.rqs{display:none;gap:8px;overflow-x:auto;scrollbar-width:none;margin:-6px 0 16px;padding:2px}
+.rqs::-webkit-scrollbar{display:none}
+.srch.on+.rqs{display:flex}
+.rqs button{flex:none;display:flex;align-items:center;gap:7px;height:38px;padding:0 12px 0 4px;border-radius:19px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.rqs button.rq0{padding:0 14px}
+.rqs button .avi{width:30px;height:30px}
+.rqs button b{font-size:11px;color:var(--muted);font-weight:800}
+.rqs button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--card))}
+.rqs button.on b{color:var(--accent)}
+/* numeri e settimana: solo PC largo */
+.kpis,.wk{display:none}
+@media(min-width:1000px){
+  body.topnav .page>.ph{background:var(--card);border-radius:22px;padding:8px 10px 8px 18px;align-items:center;margin-bottom:12px}
+  body.topnav .page>.ph>:first-child{align-self:center}
+  body.topnav .hbtn.grp{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0;align-items:center}
+  body.topnav .hbtn.grp .ib{color:var(--accent)}
+  body.topnav .hbtn.grp .ib+.ib::before{display:none}
+  body.topnav .hbtn.grp .ib.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+  body.topnav .kpis{display:flex;align-items:center;margin-right:8px}
+  .kp{display:flex;flex-direction:column;align-items:center;padding:0 10px;line-height:1}
+  .kp+.kp{border-left:1px solid var(--line)}
+  .kp b{font-family:var(--fd);font-weight:var(--fdw);font-size:21px}
+  .kp i{font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px;white-space:nowrap}
+  .kp.ok b{color:#22c55e}.kp.late b{color:var(--danger,#ef4444)}.kp.zero b{color:var(--muted)}
+  body.topnav .wk{display:flex;gap:8px;margin:14px 0 18px}
+  body.topnav #p-att .greet{margin-top:10px;padding-left:4px}
+  .wk button{flex:1;border:0;border-radius:14px;background:var(--card);color:var(--text);padding:8px 0 7px;cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .15s}
+  .wk button:hover{transform:translateY(-1px)}
+  .wk i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+  .wk b{font-family:var(--fd);font-weight:var(--fdw);font-size:22px;line-height:1.05}
+  .wk s{display:flex;gap:3px;height:6px;text-decoration:none}
+  .wk u{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.75}
+  .wk .td{background:var(--accent);color:var(--onacc)}
+  .wk .lt{color:var(--danger,#ef4444)}
+  .wk .on{box-shadow:inset 0 0 0 2px var(--accent)}
+  .wk .td.on{box-shadow:inset 0 0 0 2px var(--text)}
+}
+/* poco spazio: niente numeri, così titolo, menu e pulsanti stanno sempre su una riga */
+@media(min-width:1000px) and (max-width:1300px){body.topnav .kpis{display:none}}
 /* PC largo: Da fare a sinistra, Completate a destra */
 .only-wide{display:none}
 @media(min-width:1000px){
@@ -611,12 +651,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <section class="page on" id="p-att" data-t="att">
     <div class="ph"><div><h1 class="tt"><span class="dd" aria-hidden="true"><b></b><i></i></span><span id="pfname" title="Tocca per cambiare profilo, tieni premuto per gestirli">Attività</span><span class="pfc" id="pfd" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></h1></div>
       <div class="hbtn grp gl"><!-- i tre pulsanti uniti in un'unica pillola di vetro -->
+        <div class="kpis" id="kpis"></div>
         <button class="ib" id="sortbtn" aria-label="Ordine"></button>
         <button class="ib" id="srchbtn" aria-label="Cerca" title="Cerca (/)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
       </div></div>
     <p class="greet" id="greet"></p>
+    <div class="wk" id="wk"></div>
     <div class="srch" id="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
       <input id="q" type="search" placeholder="Cerca attività o richiedente…" autocomplete="off"></div>
+    <div class="rqs" id="rqs"></div>
     <div class="list" id="l-all"></div>
   </section>
 
@@ -1046,7 +1089,7 @@ const I18={ // italiano: [inglese, turco]
 'Rubino':['Ruby','Yakut'],'Ruggine':['Rust','Pas'],'Sabbia':['Sand','Kum'],'Sabbia notte':['Night sand','Gece kumu'],'Salmone':['Salmon','Somon'],'Salvia':['Sage','Adaçayı'],
 'Smeraldo':['Emerald','Zümrüt'],'Sole':['Sun','Güneş'],'Terracotta':['Terracotta','Kiremit'],'Turchese':['Turquoise','Turkuaz'],'Vaniglia':['Vanilla','Vanilya'],'Verde acqua':['Teal','Deniz yeşili'],
 'Verde':['Green','Yeşil'],'Vinaccia':['Wine','Şarap'],'Viola scuro':['Dark purple','Koyu mor'],'Viola':['Purple','Mor'],'Zaffiro':['Sapphire','Safir'],'Zucca':['Pumpkin','Balkabağı'],
-'Solo':['Only','Sadece'],'Le attività completate compaiono qui':['Completed tasks show up here','Tamamlanan görevler burada görünür'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
+'Solo':['Only','Sadece'],'Tutti':['All','Tümü'],'da fare':['to do','yapılacak'],'fatte oggi':['done today','bugün biten'],'in ritardo':['overdue','gecikmiş'],'Le attività completate compaiono qui':['Completed tasks show up here','Tamamlanan görevler burada görünür'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
 'Tienila':['Keep it','Kalsın'],'Toglila':['Remove it','Kaldır'],'+1 sett':['+1 week','+1 hafta'],'Tocca per vedere la storia':['Tap to see the history','Geçmişi görmek için dokun'],
 'domani':['tomorrow','yarın'],'oggi':['today','bugün'],'Togli filtro':['Remove filter','Filtreyi kaldır'],
 'Esempio di attività':['Sample task','Örnek görev']
@@ -1195,10 +1238,10 @@ function dur(ms){const m=Math.max(1,Math.round(ms/6e4));if(m<60)return m+' min';
 
 /* ═══ ATTIVITÀ: una lista sola in ordine di creazione, le completate barrate in fondo ═══ */
 let doneLimit=30;
-let reqFilter='';   // filtro rapido: tocchi il richiedente su una card e vedi solo le sue attività
+let reqFilter='',dayFilter='';   // dayFilter: giorno scelto nella settimana (PC), solo le attività che scadono quel giorno   // filtro rapido: tocchi il richiedente su una card e vedi solo le sue attività
 function filtered(){
   const q=$('q').value.trim().toLowerCase();
-  return PT().filter(t=>(!reqFilter||t.req===reqFilter)&&(!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q)));
+  return PT().filter(t=>(!reqFilter||t.req===reqFilter)&&(!dayFilter||t.due===dayFilter)&&(!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q)));
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
 function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impostazioni)
@@ -1251,6 +1294,25 @@ function fillDates(){
 }
 addEventListener('resize',()=>fillDates());
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fillDates());
+/* Ricerca: sotto la barra le persone con attività (prima chi ne ha di più da fare, poi in ordine alfabetico);
+   PC: numeri prima di ordina/cerca e settimana sotto il saluto (tocchi un giorno = solo le sue scadenze) */
+function renderHead(){
+  const P=PT(),t0=today();
+  // persone
+  const cnt={};P.forEach(t=>{if(!t.req)return;const c=cnt[t.req]||(cnt[t.req]={o:0,n:0});c.n++;if(!t.done)c.o++;});
+  const ppl=Object.keys(cnt).sort((a,b)=>cnt[b].o-cnt[a].o||cnt[b].n-cnt[a].n||a.localeCompare(b,LOC));
+  $('rqs').innerHTML=ppl.length?`<button class="rq0 ${reqFilter?'':'on'}" data-rqs="">${trS('Tutti')}</button>`+ppl.map(n=>`<button class="${reqFilter===n?'on':''}" data-rqs="${esc(n)}" title="${esc(n)}">${avImg(n)}<span>${esc(n)}</span><b>${cnt[n].o}</b></button>`).join(''):'';
+  // numeri
+  const nTodo=P.filter(t=>!t.done).length,nToday=P.filter(t=>t.done&&dkey(new Date(t.doneAt))===t0).length,nLate=P.filter(t=>!t.done&&t.due&&t.due<t0).length;
+  $('kpis').innerHTML=[[nTodo,'da fare',''],[nToday,'fatte oggi','ok'],[nLate,'in ritardo',nLate?'late':'zero']].map(([n,l,c])=>`<span class="kp ${c}"><b>${n}</b><i>${trS(l)}</i></span>`).join('');
+  // settimana (lunedì → domenica)
+  const d0=kd(t0),mon=addD(t0,-((d0.getDay()+6)%7));let w='';
+  for(let i=0;i<7;i++){const k=addD(mon,i),due=P.filter(t=>!t.done&&t.due===k),late=k<t0&&due.length;
+    w+=`<button class="${k===t0?'td':''} ${dayFilter===k?'on':''} ${late?'lt':''}" data-day="${k}"><i>${({it:['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],tr:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz']}[curLang()])[i]}</i><b>${kd(k).getDate()}</b><s>${'<u></u>'.repeat(Math.min(due.length,5))}</s></button>`;}
+  $('wk').innerHTML=w;
+}
+$('rqs').addEventListener('click',e=>{const b=e.target.closest('[data-rqs]');if(!b)return;reqFilter=b.dataset.rqs;renderAtt();});
+$('wk').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b)return;dayFilter=dayFilter===b.dataset.day?'':b.dataset.day;renderAtt();});
 // PC a due colonne: ogni colonna è alta quanto lo spazio fra il titolo e la barra in basso, e scorre da sola
 // PC largo: il menu va nell'intestazione della pagina aperta; stringendo la finestra torna in basso
 const NAVMQ=matchMedia('(min-width:1000px)');
@@ -1283,7 +1345,9 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
   // saluto: cosa c'è da fare, cosa hai chiuso oggi e cosa è in ritardo (nel profilo attuale)
   const PTn=PT(),hr=new Date().getHours(),nTodo=PTn.filter(t=>!t.done).length,nToday=PTn.filter(t=>t.done&&dkey(new Date(t.doneAt))===today()).length,nLate=PTn.filter(t=>!t.done&&t.due&&t.due<today()).length;
   $('greet').innerHTML=`${hr<5||hr>=18?'Buonasera':hr<13?'Buongiorno':'Buon pomeriggio'}, <b>${nTodo} da fare</b> e <b>${nToday} ${nToday===1?'completata':'completate'} oggi</b>${nLate?` · <em>${nLate} in ritardo</em>`:''}`;
-  if(reqFilter)h=`<div class="rqf">${avImg(reqFilter)}<span>Solo <b>${esc(reqFilter)}</b></span><button data-a="rqf-x" aria-label="Togli filtro">✕</button></div>`+h;
+  renderHead();
+  if(dayFilter)h=`<div class="rqf"><span>${trS('Scadenza')}: <b>${dueLbl(dayFilter)}</b></span><button data-a="day-x" aria-label="Togli filtro">✕</button></div>`+h;
+  if(reqFilter&&!$('srch').classList.contains('on'))h=`<div class="rqf">${avImg(reqFilter)}<span>Solo <b>${esc(reqFilter)}</b></span><button data-a="rqf-x" aria-label="Togli filtro">✕</button></div>`+h;
   $('l-all').innerHTML=h;fitCols();
   applyLayout();
 }
@@ -1368,6 +1432,7 @@ $('l-all').addEventListener('click',e=>{
   if(document.body.classList.contains('editing'))return;
   if(e.target.closest('[data-a="more"]')){doneLimit+=30;renderAtt();return;}
   if(e.target.closest('[data-a="rqf-x"]')){reqFilter='';renderAtt();return;}
+  if(e.target.closest('[data-a="day-x"]')){dayFilter='';renderAtt();return;}
   const sz=e.target.closest('[data-snz]');if(sz){const t=taskOf(sz.closest('.swp').querySelector('.card'));if(t)snooze(t,sz.dataset.snz);return;}
   const c=e.target.closest('.card');if(!c)return;const t=D.tasks.find(x=>x.id===c.dataset.id);if(!t)return;
   if(e.target.closest('[data-a="tog"]')){e.stopPropagation();toggle(t,e.target);return;}
