@@ -99,6 +99,11 @@ input,textarea,select{font:inherit;color:inherit}
 .card.leave{opacity:0;max-height:0;margin:0;padding-top:0;padding-bottom:0;transform:scale(.97)}
 .card.enter{animation:cardIn .4s ease}
 @keyframes cardIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+.card.ghost{box-shadow:0 14px 34px rgba(0,0,0,.45)!important;overflow:hidden;will-change:transform,width,height;padding:0!important}
+.card.ghost .gchk{position:absolute;inset:0;display:grid;place-items:center;color:#fff;opacity:0}
+.card.ghost .gchk svg{width:58%;height:58%}   /* la pallina che vola su Completate */
+#l-all .dsep b.bump{animation:bump .55s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.7);filter:brightness(1.3)}100%{transform:scale(1)}}
 /* pallino per completare: a destra, centrato in verticale */
 .dot{position:relative;order:2;width:30px;height:30px;padding:0;border-radius:50%;border:2.5px solid var(--pc);flex-shrink:0;display:grid;place-items:center;transition:.2s}
 .dot svg{width:16px;height:16px;opacity:.4;color:var(--pc);transition:.2s}
@@ -1025,22 +1030,29 @@ function trS(s){
   return s;
 }
 const I18_SKIP='.ct,.rq,.qghost,#dump,[contenteditable="true"],#s-code';   // contenuti dell'utente: mai tradotti
+// ogni testo tradotto si ricorda l'originale italiano: cambiando lingua (o tornando all'italiano) si riparte da quello
+const I18A=['placeholder','title','aria-label','data-tip'];
+function trText(n){const cur=n.nodeValue,src=(n.__tr!==undefined&&cur===n.__tr)?n.__it:cur,v=trS(src);
+  if(v!==src){n.__it=src;n.__tr=v;if(cur!==v)n.nodeValue=v;}else{n.__it=n.__tr=undefined;if(cur!==src)n.nodeValue=src;}}
+function trAttr(el,a){if(!el.hasAttribute(a)||(a==='title'&&el.closest('.rq')))return;el.__ia=el.__ia||{};
+  const cur=el.getAttribute(a),m=el.__ia[a],src=(m&&cur===m[1])?m[0]:cur,v=a==='data-tip'?src.replace(/Completate:/,trS('Completate')+':'):trS(src);
+  if(v!==src){el.__ia[a]=[src,v];if(cur!==v)el.setAttribute(a,v);}else{delete el.__ia[a];if(cur!==src)el.setAttribute(a,src);}}
 function trNode(root){
-  if(curLang()==='it'||!root)return;
-  if(root.nodeType===3){const p=root.parentElement;if(!p||p.closest(I18_SKIP)||/SCRIPT|STYLE/.test(p.tagName))return;const v=trS(root.nodeValue);if(v!==root.nodeValue)root.nodeValue=v;return;}
+  if(!root)return;
+  if(root.nodeType===3){const p=root.parentElement;if(!p||p.closest(I18_SKIP)||/SCRIPT|STYLE/.test(p.tagName))return;trText(root);return;}
   if(root.nodeType!==1||root.closest(I18_SKIP+',script,style'))return;
-  ['placeholder','title','aria-label','data-tip'].forEach(a=>{if(root.hasAttribute&&root.hasAttribute(a)&&!(a==='title'&&root.closest('.rq'))){const v=root.getAttribute(a),t=a==='data-tip'?v.replace(/Completate:/,trS('Completate')+':'):trS(v);if(t!==v)root.setAttribute(a,t);}});
+  I18A.forEach(a=>trAttr(root,a));
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);let n;
-  while((n=w.nextNode())){if(n.nodeType===1){if(n.matches(I18_SKIP+',script,style')){/* salta il ramo */}else['placeholder','title','aria-label','data-tip'].forEach(a=>{if(n.hasAttribute(a)&&!n.closest('.rq')){const v=n.getAttribute(a),t=trS(v);if(t!==v)n.setAttribute(a,t);}});continue;}
-    const p=n.parentElement;if(!p||p.closest(I18_SKIP)||/SCRIPT|STYLE/.test(p.tagName))continue;const v=trS(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}
+  while((n=w.nextNode())){if(n.nodeType===1){if(!n.matches(I18_SKIP+',script,style'))I18A.forEach(a=>trAttr(n,a));continue;}
+    const p=n.parentElement;if(!p||p.closest(I18_SKIP)||/SCRIPT|STYLE/.test(p.tagName))continue;trText(n);}
 }
-let i18Obs=null;
+let i18Obs=null,i18Last='it';
 function applyLang(){
   const L=curLang();LOC=LOCS[L];document.documentElement.lang=L;
   MON.splice(0,12,...(L==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:L==='tr'?['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara']:['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']));
   WD.splice(0,7,...(L==='en'?['M','T','W','T','F','S','S']:L==='tr'?['P','S','Ç','P','C','C','P']:['L','M','M','G','V','S','D']));
-  if(L==='it'){if(i18Obs){i18Obs.disconnect();i18Obs=null;}return;}
-  trNode(document.body);
+  if(L==='it'){if(i18Obs){i18Obs.disconnect();i18Obs=null;}if(i18Last!=='it')trNode(document.body);i18Last='it';return;}   // tornando all'italiano: rimette i testi originali
+  if(i18Last!==L)trNode(document.body);i18Last=L;
   if(!i18Obs){i18Obs=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')trNode(m.target);else if(m.type==='attributes')trNode(m.target);else m.addedNodes.forEach(trNode);}});
     i18Obs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});}
 }
@@ -1198,6 +1210,31 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
   $('l-all').innerHTML=h;
   applyLayout();
 }
+/* completata: la card si accartoccia in una pallina e vola, con una curva, sul contatore di "Completate";
+   intanto la lista chiude il buco. All'arrivo il contatore fa un salto. */
+function crumpleFly(cardEl,done){
+  const r=cardEl.getBoundingClientRect(),tg=document.querySelector('#l-all .dsep:not(.first) b')||document.querySelector('#l-all .dsep.first b');
+  const tr=tg?tg.getBoundingClientRect():{left:innerWidth/2,top:innerHeight-120,width:0,height:0};
+  const g=cardEl.cloneNode(true);g.classList.add('ghost');g.removeAttribute('data-id');
+  Object.assign(g.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:0,zIndex:80,pointerEvents:'none',transformOrigin:'50% 50%'});
+  g.insertAdjacentHTML('beforeend',`<i class="gchk">${CHK}</i>`);
+  document.body.appendChild(g);
+  cardEl.classList.add('leave');   // la lista si richiude subito sotto la pallina
+  // la card si ripiega (larghezza e altezza, non una scala: cosi' diventa tonda e non un bastoncino),
+  // diventa una pallina verde con la spunta e sale in curva fino al contatore di "Completate"
+  const W=r.width,H=r.height,S=46,E=20,at=(cx,cy,s)=>`translate(${cx-r.left-s/2}px,${cy-r.top-s/2}px)`;
+  const c0x=r.left+W/2,c0y=r.top+H/2,tx=tr.left+tr.width/2,ty=tr.top+tr.height/2,mx=c0x+(tx-c0x)*.45,my=Math.min(c0y,ty)-90;
+  g.querySelectorAll(':scope > :not(.gchk)').forEach(x=>x.animate([{opacity:1},{opacity:0}],{duration:170,fill:'forwards'}));
+  g.querySelector('.gchk').animate([{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'none'}],{duration:200,delay:140,fill:'forwards'});
+  const a=g.animate([
+    {width:W+'px',height:H+'px',transform:'translate(0,0) rotate(0deg)',borderRadius:'18px',backgroundColor:'var(--card)',offset:0},
+    {width:S+'px',height:S+'px',transform:at(c0x,c0y,S)+' rotate(-30deg)',borderRadius:'50%',backgroundColor:'#22c55e',offset:.32},   // si ripiega
+    {width:S*.85+'px',height:S*.85+'px',transform:at(mx,my,S*.85)+' rotate(90deg)',borderRadius:'50%',backgroundColor:'#22c55e',offset:.66},  // sale in curva
+    {width:E+'px',height:E+'px',transform:at(tx,ty,E)+' rotate(200deg)',borderRadius:'50%',backgroundColor:'#22c55e',offset:1}  // entra nel contatore
+  ],{duration:820,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'});
+  a.onfinish=()=>{g.remove();done();};
+}
+function bumpDone(){const b=document.querySelector('#l-all .dsep:not(.first) b');if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');}}
 function toggle(t,el){
   const cardEl=el&&el.closest('.card'),dot=cardEl&&cardEl.querySelector('.dot');
   const go2=()=>{
@@ -1207,7 +1244,7 @@ function toggle(t,el){
     }else{t.done=false;t.doneAt=0;}
     save();renderAtt();const ne=document.querySelector(`.card[data-id="${t.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
   };
-  if(!t.done){ding(true);if(cardEl&&D.set.anim){dot.classList.add('pop');confetti(dot);setTimeout(()=>{cardEl.classList.add('leave');setTimeout(go2,300);},380);}else go2();}
+  if(!t.done){ding(true);if(cardEl&&D.set.anim){dot.classList.add('pop');confetti(dot);setTimeout(()=>crumpleFly(cardEl,()=>{go2();bumpDone();}),340);}else go2();}
   else{ding(false);if(cardEl&&D.set.anim){cardEl.classList.add('leave');setTimeout(go2,280);}else go2();}
 }
 /* ═══ FOTO DEI RICHIEDENTI: tocca un avatar (card, podio, statistiche) → finestra con la foto tonda:
@@ -1777,7 +1814,7 @@ $('sets').addEventListener('change',e=>{
     S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];save();applyLook();renderSets();}
   if(e.target.id==='s-acc'){D.set.accent=e.target.value;save();applyLook();renderSets();}
   if(e.target.id==='s-fs'){D.set.fs=+e.target.value;save();applyLook();}
-  if(e.target.id==='s-lang'){D.set.lang=e.target.value;save();if(e.target.value==='it')location.reload();else{applyLang();renderAll();}}   // tornando all'italiano si ricarica: i testi originali sono nel codice
+  if(e.target.id==='s-lang'){D.set.lang=e.target.value;save();renderAll();}   // niente ricarica: i testi tornano da soli (vedi trNode)
   if(e.target.id==='s-font'){D.set.font=e.target.value;save();applyLook();}
   if(e.target.id==='cf-t')$('cf-o').style.display=e.target.value==='select'?'':'none';
   if(e.target.id==='s-impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.tasks))throw 0;
