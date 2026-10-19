@@ -113,7 +113,20 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
   .wk .td.on{box-shadow:inset 0 0 0 2px var(--text)}
 }
 /* poco spazio: niente numeri, così titolo, menu e pulsanti stanno sempre su una riga */
-@media(min-width:1000px) and (max-width:1300px){body.topnav .kpis{display:none}}
+@media(min-width:1000px) and (max-width:1300px){body.topnav .kpis{display:none}body.topnav .cx{display:none}}   /* colonne strette: card come sul telefono */
+.cx{display:none}
+@media(min-width:1000px){
+  body.topnav .wrap{max-width:none;padding-left:40px;padding-right:40px}
+  body.topnav #p-att,body.topnav #p-stat{max-width:none}
+  body.topnav #p-set .sets{max-width:none}
+  body.topnav .cx{display:flex;align-items:center;gap:14px;margin-left:auto;min-width:0;flex:0 1 46%;justify-content:flex-end}
+  .cxn{min-width:0;flex:0 1 auto;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+  .cxd{flex:none;font-size:12px;font-weight:800;padding:5px 10px;border-radius:10px;background:color-mix(in srgb,var(--text) 7%,transparent);color:var(--muted);white-space:nowrap}
+  .cxd.soon{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+  .cxd.late{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
+  .cxd.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+  body.topnav .card .cb{flex:1 1 auto}
+}
 /* PC largo: Da fare a sinistra, Completate a destra */
 .only-wide{display:none}
 @media(min-width:1000px){
@@ -1089,7 +1102,7 @@ const I18={ // italiano: [inglese, turco]
 'Rubino':['Ruby','Yakut'],'Ruggine':['Rust','Pas'],'Sabbia':['Sand','Kum'],'Sabbia notte':['Night sand','Gece kumu'],'Salmone':['Salmon','Somon'],'Salvia':['Sage','Adaçayı'],
 'Smeraldo':['Emerald','Zümrüt'],'Sole':['Sun','Güneş'],'Terracotta':['Terracotta','Kiremit'],'Turchese':['Turquoise','Turkuaz'],'Vaniglia':['Vanilla','Vanilya'],'Verde acqua':['Teal','Deniz yeşili'],
 'Verde':['Green','Yeşil'],'Vinaccia':['Wine','Şarap'],'Viola scuro':['Dark purple','Koyu mor'],'Viola':['Purple','Mor'],'Zaffiro':['Sapphire','Safir'],'Zucca':['Pumpkin','Balkabağı'],
-'Solo':['Only','Sadece'],'Tutti':['All','Tümü'],'da fare':['to do','yapılacak'],'fatte oggi':['done today','bugün biten'],'in ritardo':['overdue','gecikmiş'],'Le attività completate compaiono qui':['Completed tasks show up here','Tamamlanan görevler burada görünür'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
+'Solo':['Only','Sadece'],'fatta oggi':['done today','bugün bitti'],'fatta ieri':['done yesterday','dün bitti'],'scade oggi':['due today','bugün bitiyor'],'scade domani':['due tomorrow','yarın bitiyor'],'Tutti':['All','Tümü'],'da fare':['to do','yapılacak'],'fatte oggi':['done today','bugün biten'],'in ritardo':['overdue','gecikmiş'],'Le attività completate compaiono qui':['Completed tasks show up here','Tamamlanan görevler burada görünür'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
 'Tienila':['Keep it','Kalsın'],'Toglila':['Remove it','Kaldır'],'+1 sett':['+1 week','+1 hafta'],'Tocca per vedere la storia':['Tap to see the history','Geçmişi görmek için dokun'],
 'domani':['tomorrow','yarın'],'oggi':['today','bugün'],'Togli filtro':['Remove filter','Filtreyi kaldır'],
 'Esempio di attività':['Sample task','Örnek görev']
@@ -1119,6 +1132,7 @@ const I18P=[
  [/^· nata oggi$/,'· created today','· bugün oluşturuldu'],[/^· nata ieri$/,'· created yesterday','· dün oluşturuldu'],[/^· nata (\d+) giorni fa$/,'· created $1 days ago','· $1 gün önce oluşturuldu'],
  [/^Rimandata (\d+) volte\. È ancora da fare così o va tolta\?$/,'Postponed $1 times. Is it still needed as it is, or should it go?','$1 kez ertelendi. Hâlâ böyle mi yapılacak, yoksa kaldırılsın mı?'],
  [/^Rimandata a (.+) · (\d+) volte$/,'Postponed to $1 · $2 times','$1 tarihine ertelendi · $2 kez'],[/^Rimandata a (.+)$/,'Postponed to $1','$1 tarihine ertelendi'],
+ [/^fatta (\d+) giorni fa$/,'done $1 days ago','$1 gün önce bitti'],[/^in ritardo di (\d+) giorn[oi]$/,'$1 days overdue','$1 gün gecikmiş'],[/^tra (\d+) giorni$/,'in $1 days','$1 gün sonra'],
  [/^Completate: (\d+)$/,'Completed: $1','Tamamlanan: $1'],[/^(<b>.*<\/b><br>)Completate: (\d+)$/,'$1Completed: $2','$1Tamamlanan: $2'],[/^Priorità (alta|media|bassa)$/,m=>({alta:'High',media:'Medium',bassa:'Low'}[m[1]])+' priority',m=>({alta:'Yüksek',media:'Orta',bassa:'Düşük'}[m[1]])+' öncelik'],
  [/^ Non sincronizzato(.*): riprovo da solo$/,' Not synced$1: retrying',' Senkronize değil$1: tekrar deneniyor'],[/^ Sincronizzato$/,' Synced',' Senkronize edildi'],[/^ Sincronizzo…$/,' Syncing…',' Senkronize ediliyor…'],
  [/^Rimuovere il campo "(.+)"\? I valori già inseriti restano salvati ma non si vedono più\.$/,'Remove the field "$1"? Values already entered stay saved but are no longer shown.','"$1" alanı kaldırılsın mı? Girilen değerler kayıtlı kalır ama artık görünmez.'],
@@ -1244,6 +1258,14 @@ function filtered(){
   return PT().filter(t=>(!reqFilter||t.req===reqFilter)&&(!dayFilter||t.due===dayFilter)&&(!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q)));
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
+/* PC largo: le card sono molto larghe, a destra mostrano anche la nota e quanto manca alla scadenza */
+function cardX(t){
+  const t0=today();let due='',cls='';
+  if(t.done){const d=Math.round((kd(t0)-kd(dkey(new Date(t.doneAt))))/864e5);due=d===0?trS('fatta oggi'):d===1?trS('fatta ieri'):trS('fatta '+d+' giorni fa');cls='ok';}
+  else if(t.due){const d=Math.round((kd(t.due)-kd(t0))/864e5);due=d<0?trS('in ritardo di '+(-d)+(d===-1?' giorno':' giorni')):d===0?trS('scade oggi'):d===1?trS('scade domani'):trS('tra '+d+' giorni');cls=d<0?'late':d<=1?'soon':'';}
+  const note=(t.desc||'').split('\n').find(x=>x.trim())||'',steps=(t.steps||[]).length;
+  return `<div class="cx">${note?`<span class="cxn" title="${esc(t.desc)}">${esc(note)}</span>`:''}${due?`<span class="cxd ${cls}">${due}</span>`:''}</div>`;
+}
 function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impostazioni)
   // dentro la card, in quest'ordine: creazione – scadenza (tutte e due rosse se scaduta), richiedente, priorità
   const F=D.set.fields,late=!t.done&&t.due&&t.due<today();cs=cs||D.set.card||'ombra';
@@ -1256,7 +1278,7 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
 if(F.rec&&t.rec&&t.rec.type)m.push(`<span class="rc" title="${esc(recLabel(t.rec))}">${IC.rep}</span>`);   // si ripete
   return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
-    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div></div>`;
+    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div>${cardX(t)}</div>`;
 }
 const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)?p[0]+' '+p[1][0].toUpperCase()+'.':n;};
 /* giorno grande + mese prima del titolo, in tutte le pagine: alto esattamente quanto la maiuscola del titolo
@@ -1322,6 +1344,7 @@ function placeNav(){const nav=document.querySelector('nav.nav');if(!nav)return;
 function fitNav(){const nav=document.querySelector('.ph>nav.nav');if(!nav)return;nav.classList.remove('icons');const tt=nav.parentElement.querySelector('h1.tt'),hb=nav.parentElement.querySelector(':scope>.hbtn'),r=nav.getBoundingClientRect();   // tocca il titolo o i pulsanti: solo icone
   if((tt&&tt.getBoundingClientRect().right>r.left-16)||(hb&&hb.getBoundingClientRect().left<r.right+16))nav.classList.add('icons');}
 window.addEventListener('resize',fitNav);if(document.fonts)document.fonts.ready.then(fitNav);
+if(window.ResizeObserver)new ResizeObserver(()=>fitNav()).observe(document.querySelector('.wrap')||document.body);
 NAVMQ.addEventListener('change',()=>{placeNav();fitCols();});
 placeNav();
 function fitCols(){const l=$('l-all');if(!l||!l.offsetParent)return;const top=l.getBoundingClientRect().top+scrollY,nav=document.querySelector('.nav'),nb=document.body.classList.contains('topnav')?28:nav?innerHeight-nav.getBoundingClientRect().top+14:110;l.style.setProperty('--colh',Math.max(240,innerHeight-top-nb)+'px');}
