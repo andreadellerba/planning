@@ -58,7 +58,11 @@ input,textarea,select{font:inherit;color:inherit}
 /* PC largo: il menu sale nell'intestazione, al centro fra il titolo e i pulsanti; niente pillole,
    solo una barra luminosa sotto la voce aperta. Stringendo la finestra torna in basso con le pillole. */
 .ph{position:relative}
-.ph>.nav{position:absolute;left:50%;top:0;bottom:0;right:auto;transform:translateX(-50%);margin:0;max-width:none;width:auto;display:flex;align-items:center;gap:14px;z-index:5}
+body.topnav .page>.ph{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start}
+body.topnav .page>.ph>:first-child{grid-column:1;justify-self:start;min-width:0}
+body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end}
+.ph>.nav{grid-column:2;grid-row:1;position:static;flex:1 1 auto;min-width:0;align-self:center;transform:none;margin:0 8px;max-width:none;width:auto;display:flex;justify-content:center;align-items:center;gap:14px;z-index:5;overflow:hidden;padding-bottom:4px}
+.ph>.nav.icons .tb .tl{display:none}   /* poco spazio fra titolo e pulsanti: solo icone */
 .ph>.nav .bar{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border:0!important;padding:0;gap:6px}
 .ph>.nav .bar.main{flex:0 0 auto}
 .ph>.nav .tb,.ph>.nav .tb.on{flex:0 0 auto;padding:10px 14px;background:none!important;box-shadow:none!important;border-radius:10px;color:var(--muted)}
@@ -73,7 +77,8 @@ input,textarea,select{font:inherit;color:inherit}
 /* PC largo: Da fare a sinistra, Completate a destra */
 .only-wide{display:none}
 @media(min-width:1000px){
-  #p-att{max-width:1180px}
+  #p-att,#p-stat{max-width:1180px}
+  #p-stat>:not(.ph){max-width:640px;margin-left:auto;margin-right:auto}   /* statistiche: intestazione larga come le altre pagine, contenuto centrato */
   #l-all{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;align-items:start}
   #l-all>.rqf{grid-column:1/-1}
   #l-all .col>.dsep:first-child{margin-top:0}
@@ -1250,8 +1255,11 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fillDates(
 // PC largo: il menu va nell'intestazione della pagina aperta; stringendo la finestra torna in basso
 const NAVMQ=matchMedia('(min-width:1000px)');
 function placeNav(){const nav=document.querySelector('nav.nav');if(!nav)return;
-  if(NAVMQ.matches){const ph=document.querySelector('.page.on .ph');if(ph&&nav.parentElement!==ph)ph.appendChild(nav);document.body.classList.add('topnav');}
+  if(NAVMQ.matches){const ph=document.querySelector('.page.on .ph');if(ph&&nav.parentElement!==ph)ph.insertBefore(nav,ph.querySelector(':scope>.hbtn'));document.body.classList.add('topnav');fitNav();}
   else{if(nav.parentElement!==document.body)document.body.appendChild(nav);document.body.classList.remove('topnav');}}
+function fitNav(){const nav=document.querySelector('.ph>nav.nav');if(!nav)return;nav.classList.remove('icons');const tt=nav.parentElement.querySelector('h1.tt'),hb=nav.parentElement.querySelector(':scope>.hbtn'),r=nav.getBoundingClientRect();   // tocca il titolo o i pulsanti: solo icone
+  if((tt&&tt.getBoundingClientRect().right>r.left-16)||(hb&&hb.getBoundingClientRect().left<r.right+16))nav.classList.add('icons');}
+window.addEventListener('resize',fitNav);if(document.fonts)document.fonts.ready.then(fitNav);
 NAVMQ.addEventListener('change',()=>{placeNav();fitCols();});
 placeNav();
 function fitCols(){const l=$('l-all');if(!l||!l.offsetParent)return;const top=l.getBoundingClientRect().top+scrollY,nav=document.querySelector('.nav'),nb=document.body.classList.contains('topnav')?28:nav?innerHeight-nav.getBoundingClientRect().top+14:110;l.style.setProperty('--colh',Math.max(240,innerHeight-top-nb)+'px');}
@@ -1973,7 +1981,7 @@ let undoFn=null,tT;
 function toast(m,u){$('toast').classList.toggle('top',$('qa').classList.contains('on'));   // con la barra rapida aperta l'avviso va in alto
   $('toast-t').textContent=m;undoFn=u||null;$('toast-u').style.display=u?'':'none';$('toast').classList.add('on');clearTimeout(tT);tT=setTimeout(()=>$('toast').classList.remove('on'),4200);}
 $('toast-u').onclick=()=>{if(undoFn){undoFn();undoFn=null;save();renderAll();}$('toast').classList.remove('on');};
-function renderAll(){applyLang();renderAtt();if($('p-stat').classList.contains('on'))renderStats();if($('p-set').classList.contains('on'))renderSets();applyLayout();}
+function renderAll(){applyLang();renderAtt();if($('p-stat').classList.contains('on'))renderStats();if($('p-set').classList.contains('on'))renderSets();applyLayout();if(typeof fitNav==='function')fitNav();}
 document.addEventListener('keydown',e=>{
   const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)||document.activeElement.isContentEditable;
   if(e.key==='Escape'){if($('qa').classList.contains('on'))closeQuick();else if($('ov').classList.contains('on'))closeForm();else if(typing)document.activeElement.blur();else if(D.ui.editor)setEditor(false);}
