@@ -61,7 +61,7 @@ input,textarea,select{font:inherit;color:inherit}
 body.topnav .page>.ph{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start}
 body.topnav .page>.ph>:first-child{grid-column:1;justify-self:start;min-width:0}
 body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;margin-top:0!important}
-.ph>.nav{grid-column:2;grid-row:1;position:static;flex:1 1 auto;min-width:0;align-self:center;transform:none;margin:0 8px;max-width:none;width:auto;display:flex;justify-content:center;align-items:center;gap:14px;z-index:5;overflow:hidden;padding-bottom:4px}
+.ph>.nav{grid-column:2;grid-row:1;position:static;flex:1 1 auto;min-width:0;align-self:center;transform:none;margin:0 8px;max-width:none;width:auto;display:flex;justify-content:center;align-items:center;gap:14px;z-index:5;overflow:hidden;padding:4px 0}
 .ph>.nav.icons .tb .tl{display:none}   /* poco spazio fra titolo e pulsanti: solo icone */
 .ph>.nav .bar{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border:0!important;padding:0;gap:6px}
 .ph>.nav .bar.main{flex:0 0 auto}
@@ -87,7 +87,7 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
 /* numeri e settimana: solo PC largo */
 .kpis,.wk{display:none}
 @media(min-width:1000px){
-  body.topnav .page>.ph{background:var(--card);border-radius:22px;padding:8px 10px 8px 18px;align-items:center;margin-bottom:12px}
+  body.topnav .page>.ph{background:var(--card);border-radius:22px;padding:8px 14px;align-items:center;margin:0 0 12px}
   body.topnav .page>.ph>:first-child{align-self:center}
   body.topnav .hbtn.grp{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0;align-items:center}
   body.topnav .hbtn.grp .ib{color:var(--accent)}
@@ -105,7 +105,8 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
   .wk button:hover{transform:translateY(-1px)}
   .wk i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
   .wk b{font-family:var(--fd);font-weight:var(--fdw);font-size:22px;line-height:1.05}
-  .wk s{display:flex;gap:3px;height:6px;text-decoration:none}
+  .wk button{position:relative;justify-content:center;height:62px;padding:0}
+  .wk s{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:3px;height:5px;text-decoration:none}
   .wk u{width:5px;height:5px;border-radius:50%;background:var(--accent)}
   .wk .td u{background:var(--onacc)}
   .wk .we{color:var(--danger)}   /* sabato e domenica in rosso */
@@ -130,6 +131,59 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
   .cxd.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
   body.topnav .card .cb{flex:1 1 auto}
 }
+/* stessi angoli dello stile di card scelto, su tutti i riquadri */
+.lgrp{border-radius:calc(var(--cr,18px) + 2px)!important}
+.rqs button{border-radius:var(--cr,18px)!important}
+@media(min-width:1000px){
+  body.topnav .page>.ph{border-radius:calc(var(--cr,18px) + 4px)}
+  .wk button{border-radius:var(--cr,18px)}
+  .cxd{border-radius:calc(var(--cr,18px) * .55)}
+}
+/* P3 · completare con un interruttore (spento = da fare, acceso verde = fatta) */
+.dot,.card .dot{width:46px;height:28px;border-radius:14px;border:0;background:color-mix(in srgb,var(--pc) 22%,var(--card2,rgba(127,127,127,.2)));position:relative;display:block;transition:background .25s}
+.dot svg{display:none}
+.dot::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.3);transition:transform .28s cubic-bezier(.3,1.5,.5,1)}
+.card.isdone .dot,.dot.pop{background:var(--ok)}
+.card.isdone .dot::after,.dot.pop::after{transform:translateX(18px)}
+/* P5 · completate: una riga rossa barra il titolo (si disegna quando la completi) */
+.card.isdone .ct{text-decoration:none!important}
+.card.isdone .ct span{background:linear-gradient(var(--danger),var(--danger)) no-repeat 0 58%/100% 2.5px}
+.card.isdone.enter .ct span{animation:strike .55s .1s ease-out both}
+@keyframes strike{from{background-size:0 2px}to{background-size:100% 2px}}
+/* A1 · nuova attività: cade dall'alto e rimbalza */
+.card.enter{animation:drop .6s cubic-bezier(.3,1.4,.5,1)}
+@keyframes drop{0%{opacity:0;transform:translateY(-46px) rotate(-1.5deg)}60%{opacity:1;transform:translateY(5px)}80%{transform:translateY(-2px)}100%{transform:none}}
+/* A5 · le attività in ritardo ogni tanto danno una scossa */
+.card.islate:not(.isdone) .dot{animation:shake 6s ease-in-out infinite}
+@keyframes shake{0%,88%,100%{transform:none}90%{transform:translateX(-3px) rotate(-6deg)}93%{transform:translateX(3px) rotate(6deg)}96%{transform:translateX(-2px)}}
+/* A3 · numeri che scorrono */
+.roll{display:inline-block;position:relative;overflow:hidden;vertical-align:bottom;line-height:inherit}
+.roll i{display:block;font-style:normal;animation:rollup .5s cubic-bezier(.3,1.3,.5,1) both}
+.roll i.old{position:absolute;inset:0;animation-name:rollout}
+.roll.dn i{animation-name:rolldn}.roll.dn i.old{animation-name:rolloutdn}
+@keyframes rollup{from{transform:translateY(100%)}to{transform:none}}
+@keyframes rollout{to{transform:translateY(-100%)}}
+@keyframes rolldn{from{transform:translateY(-100%)}to{transform:none}}
+@keyframes rolloutdn{to{transform:translateY(100%)}}
+/* A2 · eliminare: la card si trita a strisce */
+.shred{position:fixed;z-index:80;pointer-events:none}
+.shred i{position:absolute;top:0;bottom:0;overflow:hidden}
+.shred i>div{position:absolute;top:0}
+/* A4 · rimandare: un calendarietto gira pagina */
+.flip{position:fixed;z-index:85;width:64px;height:78px;border-radius:12px;background:var(--card);box-shadow:0 12px 30px rgba(0,0,0,.35);text-align:center;perspective:300px;pointer-events:none;animation:flipIn .9s ease both}
+.flip b{display:block;background:var(--accent);color:var(--onacc);font-size:10px;font-weight:800;letter-spacing:.1em;padding:4px 0;border-radius:12px 12px 0 0}
+.flip span,.flip .pg{display:grid;place-items:center;height:56px;font-family:var(--fd);font-weight:800;font-size:30px;color:var(--text)}
+.flip .pg{position:absolute;left:0;right:0;top:20px;background:var(--card);transform-origin:top;animation:pgflip .5s .15s ease-in both;backface-visibility:hidden;border-radius:0 0 12px 12px}
+@keyframes pgflip{to{transform:rotateX(-105deg);opacity:0}}
+@keyframes flipIn{0%{opacity:0;transform:scale(.6)}15%,75%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-20px) scale(.9)}}
+/* A8 · il saluto si scrive */
+.greet.typing{clip-path:inset(0 100% 0 0);animation:typing 1.3s steps(36) .2s forwards}
+@keyframes typing{to{clip-path:inset(0 0 0 0)}}
+/* A9 · avvisi che entrano rimbalzando */
+.toast.on{animation:tbounce .55s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tbounce{0%{transform:translate(-50%,40px) scale(.9)}100%{transform:translate(-50%,0)}}
+body.noanim .card,body.noanim .dot,body.noanim .greet,body.noanim .toast{animation:none!important}
+body.noanim .greet.typing{clip-path:none}
 /* PC largo: Da fare a sinistra, Completate a destra */
 .only-wide{display:none}
 @media(min-width:1000px){
@@ -900,6 +954,7 @@ function mode(){return D.set.mode==='auto'?(matchMedia('(prefers-color-scheme:li
 function applyLook(){
   const r=document.documentElement,m=mode();r.dataset.mode=m;
   r.style.setProperty('--accent',D.set.accent);
+  r.style.setProperty('--cr',({vetro:22,grande:24}[D.set.card]||18)+'px');   // angolo delle card scelto in Impostazioni › Card: lo usano anche barra, giorni, persone
   // testo sopra l'accento: bianco o nero, quello che si legge meglio
   const h=D.set.accent.replace('#',''),lin=c=>{c=parseInt(c,16)/255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);},L=.2126*lin(h.slice(0,2))+.7152*lin(h.slice(2,4))+.0722*lin(h.slice(4,6));
   r.style.setProperty('--onacc',(L+.05)/.05>1.05/(L+.05)?'#111':'#fff');
@@ -1279,9 +1334,9 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
   if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}"><em>${esc(t.req)}</em></span>`);
   if(F.prio)m.push(`<span class="pr">${PRIO[t.prio].n}</span>`);   // priorità scritta, senza pallino né colore (il colore è nella sfumatura)
 if(F.rec&&t.rec&&t.rec.type)m.push(`<span class="rc" title="${esc(recLabel(t.rec))}">${IC.rep}</span>`);   // si ripete
-  return`<div class="card cs-${cs} ${t.done?'isdone':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
+  return`<div class="card cs-${cs} ${t.done?'isdone':''} ${late?'islate':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
-    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct">${esc(t.title)}</div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div>${cardX(t)}</div>`;
+    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct"><span>${esc(t.title)}</span></div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div>${cardX(t)}</div>`;
 }
 const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)?p[0]+' '+p[1][0].toUpperCase()+'.':n;};
 /* giorno grande + mese prima del titolo, in tutte le pagine: alto esattamente quanto la maiuscola del titolo
@@ -1344,7 +1399,10 @@ const NAVMQ=matchMedia('(min-width:1000px)');
 function placeNav(){const nav=document.querySelector('nav.nav');if(!nav)return;
   if(NAVMQ.matches){const ph=document.querySelector('.page.on .ph');if(ph&&nav.parentElement!==ph)ph.insertBefore(nav,ph.querySelector(':scope>.hbtn'));document.body.classList.add('topnav');fitNav();}
   else{if(nav.parentElement!==document.body)document.body.appendChild(nav);document.body.classList.remove('topnav');}}
-function fitNav(){const nav=document.querySelector('.ph>nav.nav');if(!nav)return;nav.classList.remove('icons');const tt=nav.parentElement.querySelector('h1.tt'),hb=nav.parentElement.querySelector(':scope>.hbtn'),r=nav.getBoundingClientRect();   // tocca il titolo o i pulsanti: solo icone
+function alignTitle(){const ph=document.querySelector('.page.on>.ph');if(!ph)return;const h=ph.querySelector('h1.tt'),sv=h&&h.querySelector('.dd svg');if(!h)return;h.style.transform='';
+  if(!document.body.classList.contains('topnav')||!sv)return;const b=ph.getBoundingClientRect(),s=sv.getBoundingClientRect(),dy=(b.top+b.height/2)-(s.top+s.height/2);   // maiuscola del titolo al centro della barra
+  h.style.transform=`translateY(${dy.toFixed(1)}px)`;}
+function fitNav(){alignTitle();const nav=document.querySelector('.ph>nav.nav');if(!nav)return;nav.classList.remove('icons');const tt=nav.parentElement.querySelector('h1.tt'),hb=nav.parentElement.querySelector(':scope>.hbtn'),r=nav.getBoundingClientRect();   // tocca il titolo o i pulsanti: solo icone
   if((tt&&tt.getBoundingClientRect().right>r.left-16)||(hb&&hb.getBoundingClientRect().left<r.right+16))nav.classList.add('icons');}
 window.addEventListener('resize',fitNav);if(document.fonts)document.fonts.ready.then(fitNav);
 if(window.ResizeObserver)new ResizeObserver(()=>fitNav()).observe(document.querySelector('.wrap')||document.body);
@@ -1374,7 +1432,7 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
   renderHead();
   if(dayFilter)h=`<div class="rqf"><span>${trS('Scadenza')}: <b>${dueLbl(dayFilter)}</b></span><button data-a="day-x" aria-label="Togli filtro">✕</button></div>`+h;
   if(reqFilter&&!$('srch').classList.contains('on'))h=`<div class="rqf">${avImg(reqFilter)}<span>Solo <b>${esc(reqFilter)}</b></span><button data-a="rqf-x" aria-label="Togli filtro">✕</button></div>`+h;
-  $('l-all').innerHTML=h;fitCols();
+  $('l-all').innerHTML=h;fitCols();rollNums();typeGreet();
   applyLayout();
 }
 /* completata: la card si accartoccia in una pallina e vola, con una curva, sul contatore di "Completate";
@@ -1468,12 +1526,39 @@ $('l-all').addEventListener('click',e=>{
 /* ═══ GESTI SULLE CARD: scorri a destra = fatta (o di nuovo da fare), a sinistra = elimina; tieni premuto = menu ═══ */
 const taskOf=c=>c&&D.tasks.find(x=>x.id===c.dataset.id);
 function eatClick(){const stop=ev=>{ev.stopPropagation();ev.preventDefault();};document.addEventListener('click',stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener('click',stop,{capture:true}),60);}
-function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;D.tasks.splice(i,1);save();renderAll();toast('Attività eliminata',()=>{D.tasks.splice(i,0,t);});}
+/* ═══ ANIMAZIONI DIVERTENTI (si spengono con Impostazioni › Animazioni) ═══ */
+// A2: la card si taglia in strisce che cadono
+function shred(cardEl){
+  if(!D.set.anim||!cardEl||!cardEl.isConnected)return;const r=cardEl.getBoundingClientRect();if(!r.width||Math.abs(r.left)>innerWidth)return;
+  const N=12,w=r.width/N,box=document.createElement('div');box.className='shred';Object.assign(box.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
+  for(let i=0;i<N;i++){const s=document.createElement('i');s.style.left=i*w+'px';s.style.width=(w+.5)+'px';
+    const c=cardEl.cloneNode(true);c.style.cssText=`position:absolute;top:0;left:${-i*w}px;width:${r.width}px;height:${r.height}px;margin:0;transform:none;animation:none`;
+    const d=document.createElement('div');d.appendChild(c);s.appendChild(d);box.appendChild(s);
+    s.animate([{transform:'none',opacity:1},{transform:`translateY(${90+Math.random()*60}px) rotate(${(i%2?1:-1)*(6+Math.random()*10)}deg)`,opacity:0}],{duration:650+Math.random()*250,delay:120+Math.random()*120,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'});}
+  document.body.appendChild(box);setTimeout(()=>box.remove(),1200);
+}
+// A4: un calendarietto sulla card gira pagina dal vecchio al nuovo giorno
+function flipCal(cardEl,from,to){
+  if(!D.set.anim||!cardEl)return;const r=cardEl.getBoundingClientRect(),f=document.createElement('div');f.className='flip';
+  const dd=k=>k?kd(k).getDate():'';f.innerHTML=`<b>${MON[kd(to).getMonth()].toUpperCase()}</b><span>${dd(to)}</span><div class="pg">${dd(from)}</div>`;
+  Object.assign(f.style,{left:Math.min(innerWidth-80,r.right-90)+'px',top:Math.max(8,r.top+r.height/2-39)+'px'});document.body.appendChild(f);setTimeout(()=>f.remove(),950);
+}
+// A3: i numeri che cambiano scorrono come un contachilometri
+const lastNums={};
+function rollNums(){
+  if(!D.set.anim)return;
+  document.querySelectorAll('#l-all .dsep b,#kpis .kp b').forEach((b,i)=>{const key=(b.closest('.col-done')?'d':b.closest('.kp')?'k'+i:'t'),v=b.textContent,o=lastNums[key];lastNums[key]=v;
+    if(o===undefined||o===v)return;b.innerHTML=`<span class="roll ${+v<+o?'dn':''}"><i class="old">${o}</i><i>${v}</i></span>`;});
+}
+// A8: il saluto si scrive una volta, all'apertura
+let typed=false;
+function typeGreet(){if(typed||!D.set.anim)return;const g=$('greet');if(!g||!g.offsetParent||!g.textContent)return;typed=true;g.classList.add('typing');setTimeout(()=>g.classList.remove('typing'),1700);}
+function delTask(t){const i=D.tasks.indexOf(t);if(i<0)return;shred(document.querySelector(`.card[data-id="${t.id}"]`));D.tasks.splice(i,1);save();renderAll();toast('Attività eliminata',()=>{D.tasks.splice(i,0,t);});}
 /* rimanda con un gesto: scorri a sinistra e scegli quando (le attività completate invece si eliminano scorrendo) */
 const SNZ=[['d1','Domani'],['mon','Lunedì'],['w1','+1 sett']],SNZW=198;
 let openSw=null;
 function snzDate(k){const t0=today();if(k==='d1')return addD(t0,1);if(k==='w1')return addD(t0,7);const d=kd(t0).getDay();return addD(t0,((8-d)%7)||7);}
-function snooze(t,k){const nd=snzDate(k);if(nd!==t.due){hist(t,'due',t.due,nd);t.due=nd;}openSw=null;save();renderAtt();
+function snooze(t,k){const nd=snzDate(k);flipCal(document.querySelector(`.card[data-id="${t.id}"]`),t.due,nd);if(nd!==t.due){hist(t,'due',t.due,nd);t.due=nd;}openSw=null;save();renderAtt();
   const n=postponed(t);toast('Rimandata a '+dueLbl(nd).toLowerCase()+(n>=3&&n>(t.hAck||0)?' · '+n+' volte':''));}
 (function(){
   let st=null;const L=$('l-all'),GO=90;
@@ -1712,7 +1797,7 @@ function openForm(t,pre){   /* pre: valori già scelti nella barra rapida ("Dett
   if($('i-due'))$('i-due').oninput=e=>{const h=e.target.parentNode.querySelector('.hint');if(h)h.textContent=e.target.value?'':'Se la lasci vuota: tra '+D.set.defDays+' giorni';};
   $('b-cancel').onclick=closeForm;$('b-save').onclick=saveForm;
   $('sheet').querySelectorAll('[data-hw]').forEach(b=>b.onclick=()=>{if(b.dataset.hw==='keep'){t.hAck=postponed(t);save();b.closest('.hwarn').remove();renderAtt();}else $('b-del').click();});   // storia: rimandata troppe volte
-  if(t){$('b-del').onclick=()=>{const i=D.tasks.indexOf(t);D.tasks.splice(i,1);save();closeForm();renderAll();toast('Attività eliminata',()=>{D.tasks.splice(i,0,t);});};
+  if(t){$('b-del').onclick=()=>{closeForm();delTask(t);};
     $('b-dup').onclick=()=>{const c={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)',hist:[],hAck:0};hist(c,'new',null,c.due);D.tasks.push(c);save();renderAll();openForm(c);toast('Attività duplicata');};}
 }
 function cfInput(f,v){
