@@ -100,13 +100,16 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
   .kp i{font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px;white-space:nowrap}
   .kp.ok b{color:#22c55e}.kp.late b{color:var(--danger,#ef4444)}.kp.zero b{color:var(--muted)}
   body.topnav .wk{display:flex;gap:8px;margin:14px 0 18px}
-  body.topnav #p-att .greet{margin-top:10px;padding-left:4px}
+  body.topnav #p-att .greet{display:none}   /* i numeri sono già nella barra */
   .wk button{flex:1;border:0;border-radius:14px;background:var(--card);color:var(--text);padding:8px 0 7px;cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .15s}
   .wk button:hover{transform:translateY(-1px)}
   .wk i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
   .wk b{font-family:var(--fd);font-weight:var(--fdw);font-size:22px;line-height:1.05}
   .wk s{display:flex;gap:3px;height:6px;text-decoration:none}
-  .wk u{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.75}
+  .wk u{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .wk .td u{background:var(--onacc)}
+  .wk .we{color:var(--danger)}   /* sabato e domenica in rosso */
+  .wk .td.we{color:var(--onacc)}
   .wk .td{background:var(--accent);color:var(--onacc)}
   .wk .lt{color:var(--danger,#ef4444)}
   .wk .on{box-shadow:inset 0 0 0 2px var(--accent)}
@@ -1330,7 +1333,7 @@ function renderHead(){
   // settimana (lunedì → domenica)
   const d0=kd(t0),mon=addD(t0,-((d0.getDay()+6)%7));let w='';
   for(let i=0;i<7;i++){const k=addD(mon,i),due=P.filter(t=>!t.done&&t.due===k),late=k<t0&&due.length;
-    w+=`<button class="${k===t0?'td':''} ${dayFilter===k?'on':''} ${late?'lt':''}" data-day="${k}"><i>${({it:['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],tr:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz']}[curLang()])[i]}</i><b>${kd(k).getDate()}</b><s>${'<u></u>'.repeat(Math.min(due.length,5))}</s></button>`;}
+    w+=`<button class="${i>4?'we':''} ${k===t0?'td':''} ${dayFilter===k?'on':''} ${late?'lt':''}" data-day="${k}"><i>${({it:['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],tr:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz']}[curLang()])[i]}</i><b>${kd(k).getDate()}</b><s>${'<u></u>'.repeat(Math.min(due.length,5))}</s></button>`;}
   $('wk').innerHTML=w;
 }
 $('rqs').addEventListener('click',e=>{const b=e.target.closest('[data-rqs]');if(!b)return;reqFilter=b.dataset.rqs;renderAtt();});
