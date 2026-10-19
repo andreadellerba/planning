@@ -58,19 +58,19 @@ input,textarea,select{font:inherit;color:inherit}
 /* PC largo: il menu sale nell'intestazione, al centro fra il titolo e i pulsanti; niente pillole,
    solo una barra luminosa sotto la voce aperta. Stringendo la finestra torna in basso con le pillole. */
 .ph{position:relative}
-body.topnav .page>.ph{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start}
+body.topnav .page>.ph{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;column-gap:24px}
 body.topnav .page>.ph>:first-child{grid-column:1;justify-self:start;min-width:0}
 body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;margin-top:0!important}
-.ph>.nav{grid-column:2;grid-row:1;position:static;flex:1 1 auto;min-width:0;align-self:center;transform:none;margin:0 8px;max-width:none;width:auto;display:flex;justify-content:center;align-items:center;gap:14px;z-index:5;overflow:hidden;padding:4px 0}
+.ph>.nav{grid-column:2;grid-row:1;position:static;flex:1 1 auto;min-width:0;align-self:center;transform:none;margin:0 8px;max-width:none;width:auto;display:flex;justify-content:space-evenly;align-items:center;gap:14px;z-index:5;overflow:hidden;padding:4px 0}   /* le voci si distribuiscono nello spazio fra titolo e numeri */
 .ph>.nav.icons .tb .tl{display:none}   /* poco spazio fra titolo e pulsanti: solo icone */
 .ph>.nav .bar{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border:0!important;padding:0;gap:6px}
-.ph>.nav .bar.main{flex:0 0 auto}
+.ph>.nav .bar,.ph>.nav .bar.main{display:contents}   /* voci e + distribuite tutte insieme nello spazio */
 .ph>.nav .tb,.ph>.nav .tb.on{flex:0 0 auto;padding:10px 14px;background:none!important;box-shadow:none!important;border-radius:10px;color:var(--muted)}
 .ph>.nav .tb .tl{display:inline}
 .ph>.nav .tb:hover{color:var(--text)}
-.ph>.nav .tb.on{color:var(--text)}
-.ph>.nav .tb.on svg{color:var(--tc)}
-.ph>.nav .tb.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-2px;height:3px;border-radius:3px;background:var(--tc);box-shadow:0 0 12px var(--tc),0 0 4px var(--tc)}
+.ph>.nav .tb.on{color:var(--tc);text-shadow:0 0 14px color-mix(in srgb,var(--tc) 70%,transparent),0 0 2px color-mix(in srgb,var(--tc) 50%,transparent)}   /* voce aperta: tutta la scritta illuminata nel suo colore */
+.ph>.nav .tb.on svg{color:var(--tc);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tc) 70%,transparent))}
+.ph>.nav .tb.on::after{display:none}
 .ph>.nav .bar.side .tb{padding:10px 12px;color:var(--accent)}
 .ph>.nav .bar.side .tb svg{width:22px;height:22px}
 .ph>.nav .tb::before,.ph>.nav .ind,.ph>.nav .bar::before,.ph>.nav .bar::after{display:none!important}
@@ -119,16 +119,17 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
 /* poco spazio: niente numeri, così titolo, menu e pulsanti stanno sempre su una riga */
 @media(min-width:1000px) and (max-width:1300px){body.topnav .kpis{display:none}body.topnav .cx{display:none}}   /* colonne strette: card come sul telefono */
 .cx{display:none}
+body.topnav .card.nocx .cx{display:none!important}
 @media(min-width:1000px){
   body.topnav .wrap{max-width:none;padding-left:40px;padding-right:40px}
   body.topnav #p-att,body.topnav #p-stat{max-width:none}
   body.topnav #p-set .sets{max-width:none}
   body.topnav .cx{display:flex;align-items:center;gap:14px;margin-left:auto;min-width:0;flex:0 1 46%;justify-content:flex-end}
   .cxn{min-width:0;flex:0 1 auto;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
-  .cxd{flex:none;font-size:12px;font-weight:800;padding:5px 10px;border-radius:10px;background:color-mix(in srgb,var(--text) 7%,transparent);color:var(--muted);white-space:nowrap}
-  .cxd.soon{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
-  .cxd.late{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
-  .cxd.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+  .cxd{flex:none;font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap}   /* scadenza scritta semplice, senza riquadro */
+  .cxd.soon{color:var(--accent);font-weight:700}
+  .cxd.late{color:var(--danger);font-weight:700}
+  .cxd.ok{color:var(--ok)}
   body.topnav .card .cb{flex:1 1 auto}
 }
 /* stessi angoli dello stile di card scelto, su tutti i riquadri */
@@ -137,7 +138,7 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
 @media(min-width:1000px){
   body.topnav .page>.ph{border-radius:calc(var(--cr,18px) + 4px)}
   .wk button{border-radius:var(--cr,18px)}
-  .cxd{border-radius:calc(var(--cr,18px) * .55)}
+
 }
 /* P3 · completare con un interruttore (spento = da fare, acceso verde = fatta) */
 .dot,.card .dot{width:46px;height:28px;border-radius:14px;border:0;background:color-mix(in srgb,var(--pc) 22%,var(--card2,rgba(127,127,127,.2)));position:relative;display:block;transition:background .25s}
@@ -147,9 +148,9 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
 .card.isdone .dot::after,.dot.pop::after{transform:translateX(18px)}
 /* P5 · completate: una riga rossa barra il titolo (si disegna quando la completi) */
 .card.isdone .ct{text-decoration:none!important}
-.card.isdone .ct span{background:linear-gradient(var(--danger),var(--danger)) no-repeat 0 58%/100% 2.5px}
+.card.isdone .ct span{background:linear-gradient(var(--danger),var(--danger)) no-repeat 0 56%/100% 3px}
 .card.isdone.enter .ct span{animation:strike .55s .1s ease-out both}
-@keyframes strike{from{background-size:0 2px}to{background-size:100% 2px}}
+@keyframes strike{from{background-size:0 3px}to{background-size:100% 3px}}
 /* A1 · nuova attività: cade dall'alto e rimbalza */
 .card.enter{animation:drop .6s cubic-bezier(.3,1.4,.5,1)}
 @keyframes drop{0%{opacity:0;transform:translateY(-46px) rotate(-1.5deg)}60%{opacity:1;transform:translateY(5px)}80%{transform:translateY(-2px)}100%{transform:none}}
@@ -281,7 +282,8 @@ body.noanim .greet.typing{clip-path:none}
 /* il titolo sta su una riga e sfuma prima del pallino */
 .ct{font-weight:650;font-size:calc(var(--fs) + .5px);line-height:1.3;white-space:nowrap;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
-.card.isdone{opacity:.62}
+.card.isdone{opacity:1}
+.card.isdone .avi{opacity:.55}.card.isdone .cm{opacity:.6}.card.isdone .ct{color:var(--muted)}   /* completate: niente velo su tutta la card, così la riga rossa si vede bene */
 .card.isdone .ct{text-decoration:line-through;text-decoration-color:var(--soft);color:var(--muted)}
 .cm{display:flex;flex-wrap:nowrap;min-width:0;gap:0;margin-top:4px;font-size:calc(var(--fs) - 2.5px);font-weight:500;color:var(--muted)}
 .cm span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
@@ -1374,6 +1376,10 @@ function fillDates(){
 }
 addEventListener('resize',()=>fillDates());
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fillDates());
+// la scadenza a destra compare solo se non toglie spazio a titolo, richiedente e priorità (le info scritte da te)
+function fitCx(){document.querySelectorAll('#l-all .card').forEach(c=>{const x=c.querySelector('.cx');if(!x)return;c.classList.remove('nocx');if(!x.offsetParent)return;
+  const cut=[...c.querySelectorAll('.ct,.cm,.cm .rq,.cm .rq em')].some(e=>e.scrollWidth>e.clientWidth+1);if(cut)c.classList.add('nocx');});}
+window.addEventListener('resize',()=>{clearTimeout(window._fcx);window._fcx=setTimeout(fitCx,120);});
 /* Ricerca: sotto la barra le persone con attività (prima chi ne ha di più da fare, poi in ordine alfabetico);
    PC: numeri prima di ordina/cerca e settimana sotto il saluto (tocchi un giorno = solo le sue scadenze) */
 function renderHead(){
@@ -1432,7 +1438,7 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
   renderHead();
   if(dayFilter)h=`<div class="rqf"><span>${trS('Scadenza')}: <b>${dueLbl(dayFilter)}</b></span><button data-a="day-x" aria-label="Togli filtro">✕</button></div>`+h;
   if(reqFilter&&!$('srch').classList.contains('on'))h=`<div class="rqf">${avImg(reqFilter)}<span>Solo <b>${esc(reqFilter)}</b></span><button data-a="rqf-x" aria-label="Togli filtro">✕</button></div>`+h;
-  $('l-all').innerHTML=h;fitCols();rollNums();typeGreet();
+  $('l-all').innerHTML=h;fitCols();fitCx();rollNums();typeGreet();
   applyLayout();
 }
 /* completata: la card si accartoccia in una pallina e vola, con una curva, sul contatore di "Completate";
