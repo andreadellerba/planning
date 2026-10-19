@@ -55,6 +55,21 @@ input,textarea,select{font:inherit;color:inherit}
 .ib svg{width:20px;height:20px}
 .ib.on{background:var(--accent);color:var(--onacc);border-color:transparent;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 50%,transparent)}
 #p-att,#p-stat{max-width:640px;margin:0 auto}
+/* PC largo: il menu sale nell'intestazione, al centro fra il titolo e i pulsanti; niente pillole,
+   solo una barra luminosa sotto la voce aperta. Stringendo la finestra torna in basso con le pillole. */
+.ph{position:relative}
+.ph>.nav{position:absolute;left:50%;top:0;bottom:0;right:auto;transform:translateX(-50%);margin:0;max-width:none;width:auto;display:flex;align-items:center;gap:14px;z-index:5}
+.ph>.nav .bar{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border:0!important;padding:0;gap:6px}
+.ph>.nav .bar.main{flex:0 0 auto}
+.ph>.nav .tb,.ph>.nav .tb.on{flex:0 0 auto;padding:10px 14px;background:none!important;box-shadow:none!important;border-radius:10px;color:var(--muted)}
+.ph>.nav .tb .tl{display:inline}
+.ph>.nav .tb:hover{color:var(--text)}
+.ph>.nav .tb.on{color:var(--text)}
+.ph>.nav .tb.on svg{color:var(--tc)}
+.ph>.nav .tb.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-2px;height:3px;border-radius:3px;background:var(--tc);box-shadow:0 0 12px var(--tc),0 0 4px var(--tc)}
+.ph>.nav .bar.side .tb{padding:10px 12px;color:var(--accent)}
+.ph>.nav .bar.side .tb svg{width:22px;height:22px}
+.ph>.nav .tb::before,.ph>.nav .ind,.ph>.nav .bar::before,.ph>.nav .bar::after{display:none!important}
 /* PC largo: Da fare a sinistra, Completate a destra */
 .only-wide{display:none}
 @media(min-width:1000px){
@@ -1232,7 +1247,14 @@ function fillDates(){
 addEventListener('resize',()=>fillDates());
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>fillDates());
 // PC a due colonne: ogni colonna è alta quanto lo spazio fra il titolo e la barra in basso, e scorre da sola
-function fitCols(){const l=$('l-all');if(!l||!l.offsetParent)return;const top=l.getBoundingClientRect().top+scrollY,nav=document.querySelector('.nav'),nb=nav?innerHeight-nav.getBoundingClientRect().top+14:110;l.style.setProperty('--colh',Math.max(240,innerHeight-top-nb)+'px');}
+// PC largo: il menu va nell'intestazione della pagina aperta; stringendo la finestra torna in basso
+const NAVMQ=matchMedia('(min-width:1000px)');
+function placeNav(){const nav=document.querySelector('nav.nav');if(!nav)return;
+  if(NAVMQ.matches){const ph=document.querySelector('.page.on .ph');if(ph&&nav.parentElement!==ph)ph.appendChild(nav);document.body.classList.add('topnav');}
+  else{if(nav.parentElement!==document.body)document.body.appendChild(nav);document.body.classList.remove('topnav');}}
+NAVMQ.addEventListener('change',()=>{placeNav();fitCols();});
+placeNav();
+function fitCols(){const l=$('l-all');if(!l||!l.offsetParent)return;const top=l.getBoundingClientRect().top+scrollY,nav=document.querySelector('.nav'),nb=document.body.classList.contains('topnav')?28:nav?innerHeight-nav.getBoundingClientRect().top+14:110;l.style.setProperty('--colh',Math.max(240,innerHeight-top-nb)+'px');}
 window.addEventListener('resize',fitCols);
 function renderAtt(){
   renderPf();fillDates();
@@ -1943,7 +1965,7 @@ function applyLayout(){
 })();
 
 /* ═══ NAVIGAZIONE, AVVISI, SCORCIATOIE ═══ */
-function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));if(p==='att')setTimeout(fitCols,0);document.querySelectorAll('.bar.main .tb').forEach(b=>b.classList.toggle('on',b.dataset.go===p));
+function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));placeNav();if(p==='att')setTimeout(fitCols,0);document.querySelectorAll('.bar.main .tb').forEach(b=>b.classList.toggle('on',b.dataset.go===p));
   D.ui.page=p;save();if(p==='stat')renderStats();if(p==='set')renderSets();if(p==='att')renderAtt();applyLayout();fillDates();scrollTo(0,0);   // la data si misura quando la pagina è già visibile (prima non si può e restava vuota)
   $('tip').style.display='none';}
 document.querySelector('.bar.main').onclick=e=>{if(document.querySelector('[data-el][contenteditable="true"]'))return;const b=e.target.closest('[data-go]');if(b)go(b.dataset.go);};
