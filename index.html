@@ -129,7 +129,7 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end}
 .list{display:flex;flex-direction:column;gap:10px}
 /* card piena, compatta, con ombra profonda; si può scorrere (fatta / elimina) o tenere premuta (menu) */
 .card{position:relative;display:flex;gap:14px;align-items:center;padding:11px 12px 11px 16px;border-radius:18px;cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-  background:var(--card);border:0;box-shadow:0 10px 26px var(--csh);   /* card piena con ombra profonda */
+  background:var(--card);border:0;box-shadow:none;   /* card piena, senza ombra (tolta su richiesta) */
   transition:transform .15s,box-shadow .15s,opacity .3s,max-height .35s,margin .35s,padding .35s;max-height:600px;overflow:hidden}
 .card:hover{transform:translateY(-1px)}
 .card.leave{opacity:0;max-height:0;margin:0;padding-top:0;padding-bottom:0;transform:scale(.97)}
@@ -282,7 +282,7 @@ button.srw:active{opacity:.7}
 .greet b{color:var(--text);font-weight:700}
 .greet em{font-style:normal;color:var(--danger);font-weight:700}
 /* lista unica: le card di una sezione stanno in un solo riquadro, con una riga tra l'una e l'altra */
-.lgrp{background:var(--card);border-radius:20px;overflow:hidden;box-shadow:0 10px 26px var(--csh);display:flex;flex-direction:column}
+.lgrp{background:var(--card);border-radius:20px;overflow:hidden;box-shadow:none;display:flex;flex-direction:column}
 .lgrp .card{border-radius:0;box-shadow:none!important;background:transparent;border:0}
 .lgrp .card+.card,.lgrp .swp+.card,.lgrp .card+.swp,.lgrp .swp+.swp{border-top:.5px solid var(--line)}
 .lgrp .swp{border-radius:0}.lgrp .swp .sa{border-radius:0}
@@ -310,7 +310,7 @@ button.srw:active{opacity:.7}
 .card .rq,.card .avi{cursor:pointer}
 .card.card{padding-left:8px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
-.card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:0 10px 26px var(--csh),inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
+.card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
 .card.cs-moderna .cm{gap:5px}
 .card.cs-moderna .cm span{height:22px;padding:0 9px;border-radius:11px;background:color-mix(in srgb,var(--text) 8%,transparent)}
 .card.cs-bordo{background:transparent;box-shadow:none;border:1px solid var(--line)}
@@ -1289,12 +1289,13 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
 }
 /* completata: la card si accartoccia in una pallina e vola, con una curva, sul contatore di "Completate";
    intanto la lista chiude il buco. All'arrivo il contatore fa un salto. */
-function crumpleFly(cardEl,done){
-  const r=cardEl.getBoundingClientRect(),tg=[...document.querySelectorAll('#l-all .dsep:not(.first) b')].find(b=>b.offsetParent)||document.querySelector('#l-all .dsep.first b');   // solo un contatore visibile (su telefono la colonna vuota è nascosta)
+function crumpleFly(cardEl,done,back){   // back: da Completate torna in Da fare (pallina con la freccia, verso il contatore Da fare)
+  const BC=back?'var(--accent)':'#22c55e',BI=back?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>':CHK;
+  const r=cardEl.getBoundingClientRect(),tg=back?document.querySelector('#l-all .dsep.first b'):([...document.querySelectorAll('#l-all .dsep:not(.first) b')].find(b=>b.offsetParent)||document.querySelector('#l-all .dsep.first b'));   // solo un contatore visibile (su telefono la colonna vuota è nascosta)
   const tr=tg?tg.getBoundingClientRect():{left:innerWidth/2,top:innerHeight-120,width:0,height:0};
   const g=cardEl.cloneNode(true);g.classList.add('ghost');g.removeAttribute('data-id');
   Object.assign(g.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:0,zIndex:80,pointerEvents:'none',transformOrigin:'50% 50%'});
-  g.insertAdjacentHTML('beforeend',`<i class="gchk">${CHK}</i>`);
+  g.insertAdjacentHTML('beforeend',`<i class="gchk">${BI}</i>`);
   document.body.appendChild(g);
   cardEl.classList.add('leave');   // la lista si richiude subito sotto la pallina
   // la card si ripiega (larghezza e altezza, non una scala: cosi' diventa tonda e non un bastoncino),
@@ -1305,13 +1306,13 @@ function crumpleFly(cardEl,done){
   g.querySelector('.gchk').animate([{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'none'}],{duration:200,delay:140,fill:'forwards'});
   const a=g.animate([
     {width:W+'px',height:H+'px',transform:'translate(0,0) rotate(0deg)',borderRadius:'18px',backgroundColor:'var(--card)',offset:0},
-    {width:S+'px',height:S+'px',transform:at(c0x,c0y,S)+' rotate(-30deg)',borderRadius:'50%',backgroundColor:'#22c55e',offset:.32},   // si ripiega
-    {width:S*.85+'px',height:S*.85+'px',transform:at(mx,my,S*.85)+' rotate(90deg)',borderRadius:'50%',backgroundColor:'#22c55e',offset:.66},  // sale in curva
-    {width:E+'px',height:E+'px',transform:at(tx,ty,E)+' rotate(200deg)',borderRadius:'50%',backgroundColor:'#22c55e',offset:1}  // entra nel contatore
+    {width:S+'px',height:S+'px',transform:at(c0x,c0y,S)+' rotate(-30deg)',borderRadius:'50%',backgroundColor:BC,offset:.32},   // si ripiega
+    {width:S*.85+'px',height:S*.85+'px',transform:at(mx,my,S*.85)+' rotate(90deg)',borderRadius:'50%',backgroundColor:BC,offset:.66},  // sale in curva
+    {width:E+'px',height:E+'px',transform:at(tx,ty,E)+' rotate(200deg)',borderRadius:'50%',backgroundColor:BC,offset:1}  // entra nel contatore
   ],{duration:820,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'});
   a.onfinish=()=>{g.remove();done();};
 }
-function bumpDone(){const b=[...document.querySelectorAll('#l-all .dsep:not(.first) b')].find(x=>x.offsetParent);if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');}}
+function bumpDone(back){const b=back?document.querySelector('#l-all .dsep.first b'):[...document.querySelectorAll('#l-all .dsep:not(.first) b')].find(x=>x.offsetParent);if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');}}
 function toggle(t,el){
   const cardEl=el&&el.closest('.card'),dot=cardEl&&cardEl.querySelector('.dot');
   const go2=()=>{
@@ -1322,7 +1323,7 @@ function toggle(t,el){
     save();renderAtt();const ne=document.querySelector(`.card[data-id="${t.id}"]`);if(ne&&D.set.anim)ne.classList.add('enter');
   };
   if(!t.done){ding(true);if(cardEl&&D.set.anim){dot.classList.add('pop');confetti(dot);setTimeout(()=>crumpleFly(cardEl,()=>{go2();bumpDone();}),340);}else go2();}
-  else{ding(false);if(cardEl&&D.set.anim){cardEl.classList.add('leave');setTimeout(go2,280);}else go2();}
+  else{ding(false);if(cardEl&&D.set.anim){crumpleFly(cardEl,()=>{go2();bumpDone(true);},true);}else go2();}   // al contrario: torna in Da fare con la stessa animazione
 }
 /* ═══ FOTO DEI RICHIEDENTI: tocca un avatar (card, podio, statistiche) → finestra con la foto tonda:
    trascinala per centrarla, cursore (o rotella) per lo zoom, Cambia foto / Togli / Salva.
@@ -1439,7 +1440,7 @@ $('cmo').addEventListener('click',e=>{
   closeCardMenu();const m=b.dataset.m;
   if(m==='edit')openForm(t);
   if(m==='dup'){const n={...JSON.parse(JSON.stringify(t)),id:uid(),done:false,doneAt:0,created:Date.now(),title:t.title+' (copia)',hist:[],hAck:0};hist(n,'new',null,n.due);D.tasks.push(n);save();renderAll();toast('Attività duplicata');}
-  if(m==='tog')toggle(t,null);
+  if(m==='tog')toggle(t,document.querySelector(`.card[data-id="${t.id}"] .dot`));   // dal menu: stessa animazione
   if(m==='del')delTask(t);
 });
 /* ═══ PROFILI: tocca il titolo per passare al profilo dopo, tienilo premuto per crearli, rinominarli o eliminarli ═══ */
