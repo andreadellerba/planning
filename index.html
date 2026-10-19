@@ -246,6 +246,10 @@ button.srw:active{opacity:.7}
 .card{isolation:isolate}
 .card::before{display:none}   /* niente barretta: la priorità la dice la sfumatura */
 .card::after{display:none;content:"";position:absolute;left:0;top:0;bottom:0;width:var(--pgw,55%);z-index:-1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) var(--pg,24%),transparent),transparent)}   /* --pg più forte sugli sfondi colorati (vedi applyLook) */
+.rqf{display:flex;align-items:center;gap:10px;margin:2px 0 12px;padding:6px 6px 6px 8px;border-radius:16px;background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);font-size:14px}
+.rqf span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rqf button{width:30px;height:30px;border-radius:50%;border:0;background:color-mix(in srgb,var(--text) 10%,transparent);color:var(--text);font-size:13px;cursor:pointer}
+.card .rq,.card .avi{cursor:pointer}
 .card.card{padding-left:8px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
 .card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:0 10px 26px var(--csh),inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
@@ -984,6 +988,7 @@ const I18={ // italiano: [inglese, turco]
 'Rubino':['Ruby','Yakut'],'Ruggine':['Rust','Pas'],'Sabbia':['Sand','Kum'],'Sabbia notte':['Night sand','Gece kumu'],'Salmone':['Salmon','Somon'],'Salvia':['Sage','Adaçayı'],
 'Smeraldo':['Emerald','Zümrüt'],'Sole':['Sun','Güneş'],'Terracotta':['Terracotta','Kiremit'],'Turchese':['Turquoise','Turkuaz'],'Vaniglia':['Vanilla','Vanilya'],'Verde acqua':['Teal','Deniz yeşili'],
 'Verde':['Green','Yeşil'],'Vinaccia':['Wine','Şarap'],'Viola scuro':['Dark purple','Koyu mor'],'Viola':['Purple','Mor'],'Zaffiro':['Sapphire','Safir'],'Zucca':['Pumpkin','Balkabağı'],
+'Solo':['Only','Sadece'],'Togli filtro':['Remove filter','Filtreyi kaldır'],
 'Esempio di attività':['Sample task','Örnek görev']
 };
 // frasi con numeri, nomi o date: [schema italiano, inglese, turco]
@@ -1117,9 +1122,10 @@ function dur(ms){const m=Math.max(1,Math.round(ms/6e4));if(m<60)return m+' min';
 
 /* ═══ ATTIVITÀ: una lista sola in ordine di creazione, le completate barrate in fondo ═══ */
 let doneLimit=30;
+let reqFilter='';   // filtro rapido: tocchi il richiedente su una card e vedi solo le sue attività
 function filtered(){
   const q=$('q').value.trim().toLowerCase();
-  return PT().filter(t=>!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q));
+  return PT().filter(t=>(!reqFilter||t.req===reqFilter)&&(!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q)));
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
 function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impostazioni)
@@ -1188,6 +1194,7 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
   // saluto: cosa c'è da fare, cosa hai chiuso oggi e cosa è in ritardo (nel profilo attuale)
   const PTn=PT(),hr=new Date().getHours(),nTodo=PTn.filter(t=>!t.done).length,nToday=PTn.filter(t=>t.done&&dkey(new Date(t.doneAt))===today()).length,nLate=PTn.filter(t=>!t.done&&t.due&&t.due<today()).length;
   $('greet').innerHTML=`${hr<5||hr>=18?'Buonasera':hr<13?'Buongiorno':'Buon pomeriggio'}, <b>${nTodo} da fare</b> e <b>${nToday} ${nToday===1?'completata':'completate'} oggi</b>${nLate?` · <em>${nLate} in ritardo</em>`:''}`;
+  if(reqFilter)h=`<div class="rqf">${avImg(reqFilter)}<span>Solo <b>${esc(reqFilter)}</b></span><button data-a="rqf-x" aria-label="Togli filtro">✕</button></div>`+h;
   $('l-all').innerHTML=h;
   applyLayout();
 }
@@ -1245,8 +1252,10 @@ $('avfile').addEventListener('change',()=>{const f=$('avfile').files[0];if(!f)re
 $('l-all').addEventListener('click',e=>{
   if(document.body.classList.contains('editing'))return;
   if(e.target.closest('[data-a="more"]')){doneLimit+=30;renderAtt();return;}
+  if(e.target.closest('[data-a="rqf-x"]')){reqFilter='';renderAtt();return;}
   const c=e.target.closest('.card');if(!c)return;const t=D.tasks.find(x=>x.id===c.dataset.id);if(!t)return;
   if(e.target.closest('[data-a="tog"]')){e.stopPropagation();toggle(t,e.target);return;}
+  if(t.req&&e.target.closest('.rq,.avi')){reqFilter=reqFilter===t.req?'':t.req;window.scrollTo({top:0,behavior:'smooth'});renderAtt();return;}   // tocco sul richiedente: solo le sue
   openForm(t);
 });
 /* ═══ GESTI SULLE CARD: scorri a destra = fatta (o di nuovo da fare), a sinistra = elimina; tieni premuto = menu ═══ */
