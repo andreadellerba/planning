@@ -179,6 +179,7 @@ input,textarea,select{font:inherit;color:inherit}
 .qpl button{text-align:center}
 .qpl button.on{background:var(--accent);color:var(--onacc)}
 .q.open{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.q.kb{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}   /* voce raggiunta col Tab: le frecce ne cambiano il valore */
 /* nome suggerito in grigio dentro il campo, dopo quello che hai scritto */
 .qiw{position:relative;flex:1;min-width:0;height:100%;display:flex;align-items:center}
 .qiw input{position:relative;z-index:1;width:100%}
@@ -244,7 +245,7 @@ button.srw:active{opacity:.7}
 /* priorità: barretta luminosa prima dell'avatar, alta quanto il contenuto, con la sfumatura che parte da lì */
 .card{isolation:isolate}
 .card::before{display:none}   /* niente barretta: la priorità la dice la sfumatura */
-.card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--pgw,55%);z-index:-1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) var(--pg,24%),transparent),transparent)}   /* --pg più forte sugli sfondi colorati (vedi applyLook) */
+.card::after{display:none;content:"";position:absolute;left:0;top:0;bottom:0;width:var(--pgw,55%);z-index:-1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) var(--pg,24%),transparent),transparent)}   /* --pg più forte sugli sfondi colorati (vedi applyLook) */
 .card.card{padding-left:8px}
 .card.cs-vetro{background:linear-gradient(180deg,var(--sheen),rgba(255,255,255,0) 55%),var(--glass);border:.5px solid var(--glassb);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 14px rgba(0,0,0,.16);padding:14px 14px 14px 16px;border-radius:22px}
 .card.cs-tinta{background:color-mix(in srgb,var(--pc) 16%,var(--card));box-shadow:0 10px 26px var(--csh),inset 0 0 0 1px color-mix(in srgb,var(--pc) 35%,transparent)}
@@ -548,7 +549,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <section class="page on" id="p-att" data-t="att">
     <div class="ph"><div><h1 class="tt"><span class="dd" aria-hidden="true"><b></b><i></i></span><span id="pfname" title="Tocca per cambiare profilo, tieni premuto per gestirli">Attività</span><span class="pfc" id="pfd" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></h1></div>
       <div class="hbtn grp gl"><!-- i tre pulsanti uniti in un'unica pillola di vetro -->
-        <button class="ib cnt" id="n-todo" title="Tocca per cambiare">0</button>
         <button class="ib" id="sortbtn" aria-label="Ordine"></button>
         <button class="ib" id="srchbtn" aria-label="Cerca" title="Cerca (/)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
       </div></div>
@@ -690,7 +690,7 @@ const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const today=()=>dkey(new Date());
 const kd=k=>new Date(k+'T12:00:00');
 const addD=(k,n)=>{const d=kd(k);d.setDate(d.getDate()+n);return dkey(d);};
-const dLong=k=>kd(k).toLocaleDateString('it-IT',{day:'numeric',month:'long'}).toUpperCase();
+const dLong=k=>kd(k).toLocaleDateString(LOC,{day:'numeric',month:'long'}).toUpperCase();
 let D;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -867,6 +867,181 @@ function nextDate(due,r){
 
 /* ═══ DATE E ICONE DELLE CARD ═══ */
 const MON=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+/* ═══ LINGUA: italiano (originale), inglese, turco ═══
+   I testi dell'app sono scritti in italiano dentro il codice. Invece di riscriverli tutti, quando la lingua
+   non è l'italiano ogni scritta che compare sullo schermo (testo, segnaposto, suggerimenti) viene cercata in
+   questo dizionario e sostituita; le frasi con numeri o nomi passano dagli schemi più sotto. I titoli delle
+   attività, i richiedenti e i nomi rinominati in Modalità editor non vengono mai toccati. */
+const LANGS=[['it','Italiano'],['en','English'],['tr','Türkçe']];
+const LOCS={it:'it-IT',en:'en-GB',tr:'tr-TR'};
+const curLang=()=>(D&&D.set&&LOCS[D.set.lang])?D.set.lang:'it';
+let LOC='it-IT';
+const I18={ // italiano: [inglese, turco]
+'Attività':['Tasks','Görevler'],'Statistiche':['Statistics','İstatistikler'],'Impostazioni':['Settings','Ayarlar'],
+'Le mie attività':['My tasks','Görevlerim'],'Da fare':['To do','Yapılacak'],'Completate':['Completed','Tamamlanan'],
+'Buonasera,':['Good evening,','İyi akşamlar,'],'Buongiorno,':['Good morning,','Günaydın,'],'Buon pomeriggio,':['Good afternoon,','Tünaydın,'],
+'Buonasera':['Good evening','İyi akşamlar'],'Buongiorno':['Good morning','Günaydın'],'Buon pomeriggio':['Good afternoon','Tünaydın'],
+'e':['and','ve'],
+'✏️ MODALITÀ EDITOR':['✏️ EDITOR MODE','✏️ DÜZENLEME MODU'],'tieni premuto per spostare · doppio tocco per rinominare':['hold to move · double tap to rename','taşımak için basılı tut · yeniden adlandırmak için çift dokun'],
+'Tieni premuto per spostare · doppio tocco per rinominare':['Hold to move · double tap to rename','Taşımak için basılı tut · yeniden adlandırmak için çift dokun'],
+'Fine':['Done','Bitti'],'Bentornato':['Welcome back','Tekrar hoş geldin'],
+'Incolla il tuo codice segreto: un codice, le tue attività su ogni dispositivo. Lo chiede solo la prima volta.':['Paste your secret code: one code, your tasks on every device. It is only asked the first time.','Gizli kodunu yapıştır: tek kod, tüm cihazlarda görevlerin. Yalnızca ilk seferde sorulur.'],
+'Incolla':['Paste','Yapıştır'],'Entra':['Enter','Gir'],
+'Crea online con questo codice e carica le attività di questo dispositivo':['Create it online with this code and upload this device\'s tasks','Bu kodla çevrimiçi oluştur ve bu cihazdaki görevleri yükle'],
+'Non ho ancora un codice: creane uno nuovo':['I don\'t have a code yet: create a new one','Henüz kodum yok: yeni bir tane oluştur'],
+'L\'app è bloccata: sbloccala col viso o con l\'impronta.':['The app is locked: unlock it with your face or fingerprint.','Uygulama kilitli: yüzünle veya parmak izinle aç.'],
+'Sblocca con Face ID':['Unlock with Face ID','Face ID ile aç'],'Usa il codice segreto':['Use the secret code','Gizli kodu kullan'],'Annulla':['Cancel','İptal'],
+'Codice segreto':['Secret code','Gizli kod'],
+'Tocca per cambiare profilo, tieni premuto per gestirli':['Tap to switch profile, hold to manage them','Profil değiştirmek için dokun, yönetmek için basılı tut'],
+'Più recenti in alto':['Newest first','En yeniler üstte'],'Più vecchie in alto':['Oldest first','En eskiler üstte'],
+'Cerca (/)':['Search (/)','Ara (/)'],'Cerca':['Search','Ara'],'Cerca attività o richiedente…':['Search tasks or requester…','Görev veya talep eden ara…'],
+'Priorità alta':['High priority','Yüksek öncelik'],'Priorità media':['Medium priority','Orta öncelik'],'Priorità bassa':['Low priority','Düşük öncelik'],
+'Alta':['High','Yüksek'],'Media':['Medium','Orta'],'Bassa':['Low','Düşük'],'Urgente':['Urgent','Acil'],
+'Segna come fatta':['Mark as done','Tamamlandı olarak işaretle'],'Riporta in da fare':['Move back to to-do','Yapılacaklara geri al'],
+'Tocca per cambiare la foto':['Tap to change the photo','Fotoğrafı değiştirmek için dokun'],'Creata il … scade il …':['Created on … due on …','Oluşturulma … bitiş …'],
+'Nuova attività (N)':['New task (N)','Yeni görev (N)'],'Nuova attività':['New task','Yeni görev'],'Aggiungi':['Add','Ekle'],
+'Niente da fare! Premi + per aggiungere':['Nothing to do! Press + to add','Yapılacak bir şey yok! Eklemek için + bas'],'Nessuna attività trovata':['No tasks found','Görev bulunamadı'],
+'Settimana':['Week','Hafta'],'Mese':['Month','Ay'],'Anno':['Year','Yıl'],'Sempre':['All time','Tümü'],'Da sempre':['All time','Başından beri'],
+'attività completata':['task completed','görev tamamlandı'],'attività completate':['tasks completed','görev tamamlandı'],
+'in questa settimana':['this week','bu hafta'],'in totale':['in total','toplamda'],
+'Richiedenti':['Requesters','Talep edenler'],'Nessuna richiesta nel periodo':['No requests in this period','Bu dönemde talep yok'],
+'Periodi':['Periods','Dönemler'],'Periodo attuale':['Current period','Mevcut dönem'],'Chi chiede di più':['Who asks the most','En çok kim istiyor'],
+'Come la settimana prima':['Same as the week before','Önceki haftayla aynı'],
+'Aspetto':['Appearance','Görünüm'],'Esempio di attività':['Sample task','Örnek görev'],'Sfondo':['Background','Arka plan'],
+'Colore principale':['Main colour','Ana renk'],'Font':['Font','Yazı tipi'],'Card':['Cards','Kartlar'],'Dimensione testo':['Text size','Yazı boyutu'],
+'Normale':['Normal','Normal'],'Piccolo':['Small','Küçük'],'Grande':['Large','Büyük'],'Luce sfondo':['Background glow','Arka plan ışığı'],
+'Animazioni':['Animations','Animasyonlar'],'Card unite':['Joined cards','Birleşik kartlar'],'Suoni':['Sounds','Sesler'],
+'Profili':['Profiles','Profiller'],'Personale':['Personal','Kişisel'],'Gestisci profili':['Manage profiles','Profilleri yönet'],
+'Scadenza predefinita (giorni)':['Default due date (days)','Varsayılan bitiş (gün)'],'Richiedente':['Requester','Talep eden'],
+'Priorità':['Priority','Öncelik'],'Scadenza':['Due date','Bitiş tarihi'],'Ricorrenza':['Repeat','Tekrar'],
+'Personalizza':['Customise','Özelleştir'],'Modalità editor':['Editor mode','Düzenleme modu'],'Sicurezza':['Security','Güvenlik'],
+'Face ID su questo dispositivo':['Face ID on this device','Bu cihazda Face ID'],'Sincronizzazione':['Sync','Senkronizasyon'],'Stato':['Status','Durum'],
+'Sincronizzo…':['Syncing…','Senkronize ediliyor…'],'Sincronizzato':['Synced','Senkronize edildi'],'Mostra':['Show','Göster'],'Copia':['Copy','Kopyala'],
+'Scollega questo dispositivo':['Disconnect this device','Bu cihazın bağlantısını kes'],'Scollega':['Disconnect','Bağlantıyı kes'],
+'Tocca per cambiare':['Tap to change','Değiştirmek için dokun'],'Oggi':['Today','Bugün'],'Domani':['Tomorrow','Yarın'],'Ieri':['Yesterday','Dün'],
+'Tra 1 sett':['In 1 week','1 hafta sonra'],'Predefinita':['Default','Varsayılan'],'Togli':['Remove','Kaldır'],'Mese prima':['Previous month','Önceki ay'],'Mese dopo':['Next month','Sonraki ay'],
+'Nessuna':['None','Yok'],'Ogni giorno':['Every day','Her gün'],'Giorni feriali (lun-ven)':['Weekdays (Mon–Fri)','Hafta içi (Pzt–Cum)'],
+'Ogni settimana':['Every week','Her hafta'],'Ogni 2 settimane':['Every 2 weeks','2 haftada bir'],'Ogni mese':['Every month','Her ay'],'Ogni anno':['Every year','Her yıl'],
+'Giorni della settimana scelti':['Chosen weekdays','Seçilen günler'],'Ogni mese il giorno…':['Every month on day…','Her ayın şu günü…'],
+'Ogni N giorni / settimane / mesi':['Every N days / weeks / months','Her N gün / hafta / ay'],
+'Feriali':['Weekdays','Hafta içi'],'Ogni sett.':['Weekly','Haftalık'],'Ogni 2 sett.':['Every 2 wks','2 haftada bir'],
+'Quando la completi, se ne crea una nuova con la prossima data.':['When you complete it, a new one is created with the next date.','Tamamladığında bir sonraki tarihle yenisi oluşturulur.'],
+'Modifica attività':['Edit task','Görevi düzenle'],'Titolo':['Title','Başlık'],'Salva':['Save','Kaydet'],'Cosa c\'è da fare?':['What needs doing?','Ne yapılacak?'],
+'Chi l\'ha chiesta?':['Who asked for it?','Kim istedi?'],'Elimina':['Delete','Sil'],'Duplica':['Duplicate','Çoğalt'],'Dettagli':['Details','Ayrıntılar'],
+'Rinomina':['Rename','Yeniden adlandır'],'Crea':['Create','Oluştur'],'Chiudi':['Close','Kapat'],'Nuovo profilo (es. Casa)':['New profile (e.g. Home)','Yeni profil (ör. Ev)'],
+'Modifica':['Edit','Düzenle'],'Sì':['Yes','Evet'],'Il giorno':['On day','Gün'],'Ogni':['Every','Her'],'di ogni mese':['of every month','her ayın'],
+'giorni':['days','gün'],'settimane':['weeks','hafta'],'mesi':['months','ay'],'giorno':['day','gün'],'settimana':['week','hafta'],'mese':['month','ay'],
+'Sicuro?':['Sure?','Emin misin?'],'Scegli foto':['Choose photo','Fotoğraf seç'],'Cambia foto':['Change photo','Fotoğrafı değiştir'],'Zoom':['Zoom','Yakınlaştır'],
+'Trascina per centrare la foto':['Drag to centre the photo','Fotoğrafı ortalamak için sürükle'],'Trascina per centrarla, usa il cursore per lo zoom':['Drag to centre it, use the slider to zoom','Ortalamak için sürükle, yakınlaştırmak için kaydırıcıyı kullan'],
+'Ancora nessuna foto: sceglila dal telefono o dal PC':['No photo yet: choose one from your phone or PC','Henüz fotoğraf yok: telefondan veya PC\'den seç'],
+'Lingua':['Language','Dil'],"Lingua dell'app":['App language','Uygulama dili'],'Stile':['Style','Stil'],'Personalizzato':['Custom','Özel'],
+'Colorata':['Coloured','Renkli'],'Moderna':['Modern','Modern'],'Ombra':['Shadow','Gölge'],'Vetro':['Glass','Cam'],'Solo bordo':['Border only','Sadece kenarlık'],'Piena':['Filled','Dolu'],'Tinta':['Tinted','Renk tonu'],
+'Scuri':['Dark','Koyu'],'Chiari':['Light','Açık'],'Vivaci':['Vivid','Canlı'],'Neutri':['Neutral','Nötr'],
+'Blu e azzurri':['Blues','Maviler'],'Verdi':['Greens','Yeşiller'],'Rossi e rosa':['Reds and pinks','Kırmızı ve pembeler'],'Gialli e arancio':['Yellows and oranges','Sarı ve turuncular'],
+'Sistema (SF Pro su iPhone)':['System (SF Pro on iPhone)','Sistem (iPhone\'da SF Pro)'],'Classico (Anton + Inter)':['Classic (Anton + Inter)','Klasik (Anton + Inter)'],
+'Set':['Sep','Eyl'],'Mar':['Mar','Mar'],
+// mesi brevi e giorni (calendari e grafici)
+'Gen':['Jan','Oca'],'Feb':['Feb','Şub'],'Apr':['Apr','Nis'],'Mag':['May','May'],'Giu':['Jun','Haz'],'Lug':['Jul','Tem'],'Ago':['Aug','Ağu'],'Ott':['Oct','Eki'],'Nov':['Nov','Kas'],'Dic':['Dec','Ara'],
+'Lunedì':['Monday','Pazartesi'],'Martedì':['Tuesday','Salı'],'Mercoledì':['Wednesday','Çarşamba'],'Giovedì':['Thursday','Perşembe'],'Venerdì':['Friday','Cuma'],'Sabato':['Saturday','Cumartesi'],'Domenica':['Sunday','Pazar'],
+// avvisi e conferme
+'Attività aggiunta':['Task added','Görev eklendi'],'Attività salvata':['Task saved','Görev kaydedildi'],'Attività duplicata':['Task duplicated','Görev çoğaltıldı'],'Attività eliminata':['Task deleted','Görev silindi'],
+'Backup ripristinato':['Backup restored','Yedek geri yüklendi'],'Backup salvato nei Download':['Backup saved to Downloads','Yedek İndirilenler\'e kaydedildi'],'Campo aggiunto':['Field added','Alan eklendi'],
+'Carico le attività online…':['Uploading tasks…','Görevler yükleniyor…'],'Codice copiato':['Code copied','Kod kopyalandı'],'Copia il codice:':['Copy the code:','Kodu kopyala:'],
+'Collegato! Le attività arrivano tra un attimo':['Connected! Your tasks will arrive in a moment','Bağlandı! Görevlerin birazdan gelecek'],
+'Disposizione ripristinata':['Layout restored','Düzen geri yüklendi'],'Face ID attivo su questo dispositivo':['Face ID on for this device','Bu cihazda Face ID açık'],
+'Face ID disattivato su questo dispositivo':['Face ID off for this device','Bu cihazda Face ID kapalı'],'Face ID non attivato':['Face ID not enabled','Face ID etkinleştirilmedi'],
+'Nessuna attività completata':['No completed tasks','Tamamlanmış görev yok'],'Profilo eliminato':['Profile deleted','Profil silindi'],
+'Questa immagine non si apre: prova con un\'altra':['This image can\'t be opened: try another one','Bu resim açılamıyor: başka birini dene'],
+'Richiedente aggiornato':['Requester updated','Talep eden güncellendi'],
+'Su questo dispositivo Face ID / impronta non sono disponibili per le app web':['Face ID / fingerprint are not available for web apps on this device','Bu cihazda web uygulamaları için Face ID / parmak izi kullanılamıyor'],
+'Tutto azzerato':['Everything reset','Her şey sıfırlandı'],'⚠️ Spazio pieno: fai un Backup':['⚠️ Storage full: make a Backup','⚠️ Depolama dolu: Yedek al'],
+'File non valido':['Invalid file','Geçersiz dosya'],'Codice non valido.':['Invalid code.','Geçersiz kod.'],'Codice sbagliato':['Wrong code','Yanlış kod'],
+'Il codice è di 36 caratteri: incollalo tutto.':['The code is 36 characters: paste all of it.','Kod 36 karakterdir: tamamını yapıştır.'],
+'Non riconosciuto: riprova o usa il codice segreto':['Not recognised: try again or use the secret code','Tanınmadı: tekrar dene veya gizli kodu kullan'],
+'Codice non trovato: controlla di averlo copiato tutto, oppure aprilo prima sul dispositivo dove è stato creato.':['Code not found: check you copied all of it, or open it first on the device where it was created.','Kod bulunamadı: tamamını kopyaladığını kontrol et ya da önce oluşturulduğu cihazda aç.'],
+'Questo codice non è ancora online. Se è il dispositivo con le tue attività, crealo qui sotto.':['This code isn\'t online yet. If this is the device with your tasks, create it below.','Bu kod henüz çevrimiçi değil. Görevlerinin olduğu cihaz buysa aşağıdan oluştur.'],
+'Azzerare tutte le attività e le impostazioni? Fai prima un Backup se vuoi tenerle.':['Reset all tasks and settings? Make a Backup first if you want to keep them.','Tüm görevler ve ayarlar sıfırlansın mı? Saklamak istiyorsan önce Yedek al.'],
+'Creare un nuovo spazio? Le attività di questo dispositivo vengono caricate online e ti mostro il codice da usare sugli altri dispositivi.':['Create a new space? This device\'s tasks are uploaded and you get the code to use on your other devices.','Yeni bir alan oluşturulsun mu? Bu cihazdaki görevler yüklenir ve diğer cihazlarda kullanacağın kodu gösteririm.'],
+'Rimettere posizioni e nomi originali?':['Restore original positions and names?','Orijinal konumlar ve adlar geri yüklensin mi?'],
+'Scollegare questo dispositivo? Per rientrare dovrai incollare di nuovo il codice.':['Disconnect this device? To get back in you\'ll have to paste the code again.','Bu cihazın bağlantısı kesilsin mi? Geri girmek için kodu tekrar yapıştırman gerekecek.'],
+'Non sincronizzato':['Not synced','Senkronize değil'],'Azzera tutto':['Reset everything','Her şeyi sıfırla'],'Backup':['Backup','Yedek'],'Ripristina':['Restore','Geri yükle'],
+'Firebase non caricato':['Firebase not loaded','Firebase yüklenmedi'],
+// nomi dei colori e dei temi
+'Acqua':['Aqua','Su'],'Acquamarina':['Aquamarine','Akuamarin'],'Albicocca':['Apricot','Kayısı'],'Ambra':['Amber','Kehribar'],'Ametista':['Amethyst','Ametist'],
+'Antracite':['Anthracite','Antrasit'],'Arancio':['Orange','Turuncu'],'Arancione':['Orange','Turuncu'],'Ardesia':['Slate','Arduvaz'],'Argento':['Silver','Gümüş'],
+'Avorio':['Ivory','Fildişi'],'Azzurro':['Light blue','Açık mavi'],'Bianco':['White','Beyaz'],'Blu intenso':['Deep blue','Koyu mavi'],'Blu notte':['Midnight blue','Gece mavisi'],
+'Blu':['Blue','Mavi'],'Bordeaux':['Bordeaux','Bordo'],'Bosco':['Forest','Orman'],'Burgundy':['Burgundy','Şarap rengi'],'Caffè':['Coffee','Kahve'],'Carta':['Paper','Kâğıt'],
+'Celeste':['Sky blue','Gök mavisi'],'Ciano':['Cyan','Camgöbeği'],'Cielo':['Sky','Gökyüzü'],'Ciliegia':['Cherry','Kiraz'],'Cioccolato':['Chocolate','Çikolata'],
+'Cipria':['Powder pink','Pudra'],'Cobalto':['Cobalt','Kobalt'],'Corallo':['Coral','Mercan'],'Crema':['Cream','Krem'],'Fiordaliso':['Cornflower','Peygamber çiçeği'],
+'Fucsia':['Fuchsia','Fuşya'],'Ghiaccio':['Ice','Buz'],'Giallo':['Yellow','Sarı'],'Glicine':['Wisteria','Mor salkım'],'Grafite':['Graphite','Grafit'],'Granata':['Garnet','Nar çiçeği'],
+'Indaco scuro':['Dark indigo','Koyu çivit'],'Indaco':['Indigo','Çivit'],'Lampone':['Raspberry','Ahududu'],'Lavanda':['Lavender','Lavanta'],'Lilla':['Lilac','Leylak'],
+'Lime acido':['Acid lime','Asit yeşili'],'Lime':['Lime','Misket limonu'],'Limone':['Lemon','Limon'],'Mandarino':['Tangerine','Mandalina'],'Mattone':['Brick','Tuğla'],
+'Melanzana':['Aubergine','Patlıcan'],'Menta':['Mint','Nane'],'Mezzanotte':['Midnight','Gece yarısı'],'Moka':['Mocha','Moka'],'Navy notte':['Night navy','Gece laciverti'],
+'Navy':['Navy','Lacivert'],'Nebbia':['Mist','Sis'],'Nero':['Black','Siyah'],'Nero OLED':['OLED black','OLED siyah'],'Oceano':['Ocean','Okyanus'],'Oliva':['Olive','Zeytin'],
+'Orchidea':['Orchid','Orkide'],'Oro':['Gold','Altın'],'Panna':['Cream','Kaymak'],'Peonia':['Peony','Şakayık'],'Perla':['Pearl','İnci'],'Pervinca':['Periwinkle','Cezayir menekşesi'],
+'Pesca':['Peach','Şeftali'],'Petrolio':['Petrol','Petrol mavisi'],'Pino':['Pine','Çam'],'Piombo':['Lead','Kurşun'],'Pistacchio':['Pistachio','Fıstık'],'Polvere blu':['Powder blue','Pudra mavisi'],
+'Prato':['Meadow','Çayır'],'Prugna':['Plum','Erik'],'Rosa confetto':['Candy pink','Şeker pembe'],'Rosa tenue':['Soft pink','Açık pembe'],'Rosa':['Pink','Pembe'],'Rosso':['Red','Kırmızı'],
+'Rubino':['Ruby','Yakut'],'Ruggine':['Rust','Pas'],'Sabbia':['Sand','Kum'],'Sabbia notte':['Night sand','Gece kumu'],'Salmone':['Salmon','Somon'],'Salvia':['Sage','Adaçayı'],
+'Smeraldo':['Emerald','Zümrüt'],'Sole':['Sun','Güneş'],'Terracotta':['Terracotta','Kiremit'],'Turchese':['Turquoise','Turkuaz'],'Vaniglia':['Vanilla','Vanilya'],'Verde acqua':['Teal','Deniz yeşili'],
+'Verde':['Green','Yeşil'],'Vinaccia':['Wine','Şarap'],'Viola scuro':['Dark purple','Koyu mor'],'Viola':['Purple','Mor'],'Zaffiro':['Sapphire','Safir'],'Zucca':['Pumpkin','Balkabağı'],
+'Esempio di attività':['Sample task','Örnek görev']
+};
+// frasi con numeri, nomi o date: [schema italiano, inglese, turco]
+const I18P=[
+ [/^(\d+) da fare$/,'$1 to do','$1 yapılacak'],
+ [/^(\d+) completata oggi$/,'$1 completed today','bugün $1 tamamlandı'],[/^(\d+) completate oggi$/,'$1 completed today','bugün $1 tamamlandı'],
+ [/^(\d+) in ritardo$/,'$1 overdue','$1 gecikmiş'],[/^(\d+) attività$/,'$1 tasks','$1 görev'],
+ [/^([+−-]?\d+) rispetto alla settimana prima$/,'$1 vs the week before','önceki haftaya göre $1'],
+ [/^([+−-]?\d+) rispetto al (\d{4})$/,'$1 vs $2','$2 yılına göre $1'],[/^([+−-]?\d+) rispetto a (.+)$/,'$1 vs $2','$2 ayına göre $1'],
+ [/^rispetto alla settimana prima$/,'vs the week before','önceki haftaya göre'],[/^rispetto al (\d{4})$/,'vs $1','$1 yılına göre'],[/^rispetto a (.+)$/,'vs $1','$1 ayına göre'],
+ [/^Come a (.+)$/,'Same as $1','$1 ile aynı'],[/^Come nel (\d{4})$/,'Same as $1','$1 ile aynı'],
+ [/^(-\d+) periodi fa$/,'$1 periods ago','$1 dönem önce'],[/^a (\S+)$/,'in $1','$1 ayında'],[/^nel (\d{4})$/,'in $1','$1 yılında'],
+ [/^Attività create in questa settimana$/,'Tasks created this week','Bu hafta oluşturulan görevler'],[/^Attività create a (.+)$/,'Tasks created in $1','$1 ayında oluşturulan görevler'],
+ [/^Attività create nel (\d{4})$/,'Tasks created in $1','$1 yılında oluşturulan görevler'],[/^Attività create in totale$/,'Tasks created in total','Toplam oluşturulan görevler'],
+ [/^Se la lasci vuota: tra (\d+) giorni$/,'If left empty: in $1 days','Boş bırakırsan: $1 gün sonra'],
+ [/^Aggiunta: (.+)$/,'Added: $1','Eklendi: $1'],[/^Profilo creato: (.+)$/,'Profile created: $1','Profil oluşturuldu: $1'],[/^Profilo: (.+)$/,'Profile: $1','Profil: $1'],
+ [/^Fatta! Prossima: (.+)$/,'Done! Next: $1','Tamamlandı! Sonraki: $1'],[/^Foto di (.+) salvata$/,'Photo of $1 saved','$1 fotoğrafı kaydedildi'],[/^Foto di (.+) tolta$/,'Photo of $1 removed','$1 fotoğrafı kaldırıldı'],
+ [/^(\d+) attività eliminate$/,'$1 tasks deleted','$1 görev silindi'],[/^Eliminare (\d+) attività completate\?$/,'Delete $1 completed tasks?','$1 tamamlanmış görev silinsin mi?'],
+ [/^Sostituire tutto con il backup \((\d+) attività\)\?$/,'Replace everything with the backup ($1 tasks)?','Her şey yedekle değiştirilsin mi ($1 görev)?'],
+ [/^Ogni mese il (\d+)$/,'Every month on the $1','Her ayın $1. günü'],[/^Ogni (\d+) (giorni|giorno)$/,'Every $1 days','Her $1 günde bir'],
+ [/^Ogni (\d+) (settimane|settimana)$/,'Every $1 weeks','Her $1 haftada bir'],[/^Ogni (\d+) (mesi|mese)$/,'Every $1 months','Her $1 ayda bir'],
+ [/^Completate: (\d+)$/,'Completed: $1','Tamamlanan: $1'],[/^(<b>.*<\/b><br>)Completate: (\d+)$/,'$1Completed: $2','$1Tamamlanan: $2'],[/^Priorità (alta|media|bassa)$/,m=>({alta:'High',media:'Medium',bassa:'Low'}[m[1]])+' priority',m=>({alta:'Yüksek',media:'Orta',bassa:'Düşük'}[m[1]])+' öncelik'],
+ [/^ Non sincronizzato(.*): riprovo da solo$/,' Not synced$1: retrying',' Senkronize değil$1: tekrar deneniyor'],[/^ Sincronizzato$/,' Synced',' Senkronize edildi'],[/^ Sincronizzo…$/,' Syncing…',' Senkronize ediliyor…'],
+ [/^Rimuovere il campo "(.+)"\? I valori già inseriti restano salvati ma non si vedono più\.$/,'Remove the field "$1"? Values already entered stay saved but are no longer shown.','"$1" alanı kaldırılsın mı? Girilen değerler kayıtlı kalır ama artık görünmez.'],
+ [/^Nuovo nome per "(.+)" \(se esiste già, i due vengono uniti\):$/,'New name for "$1" (if it already exists, the two are merged):','"$1" için yeni ad (zaten varsa ikisi birleştirilir):']
+];
+function trS(s){
+  const L=curLang();if(L==='it'||s==null)return s;const i=L==='en'?0:1;
+  const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(String(s)),core=m[2];if(!core)return s;
+  if(I18[core])return m[1]+I18[core][i]+m[3];
+  for(const p of I18P){const r=core.match(p[0]);if(r){const out=p[1+i];return m[1]+(typeof out==='function'?out(r):core.replace(p[0],out))+m[3];}}
+  // testo lungo con a capo (es. il messaggio del codice segreto): si traducono le righe una per una
+  if(core.includes('\n'))return m[1]+core.split('\n').map(x=>x&&I18[x]?I18[x][i]:x).join('\n')+m[3];
+  return s;
+}
+const I18_SKIP='.ct,.rq,.qghost,#dump,[contenteditable="true"],#s-code';   // contenuti dell'utente: mai tradotti
+function trNode(root){
+  if(curLang()==='it'||!root)return;
+  if(root.nodeType===3){const p=root.parentElement;if(!p||p.closest(I18_SKIP)||/SCRIPT|STYLE/.test(p.tagName))return;const v=trS(root.nodeValue);if(v!==root.nodeValue)root.nodeValue=v;return;}
+  if(root.nodeType!==1||root.closest(I18_SKIP+',script,style'))return;
+  ['placeholder','title','aria-label','data-tip'].forEach(a=>{if(root.hasAttribute&&root.hasAttribute(a)&&!(a==='title'&&root.closest('.rq'))){const v=root.getAttribute(a),t=a==='data-tip'?v.replace(/Completate:/,trS('Completate')+':'):trS(v);if(t!==v)root.setAttribute(a,t);}});
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);let n;
+  while((n=w.nextNode())){if(n.nodeType===1){if(n.matches(I18_SKIP+',script,style')){/* salta il ramo */}else['placeholder','title','aria-label','data-tip'].forEach(a=>{if(n.hasAttribute(a)&&!n.closest('.rq')){const v=n.getAttribute(a),t=trS(v);if(t!==v)n.setAttribute(a,t);}});continue;}
+    const p=n.parentElement;if(!p||p.closest(I18_SKIP)||/SCRIPT|STYLE/.test(p.tagName))continue;const v=trS(n.nodeValue);if(v!==n.nodeValue)n.nodeValue=v;}
+}
+let i18Obs=null;
+function applyLang(){
+  const L=curLang();LOC=LOCS[L];document.documentElement.lang=L;
+  MON.splice(0,12,...(L==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:L==='tr'?['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara']:['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']));
+  WD.splice(0,7,...(L==='en'?['M','T','W','T','F','S','S']:L==='tr'?['P','S','Ç','P','C','C','P']:['L','M','M','G','V','S','D']));
+  if(L==='it'){if(i18Obs){i18Obs.disconnect();i18Obs=null;}return;}
+  trNode(document.body);
+  if(!i18Obs){i18Obs=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')trNode(m.target);else if(m.type==='attributes')trNode(m.target);else m.addedNodes.forEach(trNode);}});
+    i18Obs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});}
+}
+// avvisi e finestre di conferma passano dalla traduzione
+const _cf=window.confirm.bind(window),_al=window.alert.bind(window),_pr=window.prompt.bind(window);
+window.confirm=m=>_cf(trS(m));window.alert=m=>_al(trS(m));window.prompt=(m,d)=>_pr(trS(m),d);
 const dShort=k=>{const d=kd(k);return d.getDate()+' '+MON[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'');};
 /* ═══ AVATAR DEI RICHIEDENTI: una persona disegnata in abiti da ufficio, sempre la stessa per lo stesso nome.
    Donna o uomo si capisce dal nome (finisce in -a = donna, con le eccezioni più comuni); uffici e reparti hanno un'icona. ═══ */
@@ -964,7 +1139,7 @@ const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)
 /* giorno grande + mese prima del titolo, in tutte le pagine: alto esattamente quanto la maiuscola del titolo
    (misurata sul font in uso) e allineato a lei; anche i pulsanti a destra e la freccia dei profili si centrano sulla maiuscola */
 function fillDates(){
-  const now=new Date(),day=String(now.getDate()),mon=MON[now.getMonth()].toUpperCase(),cv=document.createElement('canvas').getContext('2d');
+  const now=new Date(),day=String(now.getDate()),mon=MON[now.getMonth()].toLocaleUpperCase(LOC),cv=document.createElement('canvas').getContext('2d');
   document.querySelectorAll('.ph h1.tt').forEach(h=>{
     const dd=h.querySelector('.dd'),t=dd&&dd.nextElementSibling;if(!t||!h.offsetParent)return;
     const cs=getComputedStyle(t),fam=cs.fontFamily,ph0=h.closest('.ph'),hb0=ph0.querySelector('.hbtn');
@@ -1002,7 +1177,7 @@ function renderAtt(){
   const all=filtered(),todo=all.filter(t=>!t.done).sort((a,b)=>old?a.created-b.created:b.created-a.created),done=all.filter(t=>t.done).sort((a,b)=>b.doneAt-a.doneAt);
   // contatore: completate sul totale oppure da completare sul totale (si cambia toccandolo)
   const PTs=PT(),nd=PTs.filter(t=>t.done).length,ntd=D.ui.cnt==='todo';
-  $('n-todo').textContent=(ntd?PTs.length-nd:nd)+'/'+PTs.length;$('n-todo').title=ntd?'Da completare sul totale':'Completate sul totale';
+  // contatore 18/23 tolto su richiesta (non serviva come filtro)
   const q=$('q').value.trim();
   let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
   // ogni sezione è un unico riquadro con le card una sotto l'altra, separate da una riga (stile iPhone)
@@ -1174,7 +1349,7 @@ function showSearch(on){$('srch').classList.toggle('on',on);$('srchbtn').classLi
 $('srchbtn').onclick=()=>showSearch(!$('srch').classList.contains('on'));
 $('q').addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();showSearch(false);}});
 $('sortbtn').onclick=()=>{D.ui.sort=D.ui.sort==='old'?'new':'old';save();renderAtt();toast(D.ui.sort==='old'?'Più vecchie in alto':'Più recenti in alto');};
-$('n-todo').onclick=()=>{D.ui.cnt=D.ui.cnt==='todo'?'done':'todo';save();renderAtt();toast(D.ui.cnt==='todo'?'Da completare sul totale':'Completate sul totale');};
+// (contatore n-todo rimosso)
 
 /* ═══ AGGIUNTA RAPIDA: si scrive e si invia, come un messaggio ═══ */
 /* barra del +: Attività e Richiedente usano lo stesso campo (cambia solo cosa ci scrivi);
@@ -1193,26 +1368,29 @@ function openQuick(){
 function closeQuick(){document.body.classList.remove('quick');$('qa').classList.remove('on');$('qdim').classList.remove('on');if(document.activeElement)document.activeElement.blur();}
 function renderQk(){
   const F=D.set.fields,r=qv.mode==='r';
-  let h=`<button class="q gl ${r?'':'on'}" data-mode="t">Attività</button>`;
+  let h=`<button class="q gl ${r?'':'on'}" data-mode="t">${{it:'Attività',en:'Task',tr:'Görev'}[curLang()]}</button>`;
   if(F.req)h+=`<button class="q gl ${r?'on':''}" data-mode="r">Richiedente</button>`;   // la scritta resta sempre Richiedente (il nome si vede nell'anteprima)
   if(F.due)h+=`<button class="q gl ${qv.due?'set':''} ${qv.pop==='due'?'open':''}" data-pop="due">${qv.due?dShort(qv.due):'Scadenza'}</button>`;
   if(F.prio)h+=`<button class="q gl" data-prio title="Tocca per cambiare">${PRIO[qv.prio].n}</button>`;
   if(F.rec)h+=`<button class="q gl ${qv.rec?'set':''} ${qv.pop==='rec'?'open':''}" data-pop="rec">${qv.rec?QRECS[qv.rec]:'Ricorrenza'}</button>`;
-  $('qk').innerHTML=h;renderPop();qGhost();qPreview();
+  $('qk').innerHTML=h;
+  const sel={due:'[data-pop="due"]',prio:'[data-prio]',rec:'[data-pop="rec"]'}[qv.step];   // dove sei arrivato col Tab
+  if(sel){const b=$('qk').querySelector(sel);if(b){b.classList.add('kb');b.scrollIntoView({block:'nearest',inline:'nearest'});}}
+  renderPop();qGhost();qPreview();
 }
 /* pannello sopra la barra: calendario del mese o elenco delle ricorrenze */
 function renderPop(){
   const p=$('qpop');if(!qv.pop){p.hidden=true;return;}p.hidden=false;
   if(qv.pop==='rec'){p.innerHTML=`<div class="qph">Ricorrenza</div><div class="qpl">${QREC.map(k=>`<button class="${qv.rec===k?'on':''}" data-rv="${k}">${REC[k]}</button>`).join('')}</div>`;return;}
   const t=today(),base=qv.cm||(qv.due||t).slice(0,7),[y,mo]=base.split('-').map(Number),first=new Date(y,mo-1,1),nd=new Date(y,mo,0).getDate(),off=(first.getDay()+6)%7;
-  let g='';['L','M','M','G','V','S','D'].forEach(d=>g+=`<i>${d}</i>`);for(let i=0;i<off;i++)g+='<i></i>';
+  let g='';WD.forEach(d=>g+=`<i>${d}</i>`);for(let i=0;i<off;i++)g+='<i></i>';
   for(let d=1;d<=nd;d++){const k=y+'-'+pad(mo)+'-'+pad(d);g+=`<button data-dv="${k}" class="${k===qv.due?'on':''} ${k===t?'td':''} ${k<t?'past':''}">${d}</button>`;}
-  p.innerHTML=`<div class="qph"><button data-cm="-1" aria-label="Mese prima">‹</button><span>${first.toLocaleDateString('it-IT',{month:'long',year:'numeric'})}</span><button data-cm="1" aria-label="Mese dopo">›</button></div>
+  p.innerHTML=`<div class="qph"><button data-cm="-1" aria-label="Mese prima">‹</button><span>${first.toLocaleDateString(LOC,{month:'long',year:'numeric'})}</span><button data-cm="1" aria-label="Mese dopo">›</button></div>
     <div class="qcal">${g}</div><div class="qpf"><button data-dv="${t}">Oggi</button><button data-dv="${addD(t,1)}">Domani</button><button data-dv="${addD(t,7)}">Tra 1 sett</button><button data-dv="">${qv.due?'Togli':'Predefinita'}</button></div>`;
 }
 /* anteprima: la card come apparirà, aggiornata mentre scrivi */
 function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
-  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||'Nuova attività',req:r?(qSuggest()||v):qv.req,prio:qv.prio,created:Date.now(),due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,done:false});}
+  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||trS('Nuova attività'),req:r?(qSuggest()||v):qv.req,prio:qv.prio,created:Date.now(),due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,done:false});}
 /* richiedenti: il nome che comincia con quello che scrivi (prima i più usati), anche dal cognome */
 function qSuggest(){if(qv.mode!=='r')return'';const v=$('qt').value.trim().toLowerCase();if(!v)return'';
   const cnt={};D.tasks.forEach(t=>{if(t.req)cnt[t.req]=(cnt[t.req]||0)+1;});
@@ -1230,6 +1408,7 @@ function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
 /* nessun pulsante della barra o del pannello toglie il cursore dal campo, così la tastiera resta aperta */
 ['qk','qpop'].forEach(id=>$(id).addEventListener('mousedown',e=>e.preventDefault()));
 $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  qv.step=b.dataset.mode||(b.hasAttribute('data-prio')?'prio':b.dataset.pop)||qv.step;
   if(b.dataset.mode&&b.dataset.mode!==qv.mode){if(qv.mode==='r')qAccept();qStore();qv.mode=b.dataset.mode;qField();}
   else if(b.hasAttribute('data-prio'))qv.prio=(qv.prio+1)%3;
   else if(b.dataset.pop){qv.pop=qv.pop===b.dataset.pop?'':b.dataset.pop;qv.cm=null;}
@@ -1249,8 +1428,30 @@ function sendQuick(){
 }
 $('qsend').addEventListener('mousedown',e=>e.preventDefault());
 $('qsend').onclick=sendQuick;
-$('qt').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();
-  if(qv.mode==='r'){qAccept();qStore();qv.mode='t';qField();renderQk();}else sendQuick();}   // invio sul richiedente: torna all'attività
+/* da tastiera (PC): Tab passa Attività → Richiedente → Scadenza → Priorità → Ricorrenza (Maiusc+Tab indietro);
+   su Scadenza, Priorità e Ricorrenza le frecce cambiano il valore; Invio aggiunge l'attività da qualunque punto */
+function qSteps(){const F=D.set.fields;return['t',F.req&&'r',F.due&&'due',F.prio&&'prio',F.rec&&'rec'].filter(Boolean);}
+function qTab(dir){
+  const S=qSteps(),cur=qv.step||qv.mode,nx=S[(S.indexOf(cur)+dir+S.length)%S.length];
+  if(nx==='t'||nx==='r'){if(qv.mode==='r')qAccept();qStore();qv.mode=nx;qField();qv.pop='';}
+  else{if(qv.mode==='r'&&cur==='r')qAccept();qStore();qv.pop=nx==='due'?'due':nx==='rec'?'rec':'';qv.cm=null;}
+  qv.step=nx;renderQk();$('qt').focus();
+}
+function qArrow(k){
+  const st=qv.step,d=k==='ArrowRight'?1:k==='ArrowLeft'?-1:k==='ArrowDown'?7:-7;
+  if(st==='due'){const base=qv.due||addD(today(),D.set.defDays);qv.due=addD(base,d);qv.cm=null;}
+  else if(st==='prio')qv.prio=(qv.prio+(d>0?1:2))%3;
+  else if(st==='rec'){const i=QREC.indexOf(qv.rec);qv.rec=QREC[(i+(d>0?1:QREC.length-1))%QREC.length];}
+  else return false;
+  renderQk();return true;
+}
+$('qt').addEventListener('keydown',e=>{
+  if(e.key==='Tab'){e.preventDefault();qTab(e.shiftKey?-1:1);return;}
+  if(/^Arrow/.test(e.key)&&['due','prio','rec'].includes(qv.step)){if(qArrow(e.key))e.preventDefault();return;}
+  if(e.key==='Enter'){e.preventDefault();
+    if(qv.mode==='r'){qAccept();qStore();}
+    qStore();if(!qv.title){qv.mode='t';qv.step='t';qField();renderQk();$('qt').focus();return;}   // manca il titolo: si torna a scriverlo
+    sendQuick();}
   if(e.key==='Escape')closeQuick();});
 $('qdim').onclick=closeQuick;
 /* la barra segue la tastiera dell'iPhone (che copre la parte bassa dello schermo) */
@@ -1328,8 +1529,8 @@ const DAYN=['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Do
 function range(ref){
   const p=D.ui.per,d=new Date(ref||pRef);d.setHours(0,0,0,0);
   if(p==='w'){const s=new Date(d);s.setDate(d.getDate()-((d.getDay()+6)%7));const e=new Date(s);e.setDate(s.getDate()+7);
-    return{s,e,lbl:s.toLocaleDateString('it-IT',{day:'numeric',month:'short'})+' – '+new Date(e-864e5).toLocaleDateString('it-IT',{day:'numeric',month:'short'})};}
-  if(p==='m'){const s=new Date(d.getFullYear(),d.getMonth(),1),e=new Date(d.getFullYear(),d.getMonth()+1,1);return{s,e,lbl:s.toLocaleDateString('it-IT',{month:'long',year:'numeric'})};}
+    return{s,e,lbl:s.toLocaleDateString(LOC,{day:'numeric',month:'short'})+' – '+new Date(e-864e5).toLocaleDateString(LOC,{day:'numeric',month:'short'})};}
+  if(p==='m'){const s=new Date(d.getFullYear(),d.getMonth(),1),e=new Date(d.getFullYear(),d.getMonth()+1,1);return{s,e,lbl:s.toLocaleDateString(LOC,{month:'long',year:'numeric'})};}
   if(p==='y'){const s=new Date(d.getFullYear(),0,1),e=new Date(d.getFullYear()+1,0,1);return{s,e,lbl:String(d.getFullYear())};}
   const first=PT().reduce((m,t)=>Math.min(m,t.created),Date.now());const s=new Date(first);s.setDate(1);s.setHours(0,0,0,0);
   const e=new Date();e.setDate(1);e.setMonth(e.getMonth()+1);e.setHours(0,0,0,0);return{s,e,lbl:'Da sempre'};
@@ -1337,9 +1538,9 @@ function range(ref){
 function buckets(r){
   const p=D.ui.per,out=[];
   if(p==='w'||p==='m'){for(let d=new Date(r.s);d<r.e;d.setDate(d.getDate()+1)){const s=new Date(d),e=new Date(d);e.setDate(e.getDate()+1);
-    out.push({s,e,lbl:s.getDate()+' '+MON[s.getMonth()],full:s.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})});}}
+    out.push({s,e,lbl:s.getDate()+' '+MON[s.getMonth()],full:s.toLocaleDateString(LOC,{weekday:'long',day:'numeric',month:'long'})});}}
   else{const multi=r.e-r.s>370*864e5;for(let d=new Date(r.s);d<r.e;d.setMonth(d.getMonth()+1)){const s=new Date(d),e=new Date(d.getFullYear(),d.getMonth()+1,1);
-    out.push({s,e,lbl:MON[s.getMonth()]+(multi?' '+String(s.getFullYear()).slice(2):''),full:s.toLocaleDateString('it-IT',{month:'long',year:'numeric'})});}}
+    out.push({s,e,lbl:MON[s.getMonth()]+(multi?' '+String(s.getFullYear()).slice(2):''),full:s.toLocaleDateString(LOC,{month:'long',year:'numeric'})});}}
   return p==='a'&&out.length>24?out.slice(-24):out;
 }
 function renderStats(){
@@ -1347,7 +1548,7 @@ function renderStats(){
   const p=D.ui.per,r=range(),inR=ts=>ts>=r.s&&ts<r.e;
   const Tk=PT(),cre=Tk.filter(t=>inR(t.created)),don=Tk.filter(t=>t.done&&inR(t.doneAt)),open=Tk.filter(t=>!t.done);
   // il numero grande: completate nel periodo, confrontate con il periodo prima
-  const mon=x=>x.toLocaleDateString('it-IT',{month:'long'});
+  const mon=x=>x.toLocaleDateString(LOC,{month:'long'});
   const where={w:'in questa settimana',m:'a '+mon(r.s),y:'nel '+r.s.getFullYear(),a:'in totale'}[p];
   let delta='';
   if(p!=='a'){const pr=new Date(pRef);if(p==='w')pr.setDate(pr.getDate()-7);if(p==='m'){pr.setDate(1);pr.setMonth(pr.getMonth()-1);}if(p==='y')pr.setFullYear(pr.getFullYear()-1);
@@ -1457,8 +1658,9 @@ function renderSets(){
   const sb=(key,title,body)=>`<div class="sbox" data-ek="${key}"><h3 data-el="s-${key}" data-def="${title}">${esc(T('s-'+key,title))}</h3>${body}</div>`;
   const P=S.profiles,cp=curPf();
   $('sets').innerHTML=`<div class="sets" data-ec="set">
+    <div class="sbox lang-box"><h3>Lingua</h3>${row('#6366f1',sv('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),'Lingua dell\'app',`<span class="selw">${(LANGS.find(x=>x[0]===curLang())||LANGS[0])[1]}${chv}<select id="s-lang" aria-label="Lingua">${LANGS.map(([k,v])=>`<option value="${k}"${k===curLang()?' selected':''}>${v}</option>`).join('')}</select></span>`)}</div>
     ${sb('look','Aspetto',`
-      <div class="live">${card({id:'demo',title:'Esempio di attività',req:'Marco',prio:2,created:Date.now(),done:false})}</div>
+      <div class="live">${card({id:'demo',title:trS('Esempio di attività'),req:'Marco',prio:2,created:Date.now(),done:false})}</div>
       <div class="themes">${THEMES.map(([n,b,a])=>{const l=isLight(b);return `<button class="th ${b===bg&&a===ac?'on':''}" data-th="${b}|${a}" style="--tb:${b};--ta:${a};--tt:${l?'#16171a':'#eef1f7'}"><i class="a"></i><i></i><i style="width:70%"></i><span>${n}</span></button>`;}).join('')}</div>
       ${row('#8b5cf6',ICS.bg,'Sfondo',sw(bg)+esc(colName(BGN,bg))+chv,'data-pk="bg"','button')}
       ${row('#f97316',ICS.acc,'Colore principale',sw(ac)+esc(colName(ACN,ac))+chv,'data-pk="acc"','button')}
@@ -1566,6 +1768,7 @@ $('sets').addEventListener('change',e=>{
     S.theme=(Object.entries(PALS).find(([,p])=>p.bg===v)||[''])[0];save();applyLook();renderSets();}
   if(e.target.id==='s-acc'){D.set.accent=e.target.value;save();applyLook();renderSets();}
   if(e.target.id==='s-fs'){D.set.fs=+e.target.value;save();applyLook();}
+  if(e.target.id==='s-lang'){D.set.lang=e.target.value;save();if(e.target.value==='it')location.reload();else{applyLang();renderAll();}}   // tornando all'italiano si ricarica: i testi originali sono nel codice
   if(e.target.id==='s-font'){D.set.font=e.target.value;save();applyLook();}
   if(e.target.id==='cf-t')$('cf-o').style.display=e.target.value==='select'?'':'none';
   if(e.target.id==='s-impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.tasks))throw 0;
@@ -1626,7 +1829,7 @@ let undoFn=null,tT;
 function toast(m,u){$('toast').classList.toggle('top',$('qa').classList.contains('on'));   // con la barra rapida aperta l'avviso va in alto
   $('toast-t').textContent=m;undoFn=u||null;$('toast-u').style.display=u?'':'none';$('toast').classList.add('on');clearTimeout(tT);tT=setTimeout(()=>$('toast').classList.remove('on'),4200);}
 $('toast-u').onclick=()=>{if(undoFn){undoFn();undoFn=null;save();renderAll();}$('toast').classList.remove('on');};
-function renderAll(){renderAtt();if($('p-stat').classList.contains('on'))renderStats();if($('p-set').classList.contains('on'))renderSets();applyLayout();}
+function renderAll(){applyLang();renderAtt();if($('p-stat').classList.contains('on'))renderStats();if($('p-set').classList.contains('on'))renderSets();applyLayout();}
 document.addEventListener('keydown',e=>{
   const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)||document.activeElement.isContentEditable;
   if(e.key==='Escape'){if($('qa').classList.contains('on'))closeQuick();else if($('ov').classList.contains('on'))closeForm();else if(typing)document.activeElement.blur();else if(D.ui.editor)setEditor(false);}
