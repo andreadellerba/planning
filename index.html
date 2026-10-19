@@ -71,8 +71,11 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
 .ph>.nav .tb.on{color:var(--tc);text-shadow:0 0 14px color-mix(in srgb,var(--tc) 70%,transparent),0 0 2px color-mix(in srgb,var(--tc) 50%,transparent)}   /* voce aperta: tutta la scritta illuminata nel suo colore */
 .ph>.nav .tb.on svg{color:var(--tc);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tc) 70%,transparent))}
 .ph>.nav .tb.on::after{display:none}
-.ph>.nav .bar.side .tb{padding:10px 14px;color:var(--accent);gap:7px}
-.ph>.nav .bar.side .tb svg{width:22px;height:22px}
+.ph>.nav .bar.side .tb{padding:10px 14px;color:var(--muted);gap:7px;--tc:#ef4444}   /* come le altre voci; quando la stai usando si accende rosso */
+.ph>.nav .bar.side .tb:hover{color:var(--text)}
+body.quick .ph>.nav .bar.side .tb{color:var(--tc);text-shadow:0 0 14px color-mix(in srgb,var(--tc) 70%,transparent)}
+body.quick .ph>.nav .bar.side .tb svg{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tc) 70%,transparent))}
+.ph>.nav .bar.side .tb svg{width:19px;height:19px}
 .ph>.nav .tb::before,.ph>.nav .ind,.ph>.nav .bar::before,.ph>.nav .bar::after{display:none!important}
 /* persone sotto la ricerca */
 .rqs{display:none;gap:8px;overflow-x:auto;scrollbar-width:none;margin:-6px 0 16px;padding:2px}
