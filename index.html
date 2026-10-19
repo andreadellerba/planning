@@ -71,7 +71,7 @@ body.topnav .page>.ph>.hbtn{grid-column:3;justify-self:end;align-self:center;mar
 .ph>.nav .tb.on{color:var(--tc);text-shadow:0 0 14px color-mix(in srgb,var(--tc) 70%,transparent),0 0 2px color-mix(in srgb,var(--tc) 50%,transparent)}   /* voce aperta: tutta la scritta illuminata nel suo colore */
 .ph>.nav .tb.on svg{color:var(--tc);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--tc) 70%,transparent))}
 .ph>.nav .tb.on::after{display:none}
-.ph>.nav .bar.side .tb{padding:10px 12px;color:var(--accent)}
+.ph>.nav .bar.side .tb{padding:10px 14px;color:var(--accent);gap:7px}
 .ph>.nav .bar.side .tb svg{width:22px;height:22px}
 .ph>.nav .tb::before,.ph>.nav .ind,.ph>.nav .bar::before,.ph>.nav .bar::after{display:none!important}
 /* persone sotto la ricerca */
@@ -756,7 +756,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
     <button class="tb" data-t="stat" data-go="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V12M12 20V5M19 20v-6"/></svg><span class="tl" data-el="n-stat" data-def="Statistiche">Statistiche</span></button>
     <button class="tb" data-t="set" data-go="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tl" data-el="n-set" data-def="Impostazioni">Impostazioni</span></button>
   </div>
-  <div class="bar side"><button class="tb" id="addbtn" aria-label="Nuova attività" title="Nuova attività (N)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div>
+  <div class="bar side"><button class="tb" id="addbtn" aria-label="Nuova attività" title="Nuova attività (N)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="tl">Nuova attività</span></button></div>
 </nav>
 
 <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
