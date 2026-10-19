@@ -55,6 +55,16 @@ input,textarea,select{font:inherit;color:inherit}
 .ib svg{width:20px;height:20px}
 .ib.on{background:var(--accent);color:var(--onacc);border-color:transparent;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 50%,transparent)}
 #p-att,#p-stat{max-width:640px;margin:0 auto}
+/* PC largo: Da fare a sinistra, Completate a destra */
+.only-wide{display:none}
+@media(min-width:1000px){
+  #p-att{max-width:1180px}
+  #l-all{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 28px;align-items:start}
+  #l-all>.rqf{grid-column:1/-1}
+  #l-all .col>.dsep:first-child{margin-top:0}
+  #l-all .col-done .dsep{margin-top:0}
+  .only-wide{display:block}
+}
 
 /* ═══ STILE PILLOLA (lo stesso del menu) usato da tutte le pillole dell'app ═══ */
 .gl,.pseg,.mini,.sbtn,.btn,.pnav button,.srch input,.prio button,.days7 button,.sel{
@@ -1010,7 +1020,7 @@ const I18={ // italiano: [inglese, turco]
 'Rubino':['Ruby','Yakut'],'Ruggine':['Rust','Pas'],'Sabbia':['Sand','Kum'],'Sabbia notte':['Night sand','Gece kumu'],'Salmone':['Salmon','Somon'],'Salvia':['Sage','Adaçayı'],
 'Smeraldo':['Emerald','Zümrüt'],'Sole':['Sun','Güneş'],'Terracotta':['Terracotta','Kiremit'],'Turchese':['Turquoise','Turkuaz'],'Vaniglia':['Vanilla','Vanilya'],'Verde acqua':['Teal','Deniz yeşili'],
 'Verde':['Green','Yeşil'],'Vinaccia':['Wine','Şarap'],'Viola scuro':['Dark purple','Koyu mor'],'Viola':['Purple','Mor'],'Zaffiro':['Sapphire','Safir'],'Zucca':['Pumpkin','Balkabağı'],
-'Solo':['Only','Sadece'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
+'Solo':['Only','Sadece'],'Le attività completate compaiono qui':['Completed tasks show up here','Tamamlanan görevler burada görünür'],'Storia':['History','Geçmiş'],'Creata':['Created','Oluşturuldu'],'Completata':['Completed','Tamamlandı'],'Riportata in da fare':['Moved back to to-do','Yapılacaklara geri alındı'],
 'Tienila':['Keep it','Kalsın'],'Toglila':['Remove it','Kaldır'],'+1 sett':['+1 week','+1 hafta'],'Tocca per vedere la storia':['Tap to see the history','Geçmişi görmek için dokun'],
 'domani':['tomorrow','yarın'],'oggi':['today','bugün'],'Togli filtro':['Remove filter','Filtreyi kaldır'],
 'Esempio di attività':['Sample task','Örnek görev']
@@ -1223,12 +1233,14 @@ function renderAtt(){
   const PTs=PT(),nd=PTs.filter(t=>t.done).length,ntd=D.ui.cnt==='todo';
   // contatore 18/23 tolto su richiesta (non serviva come filtro)
   const q=$('q').value.trim();
-  let h=`<div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
+  let h=`<div class="col col-todo"><div class="dsep first"><span data-el="c-todo" data-def="Da fare">${esc(T('c-todo','Da fare'))}</span><b>${todo.length}</b></div>`;
   // ogni sezione è un unico riquadro con le card una sotto l'altra, separate da una riga (stile iPhone)
 const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Impostazioni › Card unite) oppure separate
-  h+=todo.length?`<div class="${gc}">${todo.map(t=>card(t)).join('')}</div>`:`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`;
-  if(done.length)h+=`<div class="dsep"><span data-el="c-done" data-def="Completate">${esc(T('c-done','Completate'))}</span><b>${done.length}</b></div>`
-    +`<div class="${gc}">${done.slice(0,doneLimit).map(t=>card(t)).join('')}</div>`+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'');
+  h+=(todo.length?`<div class="${gc}">${todo.map(t=>card(t)).join('')}</div>`:`<div class="empty"><b>${q?'🔍':'🎉'}</b>${q?'Nessuna attività trovata':'Niente da fare! Premi + per aggiungere'}</div>`)+'</div>';
+  // su PC largo: due colonne, Da fare a sinistra e Completate a destra (sul telefono una sotto l'altra, come prima)
+  if(done.length)h+=`<div class="col col-done"><div class="dsep"><span data-el="c-done" data-def="Completate">${esc(T('c-done','Completate'))}</span><b>${done.length}</b></div>`
+    +`<div class="${gc}">${done.slice(0,doneLimit).map(t=>card(t)).join('')}</div>`+(done.length>doneLimit?`<button class="more" data-a="more">Mostra altre ${done.length-doneLimit}</button>`:'')+'</div>';
+  else h+=`<div class="col col-done only-wide"><div class="dsep"><span data-el="c-done" data-def="Completate">${esc(T('c-done','Completate'))}</span><b>0</b></div><div class="empty">Le attività completate compaiono qui</div></div>`;
   // saluto: cosa c'è da fare, cosa hai chiuso oggi e cosa è in ritardo (nel profilo attuale)
   const PTn=PT(),hr=new Date().getHours(),nTodo=PTn.filter(t=>!t.done).length,nToday=PTn.filter(t=>t.done&&dkey(new Date(t.doneAt))===today()).length,nLate=PTn.filter(t=>!t.done&&t.due&&t.due<today()).length;
   $('greet').innerHTML=`${hr<5||hr>=18?'Buonasera':hr<13?'Buongiorno':'Buon pomeriggio'}, <b>${nTodo} da fare</b> e <b>${nToday} ${nToday===1?'completata':'completate'} oggi</b>${nLate?` · <em>${nLate} in ritardo</em>`:''}`;
@@ -1239,7 +1251,7 @@ const gc=D.set.joined!==false?'lgrp':'list';   // card unite in un riquadro (Imp
 /* completata: la card si accartoccia in una pallina e vola, con una curva, sul contatore di "Completate";
    intanto la lista chiude il buco. All'arrivo il contatore fa un salto. */
 function crumpleFly(cardEl,done){
-  const r=cardEl.getBoundingClientRect(),tg=document.querySelector('#l-all .dsep:not(.first) b')||document.querySelector('#l-all .dsep.first b');
+  const r=cardEl.getBoundingClientRect(),tg=[...document.querySelectorAll('#l-all .dsep:not(.first) b')].find(b=>b.offsetParent)||document.querySelector('#l-all .dsep.first b');   // solo un contatore visibile (su telefono la colonna vuota è nascosta)
   const tr=tg?tg.getBoundingClientRect():{left:innerWidth/2,top:innerHeight-120,width:0,height:0};
   const g=cardEl.cloneNode(true);g.classList.add('ghost');g.removeAttribute('data-id');
   Object.assign(g.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',margin:0,zIndex:80,pointerEvents:'none',transformOrigin:'50% 50%'});
@@ -1260,7 +1272,7 @@ function crumpleFly(cardEl,done){
   ],{duration:820,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'});
   a.onfinish=()=>{g.remove();done();};
 }
-function bumpDone(){const b=document.querySelector('#l-all .dsep:not(.first) b');if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');}}
+function bumpDone(){const b=[...document.querySelectorAll('#l-all .dsep:not(.first) b')].find(x=>x.offsetParent);if(b){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');}}
 function toggle(t,el){
   const cardEl=el&&el.closest('.card'),dot=cardEl&&cardEl.querySelector('.dot');
   const go2=()=>{
