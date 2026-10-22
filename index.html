@@ -100,18 +100,19 @@ body.quick .ph>.nav .bar.side .tb svg{filter:drop-shadow(0 0 6px color-mix(in sr
   .kp{display:flex;flex-direction:column;align-items:center;padding:0 10px;line-height:1}
   .kp+.kp{border-left:1px solid var(--line)}
   .kp b{font-family:var(--fd);font-weight:var(--fdw);font-size:21px}
-  .kp i{font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px;white-space:nowrap}
+  .kp>i{font-style:normal;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px;white-space:nowrap}
   .kp.ok b{color:#22c55e}.kp.late b{color:var(--danger,#ef4444)}.kp.zero b{color:var(--muted)}
   body.topnav .wk{display:flex;gap:8px;margin:14px 0 18px}
   body.topnav #p-att .greet{display:none}   /* i numeri sono già nella barra */
   .wk button{flex:1;border:0;border-radius:14px;background:var(--card);color:var(--text);padding:8px 0 7px;cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .15s}
   .wk button:hover{transform:translateY(-1px)}
-  .wk i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+  .wk button>i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
   .wk b{font-family:var(--fd);font-weight:var(--fdw);font-size:22px;line-height:1.05}
   .wk button{position:relative;justify-content:center;height:62px;padding:0}
   .wk s{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:3px;height:5px;text-decoration:none}
   .wk u{width:5px;height:5px;border-radius:50%;background:var(--accent)}
-  .wk .td u{background:var(--onacc)}
+  .wk u.ok{background:#22c55e}.wk u.due{background:#ef4444}   /* verde = chiusa quel giorno, rosso = scade quel giorno */
+  .wk .td u{box-shadow:0 0 0 1.5px var(--onacc)}
   .wk .we{color:var(--danger)}   /* sabato e domenica in rosso */
   .wk .td.we{color:var(--onacc)}
   .wk .td{background:var(--accent);color:var(--onacc)}
@@ -649,6 +650,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.45}
 .inp.sel{border-radius:999px}
 .sbtn{height:38px;padding:0 15px;border-radius:999px;font-weight:800;font-size:12px;letter-spacing:.3px;flex-shrink:0}
 .sbtn.dng{color:var(--danger)}
+.lostp{margin:4px 0 6px;font-size:12.5px;color:var(--muted);line-height:1.4}.lostr{display:block;font-weight:500;font-size:12px;color:var(--muted);margin-top:2px}
 @media(max-width:820px){.sets{columns:1}}
 /* telefono: una cosa per riga, tutto centrato (titolo e spiegazione sopra, comando sotto) */
 @media(max-width:640px){.sr{flex-direction:column;align-items:center;text-align:center;gap:10px;padding:14px 0}.sr .l{width:100%}.sw{justify-content:center}.sr>.sel,.sr>.inp{width:100%;max-width:320px}
@@ -898,7 +900,7 @@ function norm(){
   // proposte scelte (ottobre 2026): Navy + Mandarino, una volta sola
   if(!D.set.look3){D.set.look3=1;D.set.theme='';D.set.mode='dark';D.set.accent='#ff8a3d';D.set.bg.dark='#0c1530';migrated=true;}
 }
-function save(){if(typeof stamp==='function')stamp();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('⚠️ Spazio pieno: fai un Backup');}push();}
+function save(){if(typeof stamp==='function')stamp();if(typeof archive==='function')archive();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('⚠️ Spazio pieno: fai un Backup');}push();}
 const T=(k,d)=>(D&&D.set.labels&&D.set.labels[k])||d;   /* testo rinominato in modalità editor, oppure quello standard */
 /* profili (es. Attività, Personale): ogni profilo ha le sue attività; quelle vecchie senza profilo stanno nel primo */
 const curPf=()=>{const P=D.set.profiles;return P.some(p=>p.id===D.ui.pf)?D.ui.pf:P[0].id;};
@@ -939,6 +941,14 @@ function mergeTasks(b,l,r){
   (l||[]).concat(r||[]).forEach(t=>{if(!t||used[t.id])return;used[t.id]=1;const v=pick(t.id);if(v)out.push(v);});
   return out;
 }
+/* ═══ rete di sicurezza: su ogni dispositivo resta una copia di tutte le attività viste; quelle che spariscono si possono ripristinare ═══ */
+const ARCHKEY='todo-arch';
+let arch={};try{arch=JSON.parse(localStorage.getItem(ARCHKEY)||'{}')||{};}catch(e){arch={};}
+function archive(){let ch=false;(D.tasks||[]).forEach(t=>{if(!t||!t.id)return;const o=arch[t.id];if(!o||stable(o)!==stable(t)){arch[t.id]=JSON.parse(JSON.stringify(t));ch=true;}});
+  if(ch)try{localStorage.setItem(ARCHKEY,JSON.stringify(arch));}catch(e){}}
+const missing=()=>{const have=new Set(D.tasks.map(t=>t.id));return Object.values(arch).filter(t=>!have.has(t.id)).sort((a,b)=>(b.mod||b.created||0)-(a.mod||a.created||0));};
+function restoreTask(id){const t=arch[id];if(!t||D.tasks.some(x=>x.id===id))return;const n={...JSON.parse(JSON.stringify(t)),mod:Date.now()};D.tasks.push(n);seenAll();n.mod=Date.now();save();renderAll();toast(trS('Attività ripristinata'));}
+function forgetTask(id){delete arch[id];try{localStorage.setItem(ARCHKEY,JSON.stringify(arch));}catch(e){}renderAll();}
 function push(){
   if(!ref||!ready)return;clearTimeout(pushT);
   pushT=setTimeout(()=>{stamp();const p=payload(),s=stable(p);if(s===lastSent)return;lastSent=s;setSync('');
@@ -958,7 +968,7 @@ function connect(code,isNew){
     if(snap.exists){const d=snap.data(),s=stable({tasks:d.tasks||[],set:d.set||{}});
       let mine=false;
       if(s!==lastSent){stamp();const rem=d.tasks||[],m=mergeTasks(base,D.tasks,rem);mine=stable(m)!==stable(rem);   // mine: qui c'è qualcosa di più recente da mandare
-        lastSent=s;D.tasks=m;setBase(rem);D.set=d.set||{};norm();seenAll();
+        archive();lastSent=s;D.tasks=m;setBase(rem);D.set=d.set||{};norm();seenAll();archive();
         try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}applyLook();renderAll();
         if(migrated){migrated=false;ready=true;save();}}
       if(mine){ready=true;push();}
@@ -1424,8 +1434,9 @@ function renderHead(){
   $('kpis').innerHTML=[[nTodo,'da fare',''],[nToday,'fatte oggi','ok'],[nLate,'in ritardo',nLate?'late':'zero']].map(([n,l,c])=>`<span class="kp ${c}"><b>${n}</b><i>${trS(l)}</i></span>`).join('');
   // settimana (lunedì → domenica)
   const d0=kd(t0),mon=addD(t0,-((d0.getDay()+6)%7));let w='';
-  for(let i=0;i<7;i++){const k=addD(mon,i),due=P.filter(t=>!t.done&&t.due===k),late=k<t0&&due.length;
-    w+=`<button class="${i>4?'we':''} ${k===t0?'td':''} ${dayFilter===k?'on':''} ${late?'lt':''}" data-day="${k}"><i>${({it:['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],tr:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz']}[curLang()])[i]}</i><b>${kd(k).getDate()}</b><s>${'<u></u>'.repeat(Math.min(due.length,5))}</s></button>`;}
+  for(let i=0;i<7;i++){const k=addD(mon,i),due=P.filter(t=>!t.done&&t.due===k),fin=P.filter(t=>t.done&&t.doneAt&&dkey(new Date(t.doneAt))===k),late=k<t0&&due.length;
+    const dots='<u class="ok"></u>'.repeat(Math.min(fin.length,4))+'<u class="due"></u>'.repeat(Math.min(due.length,4)),tip=[fin.length?fin.length+' '+trS(fin.length===1?'chiusa':'chiuse'):'',due.length?due.length+' '+trS('in scadenza'):''].filter(Boolean).join(' · ');
+    w+=`<button class="${i>4?'we':''} ${k===t0?'td':''} ${dayFilter===k?'on':''} ${late?'lt':''}" data-day="${k}"${tip?` title="${tip}"`:''}><i>${({it:['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],tr:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz']}[curLang()])[i]}</i><b>${kd(k).getDate()}</b><s>${dots}</s></button>`;}
   $('wk').innerHTML=w;
 }
 $('rqs').addEventListener('click',e=>{const b=e.target.closest('[data-rqs]');if(!b)return;reqFilter=b.dataset.rqs;renderAtt();});
@@ -2045,6 +2056,9 @@ ${row('#0891b2',ICS.card,'Card unite',tg('joined',S.joined!==false))}
       +fl.map(([k,v,c])=>row(c,ICS[k],v,`<button class="tg ${S.fields[k]?'on':''}" data-f="${k}"></button>`)).join(''))}
     ${sb('edit','Personalizza',row('#6366f1',ICS.ed,'Modalità editor',`<button class="tg ${D.ui.editor?'on':''}" id="s-ed"></button>`))}
     ${sb('sec','Sicurezza',row('#0f766e',sv('<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 9v1M15 9v1M12 9v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/>'),'Face ID su questo dispositivo',`<button class="tg ${fidOn()?'on':''}" id="s-fid"></button>`))}
+    ${(()=>{const ms=missing().slice(0,40);if(!ms.length)return'';const d=t=>{const x=new Date(t.mod||t.created||Date.now());return x.getDate()+' '+MON[x.getMonth()];};
+      return sb('lost','Attività eliminate o sparite',`<p class="lostp">${trS('Copie salvate su questo dispositivo di attività che non ci sono più. Se una è sparita per sbaglio, ripristinala.')}</p>`
+        +ms.map(t=>row(t.done?'#22c55e':'#f59e0b',ICS.dd,esc(t.title)+`<small class="lostr">${esc(t.req||'')}${t.req?' · ':''}${t.done?trS('chiusa'):trS('da fare')} · ${d(t)}</small>`,`<button class="sbtn" data-rst="${esc(t.id)}">${trS('Ripristina')}</button><button class="sbtn dng" data-fgt="${esc(t.id)}" title="${trS('Togli da questo elenco')}">✕</button>`)).join(''));})()}
     ${sb('sync','Sincronizzazione',row('#10b981',ICS.sync,'Stato','<span class="sync"><i></i> Sincronizzo…</span>')
       +row('#f59e0b',ICS.key,'Codice segreto',`<button class="sbtn" id="s-show">Mostra</button><button class="sbtn" id="s-copy">Copia</button>`)
       +`<div class="code" id="s-code">${localStorage.getItem(CODEKEY)?'•'.repeat(36):'—'}</div>`
@@ -2115,6 +2129,7 @@ $('sets').addEventListener('click',e=>{
     S.custom.push({id:uid(),name:n,type:t,opts:t==='select'?$('cf-o').value.split(',').map(x=>x.trim()).filter(Boolean):[]});save();renderSets();toast('Campo aggiunto');return;}
   if(e.target.id==='s-exp'){const bl=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='attivita-backup-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup salvato nei Download');return;}
   if(e.target.id==='s-imp'){$('s-impf').click();return;}
+  {const b=e.target.closest('[data-rst],[data-fgt]');if(b){if(b.dataset.rst)restoreTask(b.dataset.rst);else forgetTask(b.dataset.fgt);renderSets();return;}}
   if(e.target.id==='s-show'){const c=localStorage.getItem(CODEKEY)||'—',el=$('s-code');el.textContent=el.textContent.startsWith('•')?c:'•'.repeat(36);return;}
   if(e.target.id==='s-copy'){const c=localStorage.getItem(CODEKEY);if(!c)return;(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Codice copiato'),()=>{prompt('Copia il codice:',c);});return;}
   if(e.target.id==='s-out'){if(!confirm('Scollegare questo dispositivo? Per rientrare dovrai incollare di nuovo il codice.'))return;
@@ -2238,7 +2253,7 @@ $('fid-ok').onclick=()=>{if($('fid-in').value.trim().replace(/\s+/g,'')===localS
 $('fid-in').addEventListener('keydown',e=>{if(e.key==='Enter')$('fid-ok').click();});
 let fidHid=0;
 document.addEventListener('visibilitychange',()=>{if(document.hidden)fidHid=Date.now();else if(fidHid&&Date.now()-fidHid>60000)fidLock();});
-load();seenAll();applyLook();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}go(D.ui.page||'att');
+load();seenAll();archive();applyLook();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}go(D.ui.page||'att');
 {const c=localStorage.getItem(CODEKEY);if(c){connect(c,false);fidLock();}else showLock();}
 </script>
 </body>
