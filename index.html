@@ -333,6 +333,8 @@ body.noanim .greet.typing{clip-path:none}
 .qi input{flex:1;min-width:0;height:100%;background:none;border:0;outline:none;font-size:16px;color:var(--text)}
 .qi input::placeholder{color:var(--soft)}
 .qi.sm{height:48px;padding-right:18px}
+.qplus{width:40px;height:40px;border-radius:16px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);display:grid;place-items:center;flex-shrink:0}.qplus svg,.sd svg{width:20px;height:20px}.qplus[hidden]{display:none}
+#qsug .q.sg{color:var(--accent)}
 .sd{width:44px;height:44px;border-radius:18px;background:var(--accent);color:var(--onacc);display:grid;place-items:center;flex-shrink:0;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 45%,transparent)}
 .sd svg{width:20px;height:20px}
 .toast.top{bottom:auto;top:calc(env(safe-area-inset-top) + 14px)}
@@ -776,6 +778,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
   <div class="qk qd" id="qsug" hidden></div>
   <div class="qpop gl" id="qpop" hidden></div>
   <div class="qi gl"><span class="qiw"><span class="qghost" id="qghost" aria-hidden="true"></span><input id="qt" autocomplete="off" enterkeyhint="send" maxlength="200" aria-label="Nuova attività"></span>
+    <button class="qplus" id="qadd" aria-label="Aggiungi un altro richiedente" title="Aggiungi un altro richiedente" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     <button class="sd" id="qsend" aria-label="Aggiungi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
 </div>
 <!-- primo avvio su un dispositivo: si incolla il codice segreto (o se ne crea uno nuovo) -->
@@ -871,6 +874,8 @@ const pad=n=>String(n).padStart(2,'0');
 const dkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const today=()=>dkey(new Date());
 const kd=k=>new Date(k+'T12:00:00');
+/* richiedenti: una o più persone, salvate come "Nome Cognome, Altro Nome" */
+const reqList=s=>[...new Set(String(s||"").split(/\s*,\s*/).map(x=>x.trim()).filter(Boolean))];
 const addD=(k,n)=>{const d=kd(k);d.setDate(d.getDate()+n);return dkey(d);};
 const dLong=k=>kd(k).toLocaleDateString(LOC,{day:'numeric',month:'long'}).toUpperCase();
 let D;
@@ -1356,7 +1361,7 @@ let doneLimit=30;
 let reqFilter='',dayFilter='';   // dayFilter: giorno scelto nella settimana (PC), solo le attività che scadono quel giorno   // filtro rapido: tocchi il richiedente su una card e vedi solo le sue attività
 function filtered(){
   const q=$('q').value.trim().toLowerCase();
-  return PT().filter(t=>(!reqFilter||t.req===reqFilter)&&(!dayFilter||t.due===dayFilter)&&(!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q)));
+  return PT().filter(t=>(!reqFilter||reqList(t.req).includes(reqFilter))&&(!dayFilter||t.due===dayFilter)&&(!q||[t.title,t.desc,t.req,...Object.values(t.cf||{})].join(' ').toLowerCase().includes(q)));
 }
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.5l3.5 3.5 7.5-8"/></svg>';
 /* PC largo: le card sono molto larghe, a destra mostrano anche la nota e quanto manca alla scadenza */
@@ -1374,12 +1379,12 @@ function card(t,cs){   // cs: stile della card (se manca, quello scelto in Impos
   // richiedente con nome e cognome; se non ci sta viene tagliato, così i dettagli restano su una riga.
   // la priorità non è scritta: la dice la riga colorata a sinistra (su tutti gli stili di card)
   {const pn=postponed(t);if(!t.done&&pn>=3)m.push(`<span class="pp" title="Tocca per vedere la storia">↻ rimandata ${pn} volte</span>`);}   // storia: si vede sulla card
-  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(t.req)}"><em>${esc(t.req)}</em></span>`);
+  if(F.req&&t.req)m.push(`<span class="rq" title="${esc(reqList(t.req).join(', '))}">${reqList(t.req).map(n=>`<em data-rq="${esc(n)}">${esc(n)}</em>`).join(', ')}</span>`);
   if(F.prio)m.push(`<span class="pr">${PRIO[t.prio].n}</span>`);   // priorità scritta, senza pallino né colore (il colore è nella sfumatura)
 if(F.rec&&t.rec&&t.rec.type)m.push(`<span class="rc" title="${esc(recLabel(t.rec))}">${IC.rep}</span>`);   // si ripete
   return`<div class="card cs-${cs} ${t.done?'isdone':''} ${late?'islate':''}" data-id="${t.id}" style="--pc:${PRIO[t.prio].c}" title="Priorità ${PRIO[t.prio].n.toLowerCase()}">
     <button class="dot" data-a="tog" aria-label="${t.done?'Riporta in da fare':'Segna come fatta'}">${CHK}</button>
-    ${F.req?avImg(t.req):''}<div class="cb"><div class="ct"><span>${esc(t.title)}</span></div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div>${cardX(t)}</div>`;
+    ${F.req?avImg(reqList(t.req)[0]||''):''}<div class="cb"><div class="ct"><span>${esc(t.title)}</span></div><div class="cm">${m.join('<i class="ms">·</i>')}</div></div>${cardX(t)}</div>`;
 }
 const shortName=n=>{const p=n.trim().split(/\s+/);return p.length>1&&!avGroup(n)?p[0]+' '+p[1][0].toUpperCase()+'.':n;};
 /* giorno grande + mese prima del titolo, in tutte le pagine: alto esattamente quanto la maiuscola del titolo
@@ -1426,7 +1431,7 @@ window.addEventListener('resize',()=>{clearTimeout(window._fcx);window._fcx=setT
 function renderHead(){
   const P=PT(),t0=today();
   // persone
-  const cnt={};P.forEach(t=>{if(!t.req)return;const c=cnt[t.req]||(cnt[t.req]={o:0,n:0});c.n++;if(!t.done)c.o++;});
+  const cnt={};P.forEach(t=>{reqList(t.req).forEach(n=>{const c=cnt[n]||(cnt[n]={o:0,n:0});c.n++;if(!t.done)c.o++;});});
   const ppl=Object.keys(cnt).sort((a,b)=>cnt[b].o-cnt[a].o||cnt[b].n-cnt[a].n||a.localeCompare(b,LOC));
   $('rqs').innerHTML=ppl.length?`<button class="rq0 ${reqFilter?'':'on'}" data-rqs="">${trS('Tutti')}</button>`+ppl.map(n=>`<button class="${reqFilter===n?'on':''}" data-rqs="${esc(n)}" title="${esc(n)}">${avImg(n)}<span>${esc(n)}</span><b>${cnt[n].o}</b></button>`).join(''):'';
   // numeri
@@ -1569,7 +1574,7 @@ $('l-all').addEventListener('click',e=>{
   const sz=e.target.closest('[data-snz]');if(sz){const t=taskOf(sz.closest('.swp').querySelector('.card'));if(t)snooze(t,sz.dataset.snz);return;}
   const c=e.target.closest('.card');if(!c)return;const t=D.tasks.find(x=>x.id===c.dataset.id);if(!t)return;
   if(e.target.closest('[data-a="tog"]')){e.stopPropagation();toggle(t,e.target);return;}
-  if(t.req&&e.target.closest('.rq,.avi')){reqFilter=reqFilter===t.req?'':t.req;window.scrollTo({top:0,behavior:'smooth'});renderAtt();return;}   // tocco sul richiedente: solo le sue
+  if(t.req&&e.target.closest('.rq,.avi')){{const em=e.target.closest('[data-rq]'),n=em?em.dataset.rq:reqList(t.req)[0];reqFilter=reqFilter===n?'':n;}window.scrollTo({top:0,behavior:'smooth'});renderAtt();return;}   // tocco sul richiedente: solo le sue
   openForm(t);
 });
 /* ═══ GESTI SULLE CARD: scorri a destra = fatta (o di nuovo da fare), a sinistra = elimina; tieni premuto = menu ═══ */
@@ -1736,7 +1741,7 @@ function renderQk(){
   $('qk').innerHTML=h;
   const sel={due:'[data-pop="due"]',prio:'[data-prio]',rec:'[data-pop="rec"]'}[qv.step];   // dove sei arrivato col Tab
   if(sel){const b=$('qk').querySelector(sel);if(b){b.classList.add('kb');b.scrollIntoView({block:'nearest',inline:'nearest'});}}
-  renderPop();qGhost();qPreview();
+  renderPop();renderSug();qGhost();qPreview();
 }
 /* pannello sopra la barra: calendario del mese o elenco delle ricorrenze */
 function renderPop(){
@@ -1750,21 +1755,33 @@ function renderPop(){
 }
 /* anteprima: la card come apparirà, aggiornata mentre scrivi */
 function qPreview(){const r=qv.mode==='r',v=$('qt').value.trim();
-  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||trS('Nuova attività'),req:r?(qSuggest()||v):qv.req,prio:qv.prio,created:Date.now(),due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,done:false});}
+  $('qpv').innerHTML=card({id:'qpv',title:(r?qv.title:v)||trS('Nuova attività'),req:reqList(qv.req).concat(r&&(qSuggest()||v)?[qSuggest()||v]:[]).join(', '),prio:qv.prio,created:Date.now(),due:qv.due||addD(today(),D.set.defDays),rec:qv.rec?{type:qv.rec}:null,done:false});}
 /* richiedenti: il nome che comincia con quello che scrivi (prima i più usati), anche dal cognome */
-function qSuggest(){if(qv.mode!=='r')return'';const v=$('qt').value.trim().toLowerCase();if(!v)return'';
-  const cnt={};D.tasks.forEach(t=>{if(t.req)cnt[t.req]=(cnt[t.req]||0)+1;});
-  const l=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]),hit=l.find(n=>n.toLowerCase().startsWith(v))||l.find(n=>n.toLowerCase().split(/\s+/).some(w=>w.startsWith(v)));
-  return hit&&hit.toLowerCase()!==v?hit:'';}
+function qSuggestAll(){if(qv.mode!=='r')return[];const v=$('qt').value.trim().toLowerCase();if(!v)return[];
+  const cnt={},have=reqList(qv.req).map(x=>x.toLowerCase());D.tasks.forEach(t=>reqList(t.req).forEach(n=>{cnt[n]=(cnt[n]||0)+1;}));
+  const l=Object.keys(cnt).filter(n=>!have.includes(n.toLowerCase())).sort((a,b)=>cnt[b]-cnt[a]);
+  return[...l.filter(n=>n.toLowerCase().startsWith(v)),...l.filter(n=>!n.toLowerCase().startsWith(v)&&n.toLowerCase().split(/\s+/).some(w=>w.startsWith(v)))].filter(n=>n.toLowerCase()!==v);}
+function qSuggest(){return qSuggestAll()[0]||'';}
 function qGhost(){const g=$('qghost'),s=qSuggest(),v=$('qt').value;
   if(!s){g.innerHTML='';return;}
   g.innerHTML=s.toLowerCase().startsWith(v.trim().toLowerCase())?`<span>${esc(v)}</span>${esc(s.slice(v.length))}`:`<span>${esc(v)}</span> → ${esc(s)}`;}
 function qAccept(){const s=qSuggest();if(s){$('qt').value=s;}}
-$('qt').addEventListener('input',()=>{qGhost();qPreview();});
+$('qt').addEventListener('input',()=>{renderSug();qGhost();qPreview();});
+$('qadd').addEventListener('mousedown',e=>e.preventDefault());$('qadd').onclick=qAddReq;
+$('qsug').addEventListener('mousedown',e=>e.preventDefault());
+$('qsug').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.sg){$('qt').value=b.dataset.sg;qStore();}else if(b.dataset.rm!==undefined)qv.req=reqList(qv.req).filter(n=>n!==b.dataset.rm).join(', ');
+  renderQk();$('qt').focus();});
 $('qt').addEventListener('scroll',()=>$('qghost').scrollLeft=$('qt').scrollLeft);
 /* stesso campo per attività e richiedente: si scambiano testo e suggerimenti, niente si sposta */
-function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?qv.req:qv.title;f.maxLength=r?60:200;f.setAttribute('aria-label',r?'Richiedente':'Nuova attività');}
-function qStore(){qv[qv.mode==='r'?'req':'title']=$('qt').value.trim();}
+function qField(){const f=$('qt'),r=qv.mode==='r';f.value=r?'':qv.title;$('qadd').hidden=!r;f.maxLength=r?60:200;f.setAttribute('aria-label',r?'Richiedente':'Nuova attività');}
+function qStore(){const v=$('qt').value.trim();if(qv.mode!=='r'){qv.title=v;return;}if(v){qv.req=reqList(qv.req).concat([v]).filter((x,i,a)=>a.findIndex(y=>y.toLowerCase()===x.toLowerCase())===i).join(', ');$('qt').value='';}}
+/* + del richiedente: aggiunge il nome scritto (o quello suggerito) e lascia il campo pronto per un altro */
+function qAddReq(){qAccept();qStore();renderQk();$('qt').focus();}
+/* pillole sopra la barra: richiedenti aggiunti (tocca per togliere) e nomi suggeriti (tocca per inserire) */
+function renderSug(){const s=$('qsug');if(qv.mode!=='r'){s.hidden=true;return;}const added=reqList(qv.req),sg=qSuggestAll().slice(0,4);
+  if(!added.length&&!sg.length){s.hidden=true;return;}s.hidden=false;
+  s.innerHTML=added.map(n=>`<button class="q gl set" data-rm="${esc(n)}" title="Togli">${esc(n)} ✕</button>`).join('')+sg.map(n=>`<button class="q gl sg" data-sg="${esc(n)}">+ ${esc(n)}</button>`).join('');}
 /* nessun pulsante della barra o del pannello toglie il cursore dal campo, così la tastiera resta aperta */
 ['qk','qpop'].forEach(id=>$(id).addEventListener('mousedown',e=>e.preventDefault()));
 $('qk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
@@ -1806,7 +1823,7 @@ function qArrow(k){
   renderQk();return true;
 }
 $('qt').addEventListener('keydown',e=>{
-  if(e.key==='Tab'){e.preventDefault();qTab(e.shiftKey?-1:1);return;}
+  if(e.key==='Tab'){e.preventDefault();if(qv.mode==='r'&&!e.shiftKey&&qSuggest()){qAddReq();return;}qTab(e.shiftKey?-1:1);return;}   // Tab sul richiedente: inserisce il nome suggerito
   if(/^Arrow/.test(e.key)&&['due','prio','rec'].includes(qv.step)){if(qArrow(e.key))e.preventDefault();return;}
   if(e.key==='Enter'){e.preventDefault();
     if(qv.mode==='r'){qAccept();qStore();}
@@ -1825,11 +1842,11 @@ function openForm(t,pre){   /* pre: valori già scelti nella barra rapida ("Dett
   edit=t||null;const F=D.set.fields;
   fv=t?JSON.parse(JSON.stringify(t)):{title:'',desc:'',req:'',prio:1,due:'',rec:null,cf:{},...(pre||{})};
   if(!fv.rec)fv.rec={type:''};
-  const reqs=[...new Set(PT().map(x=>x.req).filter(Boolean))],rt=fv.rec.type;
+  const reqs=[...new Set(PT().flatMap(x=>reqList(x.req)))],rt=fv.rec.type;
   $('sheet').innerHTML=`<h2 class="dsp">${t?'Modifica attività':'Nuova attività'}</h2>
     <div class="f"><label>Titolo</label><input class="inp" id="i-title" maxlength="200" value="${esc(fv.title)}" placeholder="Cosa c'è da fare?"></div>
     ${F.req||F.due?`<div class="row">
-      ${F.req?`<div class="f"><label>Richiedente</label><input class="inp" id="i-req" list="reqs" value="${esc(fv.req)}" placeholder="Chi l'ha chiesta?"><datalist id="reqs">${reqs.map(r=>`<option value="${esc(r)}">`).join('')}</datalist></div>`:''}
+      ${F.req?`<div class="f"><label>Richiedente</label><input class="inp" id="i-req" list="reqs" value="${esc(fv.req)}" placeholder="Chi l'ha chiesta? Più nomi: separali con la virgola"><datalist id="reqs">${reqs.map(r=>`<option value="${esc(r)}">`).join('')}</datalist></div>`:''}
       ${F.due?`<div class="f"><label>Scadenza</label><input class="inp" type="date" id="i-due" value="${fv.due||''}"><div class="hint">${fv.due?'':'Se la lasci vuota: tra '+D.set.defDays+' giorni'}</div></div>`:''}
     </div>`:''}
     ${F.prio?`<div class="f"><label>Priorità</label><div class="prio" id="i-prio">${PRIO.map((p,i)=>`<button type="button" data-p="${i}" style="--pc:${p.c}" class="${fv.prio===i?'on':''}">${p.n}</button>`).join('')}</div></div>`:''}
@@ -1948,8 +1965,8 @@ function renderStats(){
   const box=(key,title,sub,body)=>`<div class="box gl" data-ek="${key}"><h3 data-el="b-${key}" data-def="${title}">${esc(T('b-'+key,title))}</h3><div class="sub">${sub}</div>${body}</div>`;
   h+=`<div class="boxes" data-ec="box">`;
   // richiedenti, in ordine di richieste: la barra è divisa nei colori delle priorità (legenda sotto il titolo)
-  const rq={};cre.forEach(t=>{const n=t.req||'(nessuno)';rq[n]=rq[n]||{n:0,d:0,p:[0,0,0]};rq[n].n++;rq[n].p[t.prio]++;});
-  don.forEach(t=>{const n=t.req||'(nessuno)';if(rq[n])rq[n].d++;});
+  const rq={};cre.forEach(t=>{(reqList(t.req).length?reqList(t.req):['(nessuno)']).forEach(n=>{rq[n]=rq[n]||{n:0,d:0,p:[0,0,0]};rq[n].n++;rq[n].p[t.prio]++;});});   // ogni richiedente conta per conto suo
+  don.forEach(t=>{(reqList(t.req).length?reqList(t.req):['(nessuno)']).forEach(n=>{if(rq[n])rq[n].d++;});});
   const rl=Object.entries(rq).sort((a,b)=>b[1].n-a[1].n||b[1].d-a[1].d),rm=Math.max(1,...rl.map(x=>x[1].n));
   const leg=`<div class="leg">${[0,1,2].map(i=>`<span><i class="pdot" style="--pc:${PRIO[i].c}"></i>${PRIO[i].n}</span>`).join('')}</div>`;
   // podio: i primi tre richiedenti (il primo al centro, più alto)
@@ -2123,7 +2140,7 @@ $('sets').addEventListener('click',e=>{
   if(b=e.target.closest('.tg[data-f]')){S.fields[b.dataset.f]=!S.fields[b.dataset.f];save();renderSets();renderAtt();return;}
   if(b=e.target.closest('[data-rm]')){const f=S.custom.find(x=>x.id===b.dataset.rm);if(!confirm(`Rimuovere il campo "${f.name}"? I valori già inseriti restano salvati ma non si vedono più.`))return;S.custom=S.custom.filter(x=>x!==f);save();renderSets();renderAtt();return;}
   if(b=e.target.closest('[data-rn]')){const o=b.dataset.rn,n=prompt('Nuovo nome per "'+o+'" (se esiste già, i due vengono uniti):',o);if(n===null)return;
-    D.tasks.forEach(t=>{if(t.req===o)t.req=n.trim();});save();renderSets();renderAtt();toast('Richiedente aggiornato');return;}
+    D.tasks.forEach(t=>{const l=reqList(t.req);if(l.includes(o))t.req=[...new Set(l.map(x=>x===o?n.trim():x))].join(', ');});save();renderSets();renderAtt();toast('Richiedente aggiornato');return;}
   if(e.target.id==='s-lay'){if(!confirm('Rimettere posizioni e nomi originali?'))return;S.layout={};S.labels={};save();renderAll();renderSets();applyLayout();toast('Disposizione ripristinata');return;}
   if(e.target.id==='cf-add'){const n=$('cf-n').value.trim();if(!n){$('cf-n').focus();return;}const t=$('cf-t').value;
     S.custom.push({id:uid(),name:n,type:t,opts:t==='select'?$('cf-o').value.split(',').map(x=>x.trim()).filter(Boolean):[]});save();renderSets();toast('Campo aggiunto');return;}
