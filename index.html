@@ -296,7 +296,7 @@ body.noanim .greet.typing{clip-path:none}
 .cm svg{width:14px;height:14px;flex-shrink:0}
 .cm .late{color:var(--danger);font-weight:650}.cm .today{color:var(--accent);font-weight:650}.cm .okc{color:var(--ok)}
 .pdot{width:7px;height:7px;border-radius:50%;background:var(--pc);display:inline-block;flex-shrink:0}
-.dsep{display:flex;align-items:center;justify-content:center;gap:8px;margin:18px 0 0;font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.dsep{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0 14px;font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .dsep b{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--onacc);font-size:11px;display:inline-grid;place-items:center;letter-spacing:0}
 .dsep::before,.dsep::after{content:"";flex:1;height:1px;background:var(--line)}
 .empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:13px}
@@ -898,7 +898,7 @@ function norm(){
   // proposte scelte (ottobre 2026): Navy + Mandarino, una volta sola
   if(!D.set.look3){D.set.look3=1;D.set.theme='';D.set.mode='dark';D.set.accent='#ff8a3d';D.set.bg.dark='#0c1530';migrated=true;}
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('⚠️ Spazio pieno: fai un Backup');}push();}
+function save(){if(typeof stamp==='function')stamp();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('⚠️ Spazio pieno: fai un Backup');}push();}
 const T=(k,d)=>(D&&D.set.labels&&D.set.labels[k])||d;   /* testo rinominato in modalità editor, oppure quello standard */
 /* profili (es. Attività, Personale): ogni profilo ha le sue attività; quelle vecchie senza profilo stanno nel primo */
 const curPf=()=>{const P=D.set.profiles;return P.some(p=>p.id===D.ui.pf)?D.ui.pf:P[0].id;};
@@ -918,10 +918,35 @@ const stable=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v
 function setSync(s,err){syncState=s;if(s!=='off')syncErr='';else if(err)syncErr=err;
   document.querySelectorAll('.sync').forEach(e=>{e.className='sync '+(s==='ok'?'ok':s==='off'?'off':'');
     e.lastChild.textContent=s==='ok'?' Sincronizzato':s==='off'?' Non sincronizzato'+(syncErr?' ('+syncErr+')':'')+': riprovo da solo':' Sincronizzo…';});}
+/* ═══ unione attività per attività: ogni attività ha "mod" (ultima modifica); tra due dispositivi vince la versione più recente,
+   così un telefono rimasto indietro non riporta indietro quello che hai chiuso o cambiato sull'altro ═══ */
+const BASEKEY='todo-base';
+let base=null,seen={};
+try{base=JSON.parse(localStorage.getItem(BASEKEY)||'null');}catch(e){base=null;}
+const sig=t=>{const{mod,...r}=t;return stable(r);};
+const tmap=a=>{const m={};(a||[]).forEach(t=>{if(t&&t.id)m[t.id]=t;});return m;};
+function seenAll(){seen={};D.tasks.forEach(t=>{seen[t.id]=sig(t);});}
+// attività cambiate su questo dispositivo dall'ultima volta: segno l'ora della modifica
+function stamp(){const now=Date.now();D.tasks.forEach(t=>{const s=sig(t);if(seen[t.id]!==s){if(seen[t.id]!==undefined||!t.mod)t.mod=now;seen[t.id]=s;}});}
+function setBase(a){base=JSON.parse(JSON.stringify(a||[]));try{localStorage.setItem(BASEKEY,JSON.stringify(base));}catch(e){}}
+function mergeTasks(b,l,r){
+  if(!b)return r;   // prima sincronizzazione su questo dispositivo: comanda quella online
+  const B=tmap(b),L=tmap(l),R=tmap(r),out=[],used={};
+  const pick=id=>{const x=L[id],y=R[id],o=B[id];
+    if(x&&y)return(x.mod||0)>(y.mod||0)?x:y;
+    if(x)return(!o||(x.mod||0)>(o.mod||0))?x:null;   // manca online: nuova qui, oppure eliminata sull'altro dispositivo
+    return(!o||(y.mod||0)>(o.mod||0))?y:null;};      // manca qui: nuova sull'altro, oppure eliminata qui
+  (l||[]).concat(r||[]).forEach(t=>{if(!t||used[t.id])return;used[t.id]=1;const v=pick(t.id);if(v)out.push(v);});
+  return out;
+}
 function push(){
   if(!ref||!ready)return;clearTimeout(pushT);
-  pushT=setTimeout(()=>{const p=payload(),s=stable(p);if(s===lastSent)return;lastSent=s;setSync('');
-    ref.set({...p,upd:Date.now()}).then(()=>{setSync('ok');localStorage.removeItem(NEWKEY);})
+  pushT=setTimeout(()=>{stamp();const p=payload(),s=stable(p);if(s===lastSent)return;lastSent=s;setSync('');
+    // prima di scrivere leggo quello che c'è online e unisco attività per attività (vince la modifica più recente)
+    db.runTransaction(async tx=>{const sn=await tx.get(ref),rem=sn.exists?(sn.data().tasks||[]):[];
+      const m=JSON.parse(JSON.stringify(mergeTasks(base,D.tasks,rem)));tx.set(ref,{tasks:m,set:p.set,upd:Date.now()});return m;})
+    .then(m=>{const ch=stable(m)!==stable(D.tasks);D.tasks=m;setBase(m);seenAll();lastSent=stable(payload());
+      if(ch){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}renderAll();}setSync('ok');localStorage.removeItem(NEWKEY);})
       .catch(e=>{lastSent='';setSync('off',e&&e.code||'errore');clearTimeout(retryT);retryT=setTimeout(push,5000);});},500);
 }
 function connect(code,isNew){
@@ -931,9 +956,12 @@ function connect(code,isNew){
   unsub=ref.onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
     if(snap.exists){const d=snap.data(),s=stable({tasks:d.tasks||[],set:d.set||{}});
-      if(s!==lastSent){lastSent=s;D.tasks=d.tasks||[];D.set=d.set||{};norm();
+      let mine=false;
+      if(s!==lastSent){stamp();const rem=d.tasks||[],m=mergeTasks(base,D.tasks,rem);mine=stable(m)!==stable(rem);   // mine: qui c'è qualcosa di più recente da mandare
+        lastSent=s;D.tasks=m;setBase(rem);D.set=d.set||{};norm();seenAll();
         try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}applyLook();renderAll();
         if(migrated){migrated=false;ready=true;save();}}
+      if(mine){ready=true;push();}
       ready=true;localStorage.removeItem(NEWKEY);if(!snap.metadata.fromCache)setSync('ok');}
     else if(!snap.metadata.fromCache){
       if(!localStorage.getItem(NEWKEY)){const has=D.tasks.length>0;localStorage.removeItem(CODEKEY);
@@ -1412,7 +1440,8 @@ function alignTitle(){const ph=document.querySelector('.page.on>.ph');if(!ph)ret
   if(!document.body.classList.contains('topnav')||!sv)return;const b=ph.getBoundingClientRect(),s=sv.getBoundingClientRect(),dy=(b.top+b.height/2)-(s.top+s.height/2);   // maiuscola del titolo al centro della barra
   h.style.transform=`translateY(${dy.toFixed(1)}px)`;}
 function fitNav(){alignTitle();const nav=document.querySelector('.ph>nav.nav');if(!nav)return;nav.classList.remove('icons');const tt=nav.parentElement.querySelector('h1.tt'),hb=nav.parentElement.querySelector(':scope>.hbtn'),r=nav.getBoundingClientRect();   // tocca il titolo o i pulsanti: solo icone
-  if((tt&&tt.getBoundingClientRect().right>r.left-16)||(hb&&hb.getBoundingClientRect().left<r.right+16))nav.classList.add('icons');}
+  // solo icone anche quando le voci non ci stanno tutte: niente "+ Nuova attività" tagliata a metà
+  if((tt&&tt.getBoundingClientRect().right>r.left-16)||(hb&&hb.getBoundingClientRect().left<r.right+16)||nav.scrollWidth>nav.clientWidth+1||[...nav.querySelectorAll('.tb')].some(b=>{const q=b.getBoundingClientRect();return q.right>r.right+1||q.left<r.left-1;}))nav.classList.add('icons');}
 window.addEventListener('resize',fitNav);if(document.fonts)document.fonts.ready.then(fitNav);
 if(window.ResizeObserver)new ResizeObserver(()=>fitNav()).observe(document.querySelector('.wrap')||document.body);
 NAVMQ.addEventListener('change',()=>{placeNav();fitCols();});
@@ -2110,7 +2139,7 @@ $('sets').addEventListener('change',e=>{
   if(e.target.id==='s-font'){D.set.font=e.target.value;save();applyLook();}
   if(e.target.id==='cf-t')$('cf-o').style.display=e.target.value==='select'?'':'none';
   if(e.target.id==='s-impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.tasks))throw 0;
-    if(!confirm(`Sostituire tutto con il backup (${d.tasks.length} attività)?`))return;localStorage.setItem(KEY,JSON.stringify(d));load();save();applyLook();renderAll();toast('Backup ripristinato');}catch(_){alert('File non valido');}};r.readAsText(f);e.target.value='';}});
+    if(!confirm(`Sostituire tutto con il backup (${d.tasks.length} attività)?`))return;localStorage.setItem(KEY,JSON.stringify(d));load();seenAll();D.tasks.forEach(t=>t.mod=Date.now());save();applyLook();renderAll();toast('Backup ripristinato');}catch(_){alert('File non valido');}};r.readAsText(f);e.target.value='';}});
 
 /* ═══ MODALITÀ EDITOR: posizioni (D.set.layout) e nomi (D.set.labels) personalizzati ═══ */
 function applyLayout(){
@@ -2176,7 +2205,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='/'){e.preventDefault();go('att');showSearch(true);}
   if(e.key==='1')go('att');if(e.key==='2')go('stat');if(e.key==='3')go('set');
 });
-window.addEventListener('storage',e=>{if(e.key===KEY){load();applyLook();renderAll();}});
+window.addEventListener('storage',e=>{if(e.key===KEY){load();seenAll();applyLook();renderAll();}});
 /* iPhone: blocca lo zoom con due dita (Safari ignora user-scalable); il doppio tocco lo blocca touch-action */
 ["gesturestart","gesturechange","gestureend"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();renderAll();}},60000);
@@ -2209,7 +2238,7 @@ $('fid-ok').onclick=()=>{if($('fid-in').value.trim().replace(/\s+/g,'')===localS
 $('fid-in').addEventListener('keydown',e=>{if(e.key==='Enter')$('fid-ok').click();});
 let fidHid=0;
 document.addEventListener('visibilitychange',()=>{if(document.hidden)fidHid=Date.now();else if(fidHid&&Date.now()-fidHid>60000)fidLock();});
-load();applyLook();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}go(D.ui.page||'att');
+load();seenAll();applyLook();try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){}go(D.ui.page||'att');
 {const c=localStorage.getItem(CODEKEY);if(c){connect(c,false);fidLock();}else showLock();}
 </script>
 </body>
