@@ -2138,17 +2138,17 @@ async function exportReport(){
   toast('Preparo il PDF…');
   try{await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');}
   catch(e){return toast('Non riesco a scaricare il generatore di PDF: controlla la connessione');}
-  const GG=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'],MM=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  const GG=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],MM=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const p2=n=>String(n).padStart(2,'0'),dd=ms=>{const x=new Date(ms);return p2(x.getDate())+'/'+p2(x.getMonth()+1)+'/'+x.getFullYear();},hh=ms=>{const x=new Date(ms);return p2(x.getHours())+':'+p2(x.getMinutes());};
   const dk=k=>{const [y,m,d]=k.split('-');return d+'/'+m+'/'+y;},gg=ms=>GG[new Date(ms).getDay()];
-  const dur=ms=>{const m=Math.round(ms/6e4);if(m<60)return m+' min';const h=Math.round(m/60);if(h<48)return h+' ore';return Math.round(h/24)+' giorni';};
+  const dur=ms=>{const m=Math.round(ms/6e4);if(m<60)return m+' min';const h=Math.round(m/60);if(h<48)return h+(h===1?' hour':' hours');return Math.round(h/24)+' days';};
   const pfN=t=>(D.set.profiles.find(p=>p.id===pfOf(t))||{}).n||'';
   const all=D.tasks.slice().sort((a,b)=>(a.created||0)-(b.created||0)),done=all.filter(t=>t.done&&t.doneAt),open=all.filter(t=>!t.done);
   const t0=all[0].created||Date.now(),now=Date.now(),tdy=today(),days=Math.round((new Date(tdy)-new Date(dkey(new Date(t0))))/864e5)+1,weeks=Math.max(1,days)/7;
   // ogni cosa fatta: creazione, completamento, rinvii, cambi di priorità (dalla storia di ogni attività)
   const ev=[];all.forEach(t=>{const H=(t.hist||[]).slice();if(!H.some(h=>h.k==='new'))H.unshift({d:t.created,k:'new',b:t.due});
     if(t.done&&t.doneAt&&!H.some(h=>h.k==='done'))H.push({d:t.doneAt,k:'done'});
-    H.forEach(h=>{if(!h.d)return;const txt=h.k==='new'?'Creata'+(h.b?', scadenza '+dk(h.b):''):h.k==='done'?'Completata':h.k==='undo'?'Riaperta':h.k==='due'?(h.b>h.a?'Rimandata dal '+dk(h.a)+' al '+dk(h.b):'Anticipata dal '+dk(h.a)+' al '+dk(h.b)):h.k==='prio'?'Priorità da '+PRIO[h.a].n+' a '+PRIO[h.b].n:h.k;ev.push({d:h.d,k:h.k,t,txt});});});
+    H.forEach(h=>{if(!h.d)return;const PE=['Low','Medium','High'],txt=h.k==='new'?'Created'+(h.b?', due '+dk(h.b):''):h.k==='done'?'Completed':h.k==='undo'?'Reopened':h.k==='due'?(h.b>h.a?'Postponed from '+dk(h.a)+' to '+dk(h.b):'Brought forward from '+dk(h.a)+' to '+dk(h.b)):h.k==='prio'?'Priority from '+PE[h.a]+' to '+PE[h.b]:h.k;ev.push({d:h.d,k:h.k,t,txt});});});
   ev.sort((a,b)=>a.d-b.d);while(ev.length&&ev[ev.length-1].d>now)ev.pop();
   const actDays=new Set(ev.map(e=>dkey(new Date(e.d)))),late=open.filter(t=>t.due&&t.due<tdy),ontime=done.filter(t=>t.due&&dkey(new Date(t.doneAt))<=t.due).length;
   const avgDone=done.length?done.reduce((s,t)=>s+(t.doneAt-t.created),0)/done.length:0,postp=all.reduce((s,t)=>s+postponed(t),0);
@@ -2160,52 +2160,52 @@ async function exportReport(){
   const title=(s,y)=>{doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(30);doc.text(pdfT(s),14,y);doc.setDrawColor(...acc);doc.setLineWidth(.6);doc.line(14,y+1.8,30,y+1.8);return y+7;};
   const tbl=(head,body,y,o)=>{doc.autoTable(Object.assign({head:[head.map(pdfT)],body:body.map(r=>r.map(c=>pdfT(c))),startY:y,margin:{left:14,right:14},theme:'grid',styles:{font:'helvetica',fontSize:8,cellPadding:1.6,lineColor:[225,225,225],lineWidth:.1,textColor:40},headStyles:{fillColor:[35,38,46],textColor:255,fontStyle:'bold'},alternateRowStyles:{fillColor:[247,248,250]}},o||{}));return doc.lastAutoTable.finalY+8;};
   // copertina e riepilogo
-  doc.setFillColor(22,24,30);doc.rect(0,0,W,42,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('Report delle attività',14,18);
-  doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.text(pdfT(`Dal ${gg(t0)} ${dd(t0)} a ${gg(now)} ${dd(now)} · ${days} giorni`),14,27);
-  doc.setFontSize(8.5);doc.setTextColor(190);doc.text(pdfT(`Creato il ${dd(now)} alle ${hh(now)} · profili: ${D.set.profiles.map(p=>p.n).join(', ')}`),14,34);
-  let y=52;const K=[[all.length,'attività in totale'],[done.length,'completate'],[open.length,'ancora da fare'],[actDays.size,'giorni con attività'],[(done.length/Math.max(1,weeks)).toFixed(1),'completate a settimana'],[ev.length,'azioni registrate']];
+  doc.setFillColor(22,24,30);doc.rect(0,0,W,42,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('Activity report',14,18);
+  doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.text(pdfT(`From ${gg(t0)} ${dd(t0)} to ${gg(now)} ${dd(now)} · ${days} days`),14,27);
+  doc.setFontSize(8.5);doc.setTextColor(190);doc.text(pdfT(`Generated on ${dd(now)} at ${hh(now)} · profiles: ${D.set.profiles.map(p=>p.n).join(', ')}`),14,34);
+  let y=52;const K=[[all.length,'tasks in total'],[done.length,'completed'],[open.length,'still open'],[actDays.size,'active days'],[(done.length/Math.max(1,weeks)).toFixed(1),'completed per week'],[ev.length,'recorded actions']];
   K.forEach((k,i)=>{const x=14+(i%3)*62,yy=y+Math.floor(i/3)*24;doc.setFillColor(245,246,248);doc.roundedRect(x,yy,58,20,2,2,'F');doc.setTextColor(...acc);doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text(String(k[0]),x+4,yy+10);doc.setTextColor(90);doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.text(pdfT(k[1]),x+4,yy+16);});
-  y+=54;y=title('In sintesi',y);
-  y=tbl(['Dato','Valore'],[
-    ['Primo giorno',`${gg(t0)} ${dd(t0)} alle ${hh(t0)}`],['Oggi',`${gg(now)} ${dd(now)} alle ${hh(now)}`],
-    ['Giorni con almeno un\'attività',`${actDays.size} su ${days} (${Math.round(actDays.size/days*100)}%)`],
-    ['Completate in tempo',done.length?`${ontime} su ${done.length} (${Math.round(ontime/done.length*100)}%)`:'-'],
-    ['Tempo medio da aperta a chiusa (non è il tempo di lavoro)',done.length?dur(avgDone):'-'],['In ritardo adesso',String(late.length)],['Rinvii di scadenza',String(postp)],
-    ['Giorno più intenso',best?`${gg(new Date(best[0]).getTime())} ${dk(best[0])}: ${best[1]} azioni`:'-'],
-    ['Azioni prima delle 8 / dopo le 19',`${early} / ${lateH}`],['Azioni nel fine settimana',String(wkend)],
-    ['Richiedenti diversi',String(new Set(all.flatMap(t=>reqList(t.req))).size)]],y,{columnStyles:{0:{cellWidth:70,fontStyle:'bold'}}});
+  y+=54;y=title('Summary',y);
+  y=tbl(['Item','Value'],[
+    ['First day',`${gg(t0)} ${dd(t0)} at ${hh(t0)}`],['Today',`${gg(now)} ${dd(now)} at ${hh(now)}`],
+    ['Days with at least one action',`${actDays.size} of ${days} (${Math.round(actDays.size/days*100)}%)`],
+    ['Completed on time',done.length?`${ontime} of ${done.length} (${Math.round(ontime/done.length*100)}%)`:'-'],
+    ['Average time from opened to closed (not working time)',done.length?dur(avgDone):'-'],['Overdue now',String(late.length)],['Deadline postponements',String(postp)],
+    ['Busiest day',best?`${gg(new Date(best[0]).getTime())} ${dk(best[0])}: ${best[1]} actions`:'-'],
+    ['Actions before 8 am / after 7 pm',`${early} / ${lateH}`],['Actions at the weekend',String(wkend)],
+    ['Different requesters',String(new Set(all.flatMap(t=>reqList(t.req))).size)]],y,{columnStyles:{0:{cellWidth:70,fontStyle:'bold'}}});
   // mese per mese
   const mo={};all.forEach(t=>{const x=new Date(t.created),k=x.getFullYear()+'-'+p2(x.getMonth()+1);(mo[k]=mo[k]||{c:0,d:0,dy:new Set()}).c++;});
   done.forEach(t=>{const x=new Date(t.doneAt),k=x.getFullYear()+'-'+p2(x.getMonth()+1);(mo[k]=mo[k]||{c:0,d:0,dy:new Set()}).d++;});
   ev.forEach(e=>{const x=new Date(e.d),k=x.getFullYear()+'-'+p2(x.getMonth()+1);(mo[k]=mo[k]||{c:0,d:0,dy:new Set()}).dy.add(x.getDate());});
-  y=need(y,40);y=title('Mese per mese',y);y=tbl(['Mese','Create','Completate','Giorni con attività'],Object.keys(mo).sort().map(k=>{const [a,b]=k.split('-');return[MM[+b-1]+' '+a,mo[k].c,mo[k].d,mo[k].dy.size];}),y);
+  y=need(y,40);y=title('Month by month',y);y=tbl(['Month','Created','Completed','Active days'],Object.keys(mo).sort().map(k=>{const [a,b]=k.split('-');return[MM[+b-1]+' '+a,mo[k].c,mo[k].d,mo[k].dy.size];}),y);
   // giorni della settimana e fasce orarie
-  y=need(y,95);y=title('Quando apri, chiudi o modifichi le attività',y);
-  y=tbl(['Giorno','Azioni'],[1,2,3,4,5,6,0].map(i=>[GG[i],wd[i]]),y,{tableWidth:85});
-  const fx=[['Notte (0-6)',0,6],['Mattina presto (6-8)',6,8],['Mattina (8-12)',8,12],['Pranzo (12-14)',12,14],['Pomeriggio (14-18)',14,18],['Sera (18-21)',18,21],['Tarda sera (21-24)',21,24]];
-  doc.autoTable({head:[['Fascia oraria','Azioni']],body:fx.map(([n,a,b])=>[n,hrs.slice(a,b).reduce((s,v)=>s+v,0)]),startY:doc.lastAutoTable.settings.startY,pageBreak:'avoid',margin:{left:111,right:14},theme:'grid',styles:{font:'helvetica',fontSize:8,cellPadding:1.6,lineColor:[225,225,225],lineWidth:.1,textColor:40},headStyles:{fillColor:[35,38,46],textColor:255},alternateRowStyles:{fillColor:[247,248,250]}});
+  y=need(y,95);y=title('When tasks are opened, closed or changed',y);
+  y=tbl(['Day','Actions'],[1,2,3,4,5,6,0].map(i=>[GG[i],wd[i]]),y,{tableWidth:85});
+  const fx=[['Night (0-6)',0,6],['Early morning (6-8)',6,8],['Morning (8-12)',8,12],['Lunchtime (12-14)',12,14],['Afternoon (14-18)',14,18],['Evening (18-21)',18,21],['Late evening (21-24)',21,24]];
+  doc.autoTable({head:[['Time of day','Actions']],body:fx.map(([n,a,b])=>[n,hrs.slice(a,b).reduce((s,v)=>s+v,0)]),startY:doc.lastAutoTable.settings.startY,pageBreak:'avoid',margin:{left:111,right:14},theme:'grid',styles:{font:'helvetica',fontSize:8,cellPadding:1.6,lineColor:[225,225,225],lineWidth:.1,textColor:40},headStyles:{fillColor:[35,38,46],textColor:255},alternateRowStyles:{fillColor:[247,248,250]}});
   y=Math.max(y,doc.lastAutoTable.finalY+8);
   // richiedenti
   const rq={};all.forEach(t=>reqList(t.req).forEach(r=>{(rq[r]=rq[r]||{n:0,d:0}).n++;if(t.done)rq[r].d++;}));
-  if(Object.keys(rq).length){y=need(y,30);y=title('Per richiedente',y);y=tbl(['Richiedente','Attività','Completate'],Object.entries(rq).sort((a,b)=>b[1].n-a[1].n).map(([n,v])=>[n,v.n,v.d]),y);}
+  if(Object.keys(rq).length){y=need(y,30);y=title('By requester',y);y=tbl(['Requester','Tasks','Completed'],Object.entries(rq).sort((a,b)=>b[1].n-a[1].n).map(([n,v])=>[n,v.n,v.d]),y);}
   // elenco completo
-  doc.addPage();y=title('Tutte le attività',18);
-  tbl(['#','Attività','Richiedente','Priorità','Creata','Scadenza','Completata','Aperta per','Rinvii'],all.map((t,i)=>{const desc=pdfT((t.desc||'')+((t.steps||[]).length?'\n'+t.steps.map(s=>(s.d?'[x] ':'[ ] ')+s.t).join('\n'):'')).slice(0,400);
-    return[i+1,t.title+(desc?'\n'+desc:'')+(D.set.profiles.length>1?'\n('+pfN(t)+')':''),reqList(t.req).join(', '),PRIO[t.prio]?PRIO[t.prio].n:'',`${gg(t.created).slice(0,3)} ${dd(t.created)}\n${hh(t.created)}`,t.due?dk(t.due):'',t.done&&t.doneAt?`${gg(t.doneAt).slice(0,3)} ${dd(t.doneAt)}\n${hh(t.doneAt)}`:(t.due&&t.due<tdy?'IN RITARDO':'da fare'),t.done&&t.doneAt?dur(t.doneAt-t.created):'',postponed(t)||''];}),y,
-    {styles:{font:'helvetica',fontSize:7.2,cellPadding:1.4,lineColor:[225,225,225],lineWidth:.1,textColor:40,valign:'top'},columnStyles:{0:{cellWidth:7},1:{cellWidth:56},2:{cellWidth:24},3:{cellWidth:13},4:{cellWidth:20},5:{cellWidth:17},6:{cellWidth:20},7:{cellWidth:13},8:{cellWidth:12}},
-     didParseCell:d=>{if(d.section==='body'&&d.column.index===6&&String(d.cell.raw).startsWith('IN RITARDO'))d.cell.styles.textColor=[200,40,40];if(d.section==='body'&&d.column.index===1)d.cell.styles.fontStyle='normal';}});
+  doc.addPage();y=title('All tasks',18);
+  tbl(['#','Task','Requester','Priority','Created','Due','Completed','Open for','Postponed'],all.map((t,i)=>{const desc=pdfT((t.desc||'')+((t.steps||[]).length?'\n'+t.steps.map(s=>(s.d?'[x] ':'[ ] ')+s.t).join('\n'):'')).slice(0,400);
+    return[i+1,t.title+(desc?'\n'+desc:'')+(D.set.profiles.length>1?'\n('+pfN(t)+')':''),reqList(t.req).join(', '),['Low','Medium','High'][t.prio]||'',`${gg(t.created).slice(0,3)} ${dd(t.created)}\n${hh(t.created)}`,t.due?dk(t.due):'',t.done&&t.doneAt?`${gg(t.doneAt).slice(0,3)} ${dd(t.doneAt)}\n${hh(t.doneAt)}`:(t.due&&t.due<tdy?'OVERDUE':'open'),t.done&&t.doneAt?dur(t.doneAt-t.created):'',postponed(t)||''];}),y,
+    {styles:{font:'helvetica',fontSize:7.2,cellPadding:1.4,lineColor:[225,225,225],lineWidth:.1,textColor:40,valign:'top'},rowPageBreak:'avoid',columnStyles:{0:{cellWidth:7},1:{cellWidth:52},2:{cellWidth:24},3:{cellWidth:13},4:{cellWidth:20},5:{cellWidth:17},6:{cellWidth:20},7:{cellWidth:13},8:{cellWidth:16}},
+     didParseCell:d=>{if(d.section==='body'&&d.column.index===6&&String(d.cell.raw).startsWith('OVERDUE'))d.cell.styles.textColor=[200,40,40];if(d.section==='body'&&d.column.index===1)d.cell.styles.fontStyle='normal';}});
   // diario giorno per giorno
-  doc.addPage();y=title('Diario: giorno per giorno, ora per ora',18);
-  const rows=[];let lastD='';ev.forEach(e=>{const k=dkey(new Date(e.d));if(k!==lastD){rows.push([{content:`${gg(e.d)} ${dd(e.d)} · ${byDay[k]} ${byDay[k]===1?'azione':'azioni'}`,colSpan:3,styles:{fillColor:[35,38,46],textColor:255,fontStyle:'bold'}}]);lastD=k;}
+  doc.addPage();y=title('Diary: day by day, hour by hour',18);
+  const rows=[];let lastD='';ev.forEach(e=>{const k=dkey(new Date(e.d));if(k!==lastD){rows.push([{content:`${gg(e.d)} ${dd(e.d)} · ${byDay[k]} ${byDay[k]===1?'action':'actions'}`,colSpan:3,styles:{fillColor:[35,38,46],textColor:255,fontStyle:'bold'}}]);lastD=k;}
     rows.push([hh(e.d),pdfT(e.t.title),e.txt]);});
-  doc.autoTable({head:[['Ora','Attività','Cosa']],body:rows,startY:y,margin:{left:14,right:14},theme:'grid',styles:{font:'helvetica',fontSize:7.6,cellPadding:1.4,lineColor:[225,225,225],lineWidth:.1,textColor:40},headStyles:{fillColor:[...acc],textColor:255},columnStyles:{0:{cellWidth:13},2:{cellWidth:62}},
-    didParseCell:d=>{if(d.section==='body'&&d.column.index===2){const s=String(d.cell.raw);if(s==='Completata')d.cell.styles.textColor=[30,140,70];else if(s.startsWith('Rimandata'))d.cell.styles.textColor=[200,120,0];}}});
+  doc.autoTable({head:[['Time','Task','What']],body:rows,startY:y,margin:{left:14,right:14},theme:'grid',styles:{font:'helvetica',fontSize:7.6,cellPadding:1.4,lineColor:[225,225,225],lineWidth:.1,textColor:40},headStyles:{fillColor:[...acc],textColor:255},columnStyles:{0:{cellWidth:13},2:{cellWidth:62}},
+    didParseCell:d=>{if(d.section==='body'&&d.column.index===2){const s=String(d.cell.raw);if(s==='Completed')d.cell.styles.textColor=[30,140,70];else if(s.startsWith('Postponed'))d.cell.styles.textColor=[200,120,0];}}});
   // numeri di pagina
-  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(150);doc.text(`Pagina ${i} di ${n}`,W-14,290,{align:'right'});doc.text(pdfT('Report attività · '+dd(now)),14,290);}
-  const name=`Report attivita ${dkey(new Date())}.pdf`,blob=doc.output('blob'),file=new File([blob],name,{type:'application/pdf'});
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(150);doc.text(`Page ${i} of ${n}`,W-14,290,{align:'right'});doc.text(pdfT('Activity report · '+dd(now)),14,290);}
+  const name=`Activity report ${dkey(new Date())}.pdf`,blob=doc.output('blob'),file=new File([blob],name,{type:'application/pdf'});
   // telefono: si apre il menu Condividi (salva in File, manda su WhatsApp, apri…); PC: si scarica
   const mob=/iPhone|iPad|Android/i.test(navigator.userAgent);
-  if(mob&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'Report attività'});return;}catch(e){if(e.name==='AbortError')return;}}
+  if(mob&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'Activity report'});return;}catch(e){if(e.name==='AbortError')return;}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);toast('PDF pronto');
 }
 function setEditor(on){D.ui.editor=on;save();applyLook();if($('p-set').classList.contains('on'))renderSets();
